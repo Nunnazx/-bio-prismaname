@@ -111,6 +111,9 @@ export function BlogPostForm({ post = null }) {
       //   body: JSON.stringify(formData)
       // })
 
+      // Remove or comment out any console.log statements that might be logging objects
+      // console.log("Saving post:", formData); // Remove or comment this line
+
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
@@ -118,7 +121,8 @@ export function BlogPostForm({ post = null }) {
       router.push("/admin/blog")
       router.refresh()
     } catch (error) {
-      console.error("Error saving blog post:", error)
+      // Improve error handling to avoid console errors
+      console.error("Error saving blog post:", error.message || "Unknown error")
     } finally {
       setIsSubmitting(false)
     }

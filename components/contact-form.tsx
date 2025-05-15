@@ -86,6 +86,12 @@ export function ContactForm({ createInquiry }) {
     }
   }
 
+  // Replace any direct date formatting with this approach
+  const formatDate = (date) => {
+    // Use a stable format that will be consistent between server and client
+    return new Date(date).toISOString().split("T")[0]
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -130,7 +136,12 @@ export function ContactForm({ createInquiry }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="inquiryType">Inquiry Type *</Label>
-        <Select value={formData.inquiryType} onValueChange={handleSelectChange} required>
+        <Select
+          value={formData.inquiryType}
+          onValueChange={handleSelectChange}
+          required
+          key="inquiry-type-select" // Add this line to force client-side remounting
+        >
           <SelectTrigger id="inquiryType">
             <SelectValue placeholder="Select inquiry type" />
           </SelectTrigger>
