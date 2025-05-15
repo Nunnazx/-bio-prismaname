@@ -5,6 +5,9 @@ import { InquiriesChart } from "@/components/admin/inquiries-chart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
+// Mark this page as dynamic to prevent static generation errors with cookies
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "Inquiries | Admin Dashboard",
   description: "Manage customer inquiries and contact form submissions",
