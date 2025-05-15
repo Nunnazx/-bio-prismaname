@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,77 +16,22 @@ import {
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Edit, Eye, MoreHorizontal, Search, Trash } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { deleteBlogPost } from "@/app/actions/blog"
 
-// Mock data - this would come from Supabase in the real implementation
-const initialPosts = [
-  {
-    id: "1",
-    title: "How Biodegradable Plastics Are Changing the Industry",
-    slug: "biodegradable-plastics-industry",
-    status: "published",
-    category: "Industry Insights",
-    author: "Rahul Sharma",
-    date: "2023-06-15T10:30:00Z",
-    views: 987,
-  },
-  {
-    id: "2",
-    title: "5 Ways to Reduce Plastic Waste in Your Business",
-    slug: "reduce-plastic-waste-business",
-    status: "published",
-    category: "Sustainability",
-    author: "Priya Patel",
-    date: "2023-06-10T14:45:00Z",
-    views: 754,
-  },
-  {
-    id: "3",
-    title: "The Future of Biodegradable Packaging in India",
-    slug: "future-biodegradable-packaging-india",
-    status: "published",
-    category: "Market Trends",
-    author: "Amit Kumar",
-    date: "2023-06-05T09:15:00Z",
-    views: 632,
-  },
-  {
-    id: "4",
-    title: "Comparing Traditional vs. Biodegradable Plastics",
-    slug: "traditional-vs-biodegradable-plastics",
-    status: "published",
-    category: "Product Insights",
-    author: "Sneha Reddy",
-    date: "2023-05-28T16:20:00Z",
-    views: 521,
-  },
-  {
-    id: "5",
-    title: "New Regulations for Single-Use Plastics in 2023",
-    slug: "regulations-single-use-plastics-2023",
-    status: "draft",
-    category: "Regulations",
-    author: "Rahul Sharma",
-    date: "2023-05-20T11:10:00Z",
-    views: 0,
-  },
-  {
-    id: "6",
-    title: "Biodegradable Solutions for E-commerce Packaging",
-    slug: "biodegradable-ecommerce-packaging",
-    status: "draft",
-    category: "E-commerce",
-    author: "Priya Patel",
-    date: "2023-05-15T13:25:00Z",
-    views: 0,
-  },
-]
-
-export function BlogPostsTable() {
+export function BlogPostsTable({ initialPosts = [] }) {
+  const router = useRouter()
   const [posts, setPosts] = useState(initialPosts)
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedPosts, setSelectedPosts] = useState<string[]>([])
+  const [selectedPosts, setSelectedPosts] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const formatDate = (dateString: string) => {
+  useEffect(() => {
+    setPosts(initialPosts)
+  }, [initialPosts])
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A"
     const date = new Date(dateString)
     return new Intl.DateTimeFormat("en-IN", {
       day: "numeric",
@@ -97,12 +42,12 @@ export function BlogPostsTable() {
 
   const filteredPosts = posts.filter(
     (post) =>
-      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchQuery.toLowerCase()),
+      post.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.author_id?.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  const togglePostSelection = (postId: string) => {
+  const togglePostSelection = (postId) => {
     setSelectedPosts((prev) => (prev.includes(postId) ? prev.filter((id) => id !== postId) : [...prev, postId]))
   }
 
@@ -114,17 +59,45 @@ export function BlogPostsTable() {
     }
   }
 
-  const deletePost = (postId: string) => {
-    setPosts((prev) => prev.filter((post) => post.id !== postId))
-    setSelectedPosts((prev) => prev.filter((id) => id !== postId))
+  const handleDeletePost = async (postId) => {
+    if (confirm("Are you sure you want to delete this post?")) {
+      setIsLoading(true)
+      try {
+        await deleteBlogPost(postId)
+        setPosts((prev) => prev.filter((post) => post.id !== postId))
+        setSelectedPosts((prev) => prev.filter((id) => id !== postId))
+        router.refresh()
+      } catch (error) {
+        console.error("Error deleting post:", error)
+        alert("Failed to delete post")
+      } finally {
+        setIsLoading(false)
+      }
+    }
   }
 
-  const bulkDeletePosts = () => {
-    setPosts((prev) => prev.filter((post) => !selectedPosts.includes(post.id)))
-    setSelectedPosts([])
+  const bulkDeletePosts = async () => {
+    if (confirm(`Are you sure you want to delete ${selectedPosts.length} posts?`)) {
+      setIsLoading(true)
+      try {
+        for (const postId of selectedPosts) {
+          await deleteBlogPost(postId)
+        }
+        setPosts((prev) => prev.filter((post) => !selectedPosts.includes(post.id)))
+        setSelectedPosts([])
+        router.refresh()
+      } catch (error) {
+        console.error("Error deleting posts:", error)
+        alert("Failed to delete some posts")
+      } finally {
+        setIsLoading(false)
+      }
+    }
   }
 
-  const changePostStatus = (postId: string, newStatus: string) => {
+  const changePostStatus = async (postId, newStatus) => {
+    // This would be implemented with a server action
+    // For now, just update the UI
     setPosts((prev) => prev.map((post) => (post.id === postId ? { ...post, status: newStatus } : post)))
   }
 
@@ -173,7 +146,7 @@ export function BlogPostsTable() {
             >
               Unpublish
             </Button>
-            <Button variant="destructive" size="sm" onClick={bulkDeletePosts}>
+            <Button variant="destructive" size="sm" onClick={bulkDeletePosts} disabled={isLoading}>
               Delete
             </Button>
           </div>
@@ -194,16 +167,14 @@ export function BlogPostsTable() {
               <TableHead>Title</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Category</TableHead>
-              <TableHead>Author</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Views</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPosts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   No posts found.
                 </TableCell>
               </TableRow>
@@ -219,12 +190,12 @@ export function BlogPostsTable() {
                   </TableCell>
                   <TableCell className="font-medium">{post.title}</TableCell>
                   <TableCell>
-                    <Badge variant={post.status === "published" ? "default" : "secondary"}>{post.status}</Badge>
+                    <Badge variant={post.status === "published" ? "default" : "secondary"}>
+                      {post.status || "draft"}
+                    </Badge>
                   </TableCell>
                   <TableCell>{post.category}</TableCell>
-                  <TableCell>{post.author}</TableCell>
-                  <TableCell>{formatDate(post.date)}</TableCell>
-                  <TableCell>{post.views.toLocaleString()}</TableCell>
+                  <TableCell>{formatDate(post.publish_date || post.created_at)}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -259,7 +230,11 @@ export function BlogPostsTable() {
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600" onClick={() => deletePost(post.id)}>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => handleDeletePost(post.id)}
+                          disabled={isLoading}
+                        >
                           <Trash className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>

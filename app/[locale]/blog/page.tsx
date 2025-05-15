@@ -14,9 +14,10 @@ import { TranslatedText } from "@/components/translated-text"
 async function getBlogPosts() {
   const supabase = createServerComponentClient({ cookies })
 
+  // Remove the join with profiles since the relationship doesn't exist
   const { data: posts, error } = await supabase
     .from("blog_posts")
-    .select("*, profiles(first_name, last_name)")
+    .select("*")
     .eq("status", "published")
     .order("publish_date", { ascending: false })
 
@@ -134,17 +135,13 @@ export default async function BlogPage({ params }: { params: { locale: string } 
                     <CardHeader>
                       <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                         <Calendar className="h-4 w-4" />
-                        <span>{formatDate(posts[0].publish_date)}</span>
+                        <span>{posts[0].publish_date ? formatDate(posts[0].publish_date) : "No date"}</span>
                         <Separator orientation="vertical" className="h-4" />
                         <User className="h-4 w-4" />
-                        <span>
-                          {posts[0].profiles
-                            ? `${posts[0].profiles.first_name} ${posts[0].profiles.last_name}`
-                            : "Admin"}
-                        </span>
+                        <span>Admin</span>
                         <Separator orientation="vertical" className="h-4" />
                         <Clock className="h-4 w-4" />
-                        <span>{Math.ceil(posts[0].content.length / 1500)} min read</span>
+                        <span>{Math.ceil((posts[0].content?.length || 0) / 1500)} min read</span>
                       </div>
                       <CardTitle className="text-2xl">{posts[0].title}</CardTitle>
                       <CardDescription>{posts[0].excerpt}</CardDescription>
@@ -186,9 +183,9 @@ export default async function BlogPage({ params }: { params: { locale: string } 
                       </div>
                       <CardHeader>
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                          <span>{formatDate(post.publish_date)}</span>
+                          <span>{post.publish_date ? formatDate(post.publish_date) : "No date"}</span>
                           <Separator orientation="vertical" className="h-3" />
-                          <span>{Math.ceil(post.content.length / 1500)} min read</span>
+                          <span>{Math.ceil((post.content?.length || 0) / 1500)} min read</span>
                         </div>
                         <CardTitle className="text-lg">{post.title}</CardTitle>
                         <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>

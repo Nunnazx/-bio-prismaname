@@ -18,60 +18,31 @@ import { cn } from "@/lib/utils"
 import { RichTextEditor } from "@/components/admin/rich-text-editor"
 import { TagInput } from "@/components/admin/tag-input"
 import { MediaSelector } from "@/components/admin/media-selector"
-
-// Sample categories and authors - in a real app, these would come from your API
-const categories = [
-  { id: "industry-trends", name: "Industry Trends" },
-  { id: "education", name: "Education" },
-  { id: "environment", name: "Environment" },
-  { id: "certification", name: "Certification" },
-  { id: "innovation", name: "Innovation" },
-  { id: "sustainability", name: "Sustainability" },
-  { id: "business", name: "Business" },
-]
-
-const authors = [
-  { id: "author-1", name: "Priya Sharma", avatar: "/confident-leader.png" },
-  { id: "author-2", name: "Rajesh Kumar", avatar: "/confident-indian-professional.png" },
-  { id: "author-3", name: "Amit Patel", avatar: "" },
-]
+import { createBlogPost, updateBlogPost } from "@/app/actions/blog"
 
 export function BlogPostForm({ post = null }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
+    id: post?.id || undefined, // Set to undefined instead of empty string
     title: post?.title || "",
     slug: post?.slug || "",
     content: post?.content || "",
     excerpt: post?.excerpt || "",
-    author: post?.author?.id || "author-1",
-    category: post?.category?.toLowerCase().replace(/\s+/g, "-") || "industry-trends",
+    author_id: post?.author_id || null, // Set to null instead of empty string
+    category: post?.category || "Industry Trends",
     tags: post?.tags || [],
     status: post?.status || "draft",
-    publishDate: post?.publishDate ? new Date(post.publishDate) : null,
-    featuredImage: post?.featuredImage || "",
-    seo: {
-      title: post?.seo?.title || "",
-      description: post?.seo?.description || "",
-      keywords: post?.seo?.keywords || "",
-    },
+    publish_date: post?.publish_date ? new Date(post.publish_date) : null,
+    featured_image: post?.featured_image || "",
+    seo_title: post?.seo_title || "",
+    seo_description: post?.seo_description || "",
+    seo_keywords: post?.seo_keywords || "",
   })
 
   const handleChange = (e) => {
     const { name, value } = e.target
-
-    if (name.includes(".")) {
-      const [parent, child] = name.split(".")
-      setFormData((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }))
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }))
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleTagsChange = (tags) => {
@@ -79,11 +50,11 @@ export function BlogPostForm({ post = null }) {
   }
 
   const handleDateChange = (date) => {
-    setFormData((prev) => ({ ...prev, publishDate: date }))
+    setFormData((prev) => ({ ...prev, publish_date: date }))
   }
 
   const handleImageSelect = (url) => {
-    setFormData((prev) => ({ ...prev, featuredImage: url }))
+    setFormData((prev) => ({ ...prev, featured_image: url }))
   }
 
   const handleContentChange = (content) => {
@@ -104,25 +75,30 @@ export function BlogPostForm({ post = null }) {
     setIsSubmitting(true)
 
     try {
-      // This would be replaced with your actual API call
-      // const response = await fetch('/api/blog', {
-      //   method: post ? 'PUT' : 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // })
+      // Prepare the data for submission
+      const postData = {
+        ...formData,
+        // Remove id if it's undefined (for new posts)
+        id: formData.id === undefined ? undefined : formData.id,
+        // Remove author_id if it's null or empty
+        author_id: formData.author_id || undefined,
+        // Ensure dates are properly formatted for the database
+        publish_date: formData.publish_date ? formData.publish_date.toISOString() : null,
+      }
 
-      // Remove or comment out any console.log statements that might be logging objects
-      // console.log("Saving post:", formData); // Remove or comment this line
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Create or update the post
+      if (post?.id) {
+        await updateBlogPost(post.id, postData)
+      } else {
+        await createBlogPost(postData)
+      }
 
       // Redirect to blog list
       router.push("/admin/blog")
       router.refresh()
     } catch (error) {
-      // Improve error handling to avoid console errors
-      console.error("Error saving blog post:", error.message || "Unknown error")
+      console.error("Error saving blog post:", error)
+      alert("Failed to save blog post. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -195,7 +171,7 @@ export function BlogPostForm({ post = null }) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Featured Image</Label>
-                  <MediaSelector selectedImage={formData.featuredImage} onSelect={handleImageSelect} />
+                  <MediaSelector selectedImage={formData.featured_image} onSelect={handleImageSelect} />
                 </div>
               </div>
             </CardContent>
@@ -207,11 +183,11 @@ export function BlogPostForm({ post = null }) {
             <CardContent className="pt-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="seo.title">SEO Title</Label>
+                  <Label htmlFor="seo_title">SEO Title</Label>
                   <Input
-                    id="seo.title"
-                    name="seo.title"
-                    value={formData.seo.title}
+                    id="seo_title"
+                    name="seo_title"
+                    value={formData.seo_title}
                     onChange={handleChange}
                     placeholder="SEO optimized title (optional)"
                   />
@@ -219,11 +195,11 @@ export function BlogPostForm({ post = null }) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="seo.description">Meta Description</Label>
+                  <Label htmlFor="seo_description">Meta Description</Label>
                   <Textarea
-                    id="seo.description"
-                    name="seo.description"
-                    value={formData.seo.description}
+                    id="seo_description"
+                    name="seo_description"
+                    value={formData.seo_description}
                     onChange={handleChange}
                     placeholder="Brief description for search engines"
                     rows={3}
@@ -232,11 +208,11 @@ export function BlogPostForm({ post = null }) {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="seo.keywords">Meta Keywords</Label>
+                  <Label htmlFor="seo_keywords">Meta Keywords</Label>
                   <Input
-                    id="seo.keywords"
-                    name="seo.keywords"
-                    value={formData.seo.keywords}
+                    id="seo_keywords"
+                    name="seo_keywords"
+                    value={formData.seo_keywords}
                     onChange={handleChange}
                     placeholder="keyword1, keyword2, keyword3"
                   />
@@ -251,41 +227,14 @@ export function BlogPostForm({ post = null }) {
             <CardContent className="pt-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="author">Author</Label>
-                  <Select
-                    value={formData.author}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, author: value }))}
-                  >
-                    <SelectTrigger id="author">
-                      <SelectValue placeholder="Select author" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {authors.map((author) => (
-                        <SelectItem key={author.id} value={author.id}>
-                          {author.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="category">Category</Label>
-                  <Select
+                  <Input
+                    id="category"
+                    name="category"
                     value={formData.category}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    onChange={handleChange}
+                    placeholder="Enter category"
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -312,24 +261,24 @@ export function BlogPostForm({ post = null }) {
 
                 {(formData.status === "published" || formData.status === "scheduled") && (
                   <div className="space-y-2">
-                    <Label htmlFor="publishDate">Publish Date</Label>
+                    <Label htmlFor="publish_date">Publish Date</Label>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
                             "w-full justify-start text-left font-normal",
-                            !formData.publishDate && "text-muted-foreground",
+                            !formData.publish_date && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.publishDate ? format(formData.publishDate, "PPP") : <span>Pick a date</span>}
+                          {formData.publish_date ? format(formData.publish_date, "PPP") : <span>Pick a date</span>}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
                         <Calendar
                           mode="single"
-                          selected={formData.publishDate}
+                          selected={formData.publish_date}
                           onSelect={handleDateChange}
                           initialFocus
                         />
