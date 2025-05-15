@@ -1,0 +1,397 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export interface Database {
+  public: {
+    Tables: {
+      products: {
+        Row: {
+          id: string
+          name: string
+          code: string
+          category: string
+          description: string | null
+          features: Json | null
+          specifications: Json | null
+          price: string | null
+          image_url: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          code: string
+          category: string
+          description?: string | null
+          features?: Json | null
+          specifications?: Json | null
+          price?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          code?: string
+          category?: string
+          description?: string | null
+          features?: Json | null
+          specifications?: Json | null
+          price?: string | null
+          image_url?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          content: string | null
+          excerpt: string | null
+          author_id: string | null
+          category: string | null
+          tags: string[] | null
+          status: string
+          featured_image: string | null
+          seo_title: string | null
+          seo_description: string | null
+          seo_keywords: string | null
+          publish_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          content?: string | null
+          excerpt?: string | null
+          author_id?: string | null
+          category?: string | null
+          tags?: string[] | null
+          status?: string
+          featured_image?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          publish_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          content?: string | null
+          excerpt?: string | null
+          author_id?: string | null
+          category?: string | null
+          tags?: string[] | null
+          status?: string
+          featured_image?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          publish_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      inquiries: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          company: string | null
+          phone: string | null
+          message: string
+          product_interest: string | null
+          status: string
+          priority: string
+          assigned_to: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          company?: string | null
+          phone?: string | null
+          message: string
+          product_interest?: string | null
+          status?: string
+          priority?: string
+          assigned_to?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          company?: string | null
+          phone?: string | null
+          message?: string
+          product_interest?: string | null
+          status?: string
+          priority?: string
+          assigned_to?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          first_name: string | null
+          last_name: string | null
+          avatar_url: string | null
+          company: string | null
+          position: string | null
+          phone: string | null
+          bio: string | null
+          role: string
+          preferences: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          first_name?: string | null
+          last_name?: string | null
+          avatar_url?: string | null
+          company?: string | null
+          position?: string | null
+          phone?: string | null
+          bio?: string | null
+          role?: string
+          preferences?: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string | null
+          last_name?: string | null
+          avatar_url?: string | null
+          company?: string | null
+          position?: string | null
+          phone?: string | null
+          bio?: string | null
+          role?: string
+          preferences?: Json
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      media: {
+        Row: {
+          id: string
+          file_name: string
+          file_path: string
+          file_type: string
+          file_size: number
+          mime_type: string | null
+          dimensions: string | null
+          alt_text: string | null
+          caption: string | null
+          uploaded_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          file_name: string
+          file_path: string
+          file_type: string
+          file_size: number
+          mime_type?: string | null
+          dimensions?: string | null
+          alt_text?: string | null
+          caption?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          file_name?: string
+          file_path?: string
+          file_type?: string
+          file_size?: number
+          mime_type?: string | null
+          dimensions?: string | null
+          alt_text?: string | null
+          caption?: string | null
+          uploaded_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      seo_metadata: {
+        Row: {
+          id: string
+          page_path: string
+          title: string
+          description: string | null
+          keywords: string | null
+          og_title: string | null
+          og_description: string | null
+          og_image: string | null
+          canonical_url: string | null
+          robots: string
+          structured_data: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          page_path: string
+          title: string
+          description?: string | null
+          keywords?: string | null
+          og_title?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          canonical_url?: string | null
+          robots?: string
+          structured_data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          page_path?: string
+          title?: string
+          description?: string | null
+          keywords?: string | null
+          og_title?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          canonical_url?: string | null
+          robots?: string
+          structured_data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      roles: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      permissions: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          resource: string
+          action: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          resource: string
+          action: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          resource?: string
+          action?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      role_permissions: {
+        Row: {
+          role_id: string
+          permission_id: string
+          created_at: string
+        }
+        Insert: {
+          role_id: string
+          permission_id: string
+          created_at?: string
+        }
+        Update: {
+          role_id?: string
+          permission_id?: string
+          created_at?: string
+        }
+      }
+      backups: {
+        Row: {
+          id: string
+          filename: string
+          size: number
+          backup_type: string
+          status: string
+          storage_path: string
+          created_by: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          filename: string
+          size: number
+          backup_type: string
+          status: string
+          storage_path: string
+          created_by?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          filename?: string
+          size?: number
+          backup_type?: string
+          status?: string
+          storage_path?: string
+          created_by?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+    }
+  }
+}
