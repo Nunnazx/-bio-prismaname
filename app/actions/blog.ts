@@ -32,6 +32,21 @@ export async function getBlogPost(slug: string) {
 export async function createBlogPost(postData: any) {
   const supabase = createClient()
 
+  // Remove empty ID to let Supabase generate it
+  if (postData.id === "" || postData.id === undefined) {
+    delete postData.id
+  }
+
+  // Ensure author_id is set
+  if (!postData.author_id) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session?.user?.id) {
+      postData.author_id = session.user.id
+    }
+  }
+
   const { data, error } = await supabase.from("blog_posts").insert([postData]).select()
 
   if (error) {
@@ -45,6 +60,11 @@ export async function createBlogPost(postData: any) {
 
 export async function updateBlogPost(id: string, postData: any) {
   const supabase = createClient()
+
+  // Don't update the ID
+  if (postData.id) {
+    delete postData.id
+  }
 
   const { data, error } = await supabase.from("blog_posts").update(postData).eq("id", id).select()
 

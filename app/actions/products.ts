@@ -32,6 +32,11 @@ export async function getProduct(id: string) {
 export async function createProduct(productData: any) {
   const supabase = createClient()
 
+  // Remove any id field to let Supabase generate it
+  if (productData.id === "") {
+    delete productData.id
+  }
+
   const { data, error } = await supabase.from("products").insert([productData]).select()
 
   if (error) {
@@ -45,6 +50,11 @@ export async function createProduct(productData: any) {
 
 export async function updateProduct(id: string, productData: any) {
   const supabase = createClient()
+
+  // Remove the id from the update data
+  if (productData.id) {
+    delete productData.id
+  }
 
   const { data, error } = await supabase.from("products").update(productData).eq("id", id).select()
 

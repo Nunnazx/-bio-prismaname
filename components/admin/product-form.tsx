@@ -27,7 +27,6 @@ export function ProductForm({ product = null }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
-    id: product?.id || "",
     name: product?.name || "",
     code: product?.code || "",
     category: product?.category || "granules",

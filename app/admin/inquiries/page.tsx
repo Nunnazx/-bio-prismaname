@@ -1,13 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import type { Metadata } from "next"
+import { getInquiries, getInquiryStats } from "@/app/actions/inquiries"
 import { InquiriesTable } from "@/components/admin/inquiries-table"
 import { InquiriesChart } from "@/components/admin/inquiries-chart"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Inquiries | Admin Dashboard",
   description: "Manage customer inquiries and contact form submissions",
 }
 
-export default function InquiriesPage() {
+export default async function InquiriesPage() {
+  // Fetch inquiries from the database
+  const inquiries = await getInquiries()
+  const stats = await getInquiryStats()
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -20,7 +27,7 @@ export default function InquiriesPage() {
             <CardTitle className="text-sm font-medium">Total Inquiries</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">32</div>
+            <div className="text-2xl font-bold">{stats.total}</div>
           </CardContent>
         </Card>
 
@@ -29,7 +36,7 @@ export default function InquiriesPage() {
             <CardTitle className="text-sm font-medium">New</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">8</div>
+            <div className="text-2xl font-bold">{stats.new}</div>
           </CardContent>
         </Card>
 
@@ -38,7 +45,7 @@ export default function InquiriesPage() {
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{stats.inProgress}</div>
           </CardContent>
         </Card>
 
@@ -47,30 +54,48 @@ export default function InquiriesPage() {
             <CardTitle className="text-sm font-medium">Completed</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
+            <div className="text-2xl font-bold">{stats.completed}</div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Inquiry Trends</CardTitle>
-          <CardDescription>Monthly inquiry volume over time</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <InquiriesChart />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="all" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">All Inquiries</TabsTrigger>
+          <TabsTrigger value="new">New</TabsTrigger>
+          <TabsTrigger value="in-progress">In Progress</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Inquiries</CardTitle>
-          <CardDescription>Manage and respond to customer inquiries</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <InquiriesTable />
-        </CardContent>
-      </Card>
+        <TabsContent value="all" className="space-y-4">
+          <InquiriesTable inquiries={inquiries} />
+        </TabsContent>
+
+        <TabsContent value="new" className="space-y-4">
+          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "new")} />
+        </TabsContent>
+
+        <TabsContent value="in-progress" className="space-y-4">
+          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "in-progress")} />
+        </TabsContent>
+
+        <TabsContent value="completed" className="space-y-4">
+          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "completed")} />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Inquiry Analytics</CardTitle>
+              <CardDescription>Inquiry trends and statistics over time</CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <InquiriesChart inquiries={inquiries} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

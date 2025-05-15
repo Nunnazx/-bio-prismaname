@@ -32,6 +32,21 @@ export async function getMediaItem(id: string) {
 export async function createMediaItem(mediaData: any) {
   const supabase = createClient()
 
+  // Remove empty ID to let Supabase generate it
+  if (mediaData.id === "" || mediaData.id === undefined) {
+    delete mediaData.id
+  }
+
+  // Set uploaded_by if not provided
+  if (!mediaData.uploaded_by) {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session?.user?.id) {
+      mediaData.uploaded_by = session.user.id
+    }
+  }
+
   const { data, error } = await supabase.from("media").insert([mediaData]).select()
 
   if (error) {
@@ -45,6 +60,11 @@ export async function createMediaItem(mediaData: any) {
 
 export async function updateMediaItem(id: string, mediaData: any) {
   const supabase = createClient()
+
+  // Don't update the ID
+  if (mediaData.id) {
+    delete mediaData.id
+  }
 
   const { data, error } = await supabase.from("media").update(mediaData).eq("id", id).select()
 

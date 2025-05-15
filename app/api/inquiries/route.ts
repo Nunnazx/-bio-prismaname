@@ -7,29 +7,27 @@ export async function POST(request: Request) {
     const supabase = createClient()
 
     // Validate required fields
-    const requiredFields = ["name", "email", "message"]
+    const requiredFields = ["name", "email", "message", "inquiryType"]
     for (const field of requiredFields) {
       if (!data[field]) {
         return NextResponse.json({ error: `Missing required field: ${field}` }, { status: 400 })
       }
     }
 
+    // Map form data to database schema
+    const inquiryData = {
+      name: data.name,
+      email: data.email,
+      company: data.company || null,
+      phone: data.phone || null,
+      message: data.message,
+      product_interest: data.inquiryType || null,
+      status: "new",
+      priority: "medium",
+    }
+
     // Insert the inquiry into the database
-    const { data: inquiry, error } = await supabase
-      .from("inquiries")
-      .insert([
-        {
-          name: data.name,
-          email: data.email,
-          company: data.company || null,
-          phone: data.phone || null,
-          message: data.message,
-          product_interest: data.productInterest || null,
-          status: "new",
-          priority: "medium",
-        },
-      ])
-      .select()
+    const { data: inquiry, error } = await supabase.from("inquiries").insert([inquiryData]).select()
 
     if (error) {
       console.error("Error saving inquiry:", error)

@@ -1,44 +1,33 @@
 import Link from "next/link"
-import { CheckCircle, ArrowLeft } from "lucide-react"
-
+import { CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function ThankYouPage() {
   return (
-    <div className="container flex items-center justify-center min-h-[80vh] px-4 py-12">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <CheckCircle className="h-16 w-16 text-green-600" />
+    <div className="container flex flex-col items-center justify-center py-20 text-center">
+      <div className="mx-auto max-w-md space-y-6">
+        <div className="flex justify-center">
+          <CheckCircle className="h-16 w-16 text-green-500" />
+        </div>
+        <h1 className="text-3xl font-bold">Thank You for Your Message!</h1>
+        <p className="text-muted-foreground">
+          We've received your inquiry and will get back to you as soon as possible. A confirmation has been sent to your
+          email address.
+        </p>
+        <div className="pt-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            Your inquiry has been logged in our system and our team will review it shortly.
+          </p>
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-4 sm:space-y-0 justify-center">
+            <Button asChild>
+              <Link href="/">Return to Home</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href="/products">Browse Products</Link>
+            </Button>
           </div>
-          <CardTitle className="text-2xl">Thank You!</CardTitle>
-          <CardDescription>Your inquiry has been submitted successfully</CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p className="mb-4">
-            We appreciate your interest in AICMT International's compostable plastic products. Our team will review your
-            inquiry and get back to you shortly.
-          </p>
-          <p className="text-sm text-gray-500">
-            Please check your email for a confirmation of your submission. If you don't see it, please check your spam
-            folder.
-          </p>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Link href="/" className="w-full">
-            <Button className="w-full">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Return to Home
-            </Button>
-          </Link>
-          <Link href="/products" className="w-full">
-            <Button variant="outline" className="w-full">
-              Browse Products
-            </Button>
-          </Link>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

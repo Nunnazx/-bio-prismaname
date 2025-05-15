@@ -1,59 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { OptimizedImage } from "@/components/optimized-image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Star, Info, ShoppingCart } from "lucide-react"
 import Link from "next/link"
-
-// Sample featured products data
-const featuredProducts = [
-  {
-    id: "eco-bags-premium",
-    name: "Premium Eco Shopping Bags",
-    description: "Our new premium biodegradable shopping bags with reinforced handles and custom printing options.",
-    image: "/earth-friendly-shopping.png",
-    badge: "New",
-    badgeColor: "bg-blue-100 text-blue-800",
-    price: "₹299 per pack of 50",
-    features: ["Extra strong handles", "100% biodegradable", "Custom printing available", "Multiple sizes"],
-  },
-  {
-    id: "food-containers-pro",
-    name: "Pro Food Containers",
-    description: "Advanced biodegradable food containers with improved heat resistance and leak-proof design.",
-    image: "/earth-friendly-takeout.png",
-    badge: "Featured",
-    badgeColor: "bg-green-100 text-green-800",
-    price: "₹349 per pack of 25",
-    features: ["Heat resistant up to 100°C", "Leak-proof design", "Microwave safe", "Various sizes available"],
-  },
-  {
-    id: "agri-film-plus",
-    name: "Agricultural Film Plus",
-    description: "Enhanced biodegradable agricultural film with improved UV resistance and durability.",
-    image: "/clear-eco-pellets.png",
-    badge: "New",
-    badgeColor: "bg-blue-100 text-blue-800",
-    price: "₹1,499 per roll",
-    features: ["UV resistant", "Enhanced durability", "Fully biodegradable", "Custom widths available"],
-  },
-  {
-    id: "garbage-bags-xl",
-    name: "XL Garbage Bags",
-    description: "Extra large biodegradable garbage bags with enhanced tear resistance and odor control.",
-    image: "/images/shop/garbage-bags.jpg",
-    badge: "Best Seller",
-    badgeColor: "bg-orange-100 text-orange-800",
-    price: "₹399 per pack of 30",
-    features: ["Extra large capacity", "Tear resistant", "Odor control technology", "Drawstring closure"],
-  },
-]
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useRouter } from "next/navigation"
 
 export function FeaturedProducts() {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
+  const [products, setProducts] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true)
+      const supabase = createClientComponentClient()
+
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(4)
+
+      if (error) {
+        console.error("Error fetching featured products:", error)
+      } else {
+        setProducts(data || [])
+      }
+
+      setLoading(false)
+    }
+
+    fetchProducts()
+  }, [])
+
+  // Generate badge data based on product attributes
+  const getBadgeInfo = (product: any, index: number) => {
+    const options = [
+      { text: "New", color: "bg-blue-100 text-blue-800" },
+      { text: "Featured", color: "bg-green-100 text-green-800" },
+      { text: "Best Seller", color: "bg-orange-100 text-orange-800" },
+    ]
+
+    // Use product index to deterministically assign a badge
+    return options[index % options.length]
+  }
 
   return (
     <div className="w-full max-w-6xl mx-auto py-12">
@@ -72,61 +69,106 @@ export function FeaturedProducts() {
         </Link>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {featuredProducts.map((product) => (
-          <Card
-            key={product.id}
-            className="overflow-hidden transition-all duration-300 hover:shadow-lg"
-            onMouseEnter={() => setHoveredProduct(product.id)}
-            onMouseLeave={() => setHoveredProduct(null)}
-            tabIndex={0}
-          >
-            <div className="relative">
-              <div className="aspect-square overflow-hidden">
-                <OptimizedImage
-                  src={product.image}
-                  alt={`${product.name}: ${product.description}`}
-                  width={300}
-                  height={300}
-                  className={`w-full h-full object-cover transition-transform duration-500 ${
-                    hoveredProduct === product.id ? "scale-110" : "scale-100"
-                  }`}
-                />
-              </div>
+      {loading ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="overflow-hidden">
+              <div className="aspect-square bg-gray-100 animate-pulse"></div>
+              <CardContent className="p-4">
+                <div className="h-6 bg-gray-200 rounded animate-pulse mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-3 w-3/4"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-1"></div>
+                <div className="h-4 bg-gray-200 rounded animate-pulse mb-1 w-2/3"></div>
+              </CardContent>
+              <CardFooter className="p-4 pt-0">
+                <div className="h-9 bg-gray-200 rounded animate-pulse w-full"></div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : products.length > 0 ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {products.map((product, index) => {
+            const badge = getBadgeInfo(product, index)
+            const features = product.features?.features || []
 
-              {product.badge && (
-                <Badge className={`absolute top-2 right-2 ${product.badgeColor}`}>{product.badge}</Badge>
-              )}
-            </div>
-
-            <CardContent className="p-4">
-              <h3 className="font-bold text-lg mb-1">{product.name}</h3>
-              <p className="text-sm text-gray-600 mb-2">{product.description}</p>
-              <div className="font-medium text-green-600 mb-2">{product.price}</div>
-
-              <div className="space-y-1">
-                {product.features.slice(0, 2).map((feature, index) => (
-                  <div key={index} className="flex items-start gap-2 text-sm">
-                    <Star className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
-                    <span>{feature}</span>
+            return (
+              <Card
+                key={product.id}
+                className="overflow-hidden transition-all duration-300 hover:shadow-lg"
+                onMouseEnter={() => setHoveredProduct(product.id)}
+                onMouseLeave={() => setHoveredProduct(null)}
+                tabIndex={0}
+              >
+                <div className="relative">
+                  <div className="aspect-square overflow-hidden">
+                    <OptimizedImage
+                      src={product.image_url || "/placeholder.svg?height=300&width=300&query=biodegradable product"}
+                      alt={`${product.name}: ${product.description}`}
+                      width={300}
+                      height={300}
+                      className={`w-full h-full object-cover transition-transform duration-500 ${
+                        hoveredProduct === product.id ? "scale-110" : "scale-100"
+                      }`}
+                    />
                   </div>
-                ))}
-              </div>
-            </CardContent>
 
-            <CardFooter className="p-4 pt-0 flex justify-between">
-              <Button variant="outline" size="sm" className="gap-1">
-                <Info className="h-3 w-3" />
-                Details
-              </Button>
-              <Button size="sm" className="gap-1" aria-label={`Inquire about ${product.name}`}>
-                <ShoppingCart className="h-3 w-3" />
-                Inquire
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+                  <Badge className={`absolute top-2 right-2 ${badge.color}`}>{badge.text}</Badge>
+                </div>
+
+                <CardContent className="p-4">
+                  <h3 className="font-bold text-lg mb-1">{product.name}</h3>
+                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{product.description}</p>
+                  <div className="font-medium text-green-600 mb-2">{product.price}</div>
+
+                  <div className="space-y-1">
+                    {features.slice(0, 2).map((feature: string, index: number) => (
+                      <div key={index} className="flex items-start gap-2 text-sm">
+                        <Star className="h-3 w-3 text-green-600 mt-1 flex-shrink-0" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+
+                <CardFooter className="p-4 pt-0 flex justify-between">
+                  <Link href={`/products/${product.id}`}>
+                    <Button variant="outline" size="sm" className="gap-1">
+                      <Info className="h-3 w-3" />
+                      Details
+                    </Button>
+                  </Link>
+                  <Button
+                    size="sm"
+                    className="gap-1"
+                    aria-label={`Inquire about ${product.name}`}
+                    onClick={() => {
+                      // Store the selected product in localStorage for the inquiry form
+                      localStorage.setItem(
+                        "inquiryProduct",
+                        JSON.stringify({
+                          id: product.id,
+                          name: product.name,
+                          code: product.code,
+                        }),
+                      )
+                      // Navigate to the contact page
+                      window.location.href = "/contact"
+                    }}
+                  >
+                    <ShoppingCart className="h-3 w-3" />
+                    Inquire
+                  </Button>
+                </CardFooter>
+              </Card>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-500">No featured products found. Please add products through the admin dashboard.</p>
+        </div>
+      )}
 
       <div className="mt-12 bg-green-50 p-6 rounded-lg">
         <div className="flex flex-col md:flex-row gap-6 items-center">

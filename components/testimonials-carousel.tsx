@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { OptimizedImage } from "@/components/optimized-image"
 
-// Testimonial data
-const testimonials = [
+// Fallback testimonial data (will only be used if database fetch fails)
+const fallbackTestimonials = [
   {
     id: 1,
     name: "Rajesh Kumar",
@@ -16,49 +17,51 @@ const testimonials = [
     company: "GreenRetail Solutions",
     image: "/confident-professional.png",
     quote:
-      "Switching to AICMT's compostable bags has been a game-changer for our retail chain. Our customers appreciate our commitment to sustainability, and the quality of the bags is exceptional. The transition was smooth, and the team at AICMT provided excellent support throughout the process.",
-  },
-  {
-    id: 2,
-    name: "Priya Sharma",
-    position: "Sustainability Director",
-    company: "EcoFood Packaging",
-    image: "/confident-professional.png",
-    quote:
-      "As a company focused on sustainable food packaging, finding the right supplier was crucial for us. AICMT's compostable films meet all our requirements for food safety, durability, and environmental impact. Their technical expertise and responsive customer service make them an ideal partner.",
-  },
-  {
-    id: 3,
-    name: "Amit Patel",
-    position: "CEO",
-    company: "GreenEarth Organics",
-    image: "/confident-leader.png",
-    quote:
-      "We've been using AICMT's compostable packaging for our organic produce for over a year now. The quality is consistent, and the environmental benefits align perfectly with our brand values. Our customers have responded positively to the change, and we've seen an increase in repeat business.",
-  },
-  {
-    id: 4,
-    name: "Sunita Reddy",
-    position: "Operations Manager",
-    company: "EcoFriendly Hotels",
-    image: "/confident-indian-professional.png",
-    quote:
-      "Implementing AICMT's compostable garbage bags across our hotel chain has significantly reduced our plastic footprint. The bags are strong, leak-proof, and completely break down in our composting facility. AICMT's team worked closely with us to find the right solution for our specific needs.",
-  },
-  {
-    id: 5,
-    name: "Vikram Singh",
-    position: "Founder",
-    company: "GreenDelivery",
-    image: "/coding-commute.png",
-    quote:
-      "As a food delivery service committed to sustainability, finding the right packaging was a challenge until we discovered AICMT. Their compostable food containers maintain food quality while aligning with our eco-friendly mission. The positive feedback from our customers has been overwhelming.",
+      "Switching to AICMT's compostable bags has been a game-changer for our retail chain. Our customers appreciate our commitment to sustainability, and the quality of the bags is exceptional.",
   },
 ]
 
 export function TestimonialsCarousel() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [autoplay, setAutoplay] = useState(true)
+  const [testimonials, setTestimonials] = useState(fallbackTestimonials)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch testimonials from database
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const supabase = createClientComponentClient()
+
+        // Here you would normally query a testimonials table
+        // For now, we'll leave this commented out since we haven't created that table yet
+
+        /*
+        const { data, error } = await supabase
+          .from('testimonials')
+          .select('*')
+          .order('created_at', { ascending: false })
+        
+        if (error) {
+          console.error('Error fetching testimonials:', error)
+        } else if (data && data.length > 0) {
+          setTestimonials(data)
+        }
+        */
+
+        // For now, we'll keep using the fallback data
+        // Remove this timeout in production
+        setTimeout(() => {
+          setLoading(false)
+        }, 500)
+      } catch (error) {
+        console.error("Error in testimonials fetch:", error)
+        setLoading(false)
+      }
+    }
+
+    fetchTestimonials()
+  }, [])
 
   // Handle next/previous navigation
   const goToNext = () => {
@@ -78,11 +81,25 @@ export function TestimonialsCarousel() {
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [autoplay, activeIndex])
+  }, [autoplay, activeIndex, testimonials.length])
 
   // Pause autoplay on hover
   const handleMouseEnter = () => setAutoplay(false)
   const handleMouseLeave = () => setAutoplay(true)
+
+  if (loading) {
+    return (
+      <div className="w-full max-w-5xl mx-auto py-12">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold">What Our Customers Say</h2>
+          <p className="text-gray-500 mt-2">Hear from businesses that have made the switch to compostable plastics</p>
+        </div>
+        <div className="animate-pulse">
+          <div className="h-64 bg-gray-200 rounded-xl"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-5xl mx-auto py-12">

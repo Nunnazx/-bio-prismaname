@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 
-export function InquiryForm() {
+export function ContactForm({ createInquiry }) {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,32 +24,13 @@ export function InquiryForm() {
     message: "",
   })
 
-  useEffect(() => {
-    // Check if there's product information in localStorage
-    const storedProduct = localStorage.getItem("inquiryProduct")
-    if (storedProduct) {
-      try {
-        const productInfo = JSON.parse(storedProduct)
-        setFormData((prev) => ({
-          ...prev,
-          product: productInfo.name,
-          message: `I'm interested in ${productInfo.name} (Code: ${productInfo.code}). Please provide more information.`,
-        }))
-        // Clear the localStorage after using it
-        localStorage.removeItem("inquiryProduct")
-      } catch (error) {
-        console.error("Error parsing product info:", error)
-      }
-    }
-  }, [])
-
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSelectChange = (name, value) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  const handleSelectChange = (value) => {
+    setFormData((prev) => ({ ...prev, inquiryType: value }))
   }
 
   const handleSubmit = async (e) => {
@@ -57,45 +38,50 @@ export function InquiryForm() {
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/inquiries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+      // Create FormData object for server action
+      const formDataObj = new FormData()
+      Object.entries(formData).forEach(([key, value]) => {
+        formDataObj.append(key, value || "")
       })
 
-      const data = await response.json()
+      // Call the server action
+      const result = await createInquiry(formDataObj)
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit inquiry")
+      if (result.success) {
+        // Show success toast
+        toast({
+          title: "Message Sent",
+          description: "Thank you for contacting us. We'll get back to you soon.",
+        })
+
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          company: "",
+          phone: "",
+          inquiryType: "",
+          message: "",
+        })
+
+        // Redirect to thank you page
+        router.push("/thank-you")
+      } else {
+        // Show error toast
+        toast({
+          title: "Submission Failed",
+          description: result.error || "There was a problem sending your message. Please try again.",
+          variant: "destructive",
+        })
+        setIsSubmitting(false)
       }
-
-      // Show success toast
-      toast({
-        title: "Inquiry Submitted",
-        description: "Thank you for your inquiry. We'll get back to you soon.",
-        variant: "default",
-      })
-
-      // Reset form
-      setFormData({
-        name: "",
-        email: "",
-        company: "",
-        phone: "",
-        inquiryType: "",
-        message: "",
-      })
-
-      // Redirect to thank you page
-      router.push("/thank-you")
     } catch (error) {
-      console.error("Error submitting inquiry:", error)
+      console.error("Error submitting form:", error)
       toast({
         title: "Submission Failed",
-        description: error.message || "There was a problem submitting your inquiry. Please try again.",
+        description: "There was a problem sending your message. Please try again.",
         variant: "destructive",
       })
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -108,18 +94,6 @@ export function InquiryForm() {
           <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="company">Company</Label>
-          <Input
-            id="company"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            placeholder="Your company"
-          />
-        </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
           <Input
             id="email"
@@ -129,6 +103,18 @@ export function InquiryForm() {
             onChange={handleChange}
             placeholder="Your email"
             required
+          />
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="company">Company</Label>
+          <Input
+            id="company"
+            name="company"
+            value={formData.company}
+            onChange={handleChange}
+            placeholder="Your company"
           />
         </div>
         <div className="space-y-2">
@@ -144,11 +130,7 @@ export function InquiryForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="inquiryType">Inquiry Type *</Label>
-        <Select
-          value={formData.inquiryType}
-          onValueChange={(value) => handleSelectChange("inquiryType", value)}
-          required
-        >
+        <Select value={formData.inquiryType} onValueChange={handleSelectChange} required>
           <SelectTrigger id="inquiryType">
             <SelectValue placeholder="Select inquiry type" />
           </SelectTrigger>
@@ -177,7 +159,7 @@ export function InquiryForm() {
         {isSubmitting ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Submitting...
+            Sending...
           </>
         ) : (
           "Send Message"

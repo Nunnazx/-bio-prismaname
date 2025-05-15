@@ -1,5 +1,7 @@
-import { ArrowLeft, Download, Leaf, Shield, Recycle } from "lucide-react"
+import { ArrowLeft, Download, Leaf, Shield } from "lucide-react"
 import Link from "next/link"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,7 +10,41 @@ import { Badge } from "@/components/ui/badge"
 import { LanguageMeta } from "@/components/language-meta"
 import { OptimizedImage } from "@/components/optimized-image"
 
-export default function ProductsPage({ params }: { params: { locale: string } }) {
+async function getProducts() {
+  const supabase = createServerComponentClient({ cookies })
+
+  const { data: products, error } = await supabase
+    .from("products")
+    .select("*")
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching products:", error)
+    return []
+  }
+
+  return products || []
+}
+
+export default async function ProductsPage({ params }: { params: { locale: string } }) {
+  const products = await getProducts()
+
+  // Group products by category
+  const productsByCategory = products.reduce(
+    (acc, product) => {
+      const category = product.category || "Other"
+      if (!acc[category]) {
+        acc[category] = []
+      }
+      acc[category].push(product)
+      return acc
+    },
+    {} as Record<string, any[]>,
+  )
+
+  // Get unique categories for tabs
+  const categories = Object.keys(productsByCategory)
+
   return (
     <>
       <LanguageMeta pageName="products" />
@@ -43,305 +79,72 @@ export default function ProductsPage({ params }: { params: { locale: string } })
             </div>
           </div>
 
-          <Tabs defaultValue="granules" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="granules">Granules</TabsTrigger>
-              <TabsTrigger value="films">Films & Bags</TabsTrigger>
-              <TabsTrigger value="custom">Custom Solutions</TabsTrigger>
-            </TabsList>
+          {categories.length > 0 ? (
+            <Tabs defaultValue={categories[0]} className="w-full">
+              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${categories.length}, 1fr)` }}>
+                {categories.map((category) => (
+                  <TabsTrigger key={category} value={category}>
+                    {category}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
 
-            <TabsContent value="granules" className="pt-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Compostable Filler Master Batch</CardTitle>
-                        <CardDescription>CODE: ABP-FMB</CardDescription>
-                      </div>
-                      <Badge className="bg-green-600">CPCB Certified</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                      <OptimizedImage
-                        src="/biodegradable-plastic-granules.png"
-                        alt="Compostable Filler Master Batch - biodegradable plastic granules"
-                        width={300}
-                        height={300}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Properties:</h3>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Excellent Mechanical Properties</li>
-                        <li>High Strength</li>
-                        <li>Easy to Process</li>
-                        <li>Very good sealing Properties</li>
-                        <li>Cost Competitive</li>
-                      </ul>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                      <Leaf className="h-4 w-4" />
-                      <span>100% Biodegradable & Non-toxic</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full">Request Sample</Button>
-                  </CardFooter>
-                </Card>
+              {categories.map((category) => (
+                <TabsContent key={category} value={category} className="pt-6">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {productsByCategory[category].map((product) => {
+                      // Parse features from JSONB
+                      const features = product.features?.features || []
 
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Natural Filler Master Batch</CardTitle>
-                        <CardDescription>CODE: ABP-NFMB</CardDescription>
-                      </div>
-                      <Badge className="bg-green-600">CPCB Certified</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                      <OptimizedImage
-                        src="/clear-eco-pellets.png"
-                        alt="Natural Filler Master Batch - clear eco-friendly plastic pellets"
-                        width={300}
-                        height={300}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Properties:</h3>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Enhanced Natural Content</li>
-                        <li>Improved Biodegradability</li>
-                        <li>Excellent Processability</li>
-                        <li>Good Mechanical Properties</li>
-                        <li>Eco-friendly Formulation</li>
-                      </ul>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                      <Leaf className="h-4 w-4" />
-                      <span>100% Biodegradable & Non-toxic</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full">Request Sample</Button>
-                  </CardFooter>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Pre-Mix Granules</CardTitle>
-                        <CardDescription>CODE: ABP-PMG</CardDescription>
-                      </div>
-                      <Badge className="bg-green-600">CPCB Certified</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                      <OptimizedImage
-                        src="/clear-biodegradable-pellets.png"
-                        alt="Pre-Mix Granules - clear biodegradable plastic pellets"
-                        width={300}
-                        height={300}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Properties:</h3>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Ready-to-Use Formulation</li>
-                        <li>Consistent Quality</li>
-                        <li>Optimized Processing</li>
-                        <li>Balanced Properties</li>
-                        <li>Custom Formulations Available</li>
-                      </ul>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                      <Leaf className="h-4 w-4" />
-                      <span>100% Biodegradable & Non-toxic</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full">Request Sample</Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="films" className="pt-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Compostable Carry Bags</CardTitle>
-                        <CardDescription>Multiple sizes available</CardDescription>
-                      </div>
-                      <Badge className="bg-green-600">CPCB Certified</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                      <OptimizedImage
-                        src="/earth-friendly-shopping.png"
-                        alt="Compostable Carry Bags - eco-friendly shopping bags"
-                        width={300}
-                        height={300}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Features:</h3>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Strong & Durable</li>
-                        <li>Water Resistant</li>
-                        <li>Customizable Printing</li>
-                        <li>Various Sizes Available</li>
-                        <li>Complies with Plastic Ban Regulations</li>
-                      </ul>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                      <Recycle className="h-4 w-4" />
-                      <span>Fully Compostable within 180 days</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full">Request Sample</Button>
-                  </CardFooter>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Compostable Garbage Bags</CardTitle>
-                        <CardDescription>Eco-friendly waste management</CardDescription>
-                      </div>
-                      <Badge className="bg-green-600">CPCB Certified</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                      <OptimizedImage
-                        src="/images/shop/garbage-bags.jpg"
-                        alt="Compostable Garbage Bags - eco-friendly waste management bags"
-                        width={300}
-                        height={300}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Features:</h3>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Tear Resistant</li>
-                        <li>Leak Proof</li>
-                        <li>Odor Control</li>
-                        <li>Multiple Sizes</li>
-                        <li>Perfect for Organic Waste</li>
-                      </ul>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                      <Recycle className="h-4 w-4" />
-                      <span>Fully Compostable within 180 days</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full">Request Sample</Button>
-                  </CardFooter>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>Food Packaging Films</CardTitle>
-                        <CardDescription>Safe for food contact</CardDescription>
-                      </div>
-                      <Badge className="bg-green-600">CPCB Certified</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                      <OptimizedImage
-                        src="/earth-friendly-takeout.png"
-                        alt="Food Packaging Films - eco-friendly food containers"
-                        width={300}
-                        height={300}
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="font-medium">Features:</h3>
-                      <ul className="list-disc pl-5 space-y-1">
-                        <li>Food-Safe Certified</li>
-                        <li>Oil & Grease Resistant</li>
-                        <li>Heat Resistant up to 85°C</li>
-                        <li>Transparent Options Available</li>
-                        <li>Suitable for Hot & Cold Foods</li>
-                      </ul>
-                    </div>
-                    <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                      <Shield className="h-4 w-4" />
-                      <span>Non-toxic & Food Contact Safe</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex gap-2">
-                    <Button className="w-full">Request Sample</Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="custom" className="pt-6">
-              <div className="bg-green-50 rounded-lg p-6 mb-6">
-                <h2 className="text-2xl font-bold text-green-800 mb-4">Custom Solutions</h2>
-                <p className="text-green-700 mb-4">
-                  We specialize in developing custom compostable plastic solutions tailored to your specific
-                  requirements. Our team of experts works closely with you to create products that meet your exact
-                  specifications while maintaining our commitment to environmental sustainability.
-                </p>
-                <div className="grid md:grid-cols-2 gap-6 mt-6">
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <h3 className="font-bold text-green-700 mb-2">Custom Formulations</h3>
-                    <p className="text-sm text-gray-600">
-                      We can adjust our formulations to meet specific requirements for strength, flexibility,
-                      transparency, and other properties.
-                    </p>
+                      return (
+                        <Card key={product.id}>
+                          <CardHeader>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <CardTitle>{product.name}</CardTitle>
+                                <CardDescription>CODE: {product.code}</CardDescription>
+                              </div>
+                              <Badge className="bg-green-600">CPCB Certified</Badge>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
+                              <OptimizedImage
+                                src={product.image_url || "/placeholder.svg?height=300&width=300&query=product"}
+                                alt={`${product.name} - ${product.description}`}
+                                width={300}
+                                height={300}
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <h3 className="font-medium">Properties:</h3>
+                              <ul className="list-disc pl-5 space-y-1">
+                                {features.slice(0, 5).map((feature, index) => (
+                                  <li key={index}>{feature}</li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
+                              <Leaf className="h-4 w-4" />
+                              <span>100% Biodegradable & Non-toxic</span>
+                            </div>
+                          </CardContent>
+                          <CardFooter className="flex gap-2">
+                            <Button className="w-full">Request Sample</Button>
+                          </CardFooter>
+                        </Card>
+                      )
+                    })}
                   </div>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <h3 className="font-bold text-green-700 mb-2">Specialized Applications</h3>
-                    <p className="text-sm text-gray-600">
-                      From agricultural films to specialized packaging, we can develop solutions for unique
-                      applications.
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <h3 className="font-bold text-green-700 mb-2">Branded Products</h3>
-                    <p className="text-sm text-gray-600">
-                      Custom printing and branding options available for all our compostable products.
-                    </p>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <h3 className="font-bold text-green-700 mb-2">Regulatory Compliance</h3>
-                    <p className="text-sm text-gray-600">
-                      We ensure all custom solutions meet relevant regulatory standards and certifications.
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-6">
-                  <Button size="lg" className="bg-green-600 hover:bg-green-700">
-                    Contact Us for Custom Solutions
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                </TabsContent>
+              ))}
+            </Tabs>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No products found. Please add products through the admin dashboard.</p>
+            </div>
+          )}
 
           <div className="mt-12 p-6 bg-gray-50 rounded-lg">
             <div className="flex flex-col md:flex-row gap-6 items-center">

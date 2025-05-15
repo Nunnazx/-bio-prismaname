@@ -32,6 +32,11 @@ export async function getUser(id: string) {
 export async function updateUser(id: string, userData: any) {
   const supabase = createClient()
 
+  // Don't update the ID
+  if (userData.id) {
+    delete userData.id
+  }
+
   const { data, error } = await supabase.from("profiles").update(userData).eq("id", id).select()
 
   if (error) {
@@ -46,6 +51,11 @@ export async function updateUser(id: string, userData: any) {
 
 export async function createUserProfile(userData: any) {
   const supabase = createClient()
+
+  // For profiles, ID must match auth.users ID
+  if (!userData.id) {
+    throw new Error("User ID is required for creating a profile")
+  }
 
   const { data, error } = await supabase.from("profiles").insert([userData]).select()
 
