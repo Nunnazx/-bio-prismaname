@@ -392,6 +392,77 @@ export interface Database {
           updated_at?: string
         }
       }
+      custom_orders: {
+        Row: {
+          id: string
+          product_type: string
+          size: string
+          color: string
+          thickness: string
+          printing: boolean
+          printing_colors: number | null
+          logo_url: string | null
+          quantity: number
+          company_name: string
+          contact_name: string
+          email: string
+          phone: string | null
+          timeline: string | null
+          special_requirements: string | null
+          status: string
+          quote_amount: number | null
+          quote_date: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_type: string
+          size: string
+          color: string
+          thickness: string
+          printing: boolean
+          printing_colors?: number | null
+          logo_url?: string | null
+          quantity: number
+          company_name: string
+          contact_name: string
+          email: string
+          phone?: string | null
+          timeline?: string | null
+          special_requirements?: string | null
+          status?: string
+          quote_amount?: number | null
+          quote_date?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_type?: string
+          size?: string
+          color?: string
+          thickness?: string
+          printing?: boolean
+          printing_colors?: number | null
+          logo_url?: string | null
+          quantity?: number
+          company_name?: string
+          contact_name?: string
+          email?: string
+          phone?: string | null
+          timeline?: string | null
+          special_requirements?: string | null
+          status?: string
+          quote_amount?: number | null
+          quote_date?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

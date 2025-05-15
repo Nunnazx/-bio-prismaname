@@ -1,16 +1,19 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { OptimizedImage } from "@/components/optimized-image"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Settings, Palette, Ruler, Package, FileText, Send } from "lucide-react"
+import { Settings, Palette, Ruler, Package, FileText, Send, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/components/ui/use-toast"
+import { createCustomOrder } from "@/app/actions/custom-orders"
 
 // Sample customization options
 const customizationOptions = {
@@ -73,6 +76,8 @@ const customizableProducts = [
 ]
 
 export function CustomSolutions() {
+  const router = useRouter()
+  const { toast } = useToast()
   const [activeTab, setActiveTab] = useState("bags")
   const [activeStep, setActiveStep] = useState(1)
   const [selectedSize, setSelectedSize] = useState("medium")
@@ -80,6 +85,26 @@ export function CustomSolutions() {
   const [selectedThickness, setSelectedThickness] = useState("medium")
   const [selectedPrinting, setSelectedPrinting] = useState("none")
   const [customRequirements, setCustomRequirements] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [customSizeValue, setCustomSizeValue] = useState("")
+  const [customColorValue, setCustomColorValue] = useState("")
+  const [customThicknessValue, setCustomThicknessValue] = useState("")
+  const [formData, setFormData] = useState({
+    companyName: "",
+    contactName: "",
+    email: "",
+    phone: "",
+    quantity: "",
+    timeline: "standard",
+    logoFile: null,
+    printLocation: "center",
+    printOptions: {
+      qrCode: false,
+      serialNumbers: false,
+      embossed: false,
+    },
+    printNotes: "",
+  })
 
   const handleNextStep = () => {
     setActiveStep(Math.min(3, activeStep + 1))
@@ -87,6 +112,103 @@ export function CustomSolutions() {
 
   const handlePrevStep = () => {
     setActiveStep(Math.max(1, activeStep - 1))
+  }
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+
+    if (name.startsWith("printOptions.")) {
+      const optionName = name.split(".")[1]
+      setFormData({
+        ...formData,
+        printOptions: {
+          ...formData.printOptions,
+          [optionName]: checked,
+        },
+      })
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === "checkbox" ? checked : value,
+      })
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      // Get the current product
+      const product = customizableProducts.find((p) => p.id === activeTab)
+
+      // Prepare the order data
+      const orderData = {
+        company_name: formData.companyName,
+        contact_name: formData.contactName,
+        email: formData.email,
+        phone: formData.phone,
+        product_type: activeTab,
+        product_name: product.name,
+        size: selectedSize === "custom" ? customSizeValue : selectedSize,
+        color: selectedColor === "custom" ? customColorValue : selectedColor,
+        thickness: selectedThickness === "custom" ? customThicknessValue : selectedThickness,
+        printing_option: selectedPrinting,
+        quantity: Number.parseInt(formData.quantity) || 0,
+        timeline: formData.timeline,
+        print_location: selectedPrinting !== "none" ? formData.printLocation : null,
+        special_instructions: formData.printNotes,
+        additional_requirements: customRequirements,
+      }
+
+      // Submit the order
+      const result = await createCustomOrder(orderData)
+
+      if (result.success) {
+        toast({
+          title: "Custom Order Submitted",
+          description: "Thank you for your custom order request. We'll get back to you with a quote soon.",
+        })
+
+        // Reset form
+        setActiveStep(1)
+        setSelectedSize("medium")
+        setSelectedColor("natural")
+        setSelectedThickness("medium")
+        setSelectedPrinting("none")
+        setCustomRequirements("")
+        setFormData({
+          companyName: "",
+          contactName: "",
+          email: "",
+          phone: "",
+          quantity: "",
+          timeline: "standard",
+          logoFile: null,
+          printLocation: "center",
+          printOptions: {
+            qrCode: false,
+            serialNumbers: false,
+            embossed: false,
+          },
+          printNotes: "",
+        })
+
+        // Redirect to thank you page
+        router.push("/thank-you-custom-order")
+      } else {
+        throw new Error(result.error || "Failed to submit custom order")
+      }
+    } catch (error) {
+      console.error("Error submitting custom order:", error)
+      toast({
+        title: "Submission Failed",
+        description: error.message || "There was a problem submitting your custom order. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -235,6 +357,8 @@ export function CustomSolutions() {
                               <Label htmlFor="custom-size">Specify Custom Size</Label>
                               <Textarea
                                 id="custom-size"
+                                value={customSizeValue}
+                                onChange={(e) => setCustomSizeValue(e.target.value)}
                                 placeholder="Enter dimensions (width x height x depth in cm)"
                                 className="h-20"
                               />
@@ -265,7 +389,12 @@ export function CustomSolutions() {
                           {selectedColor === "custom" && (
                             <div className="mt-4 space-y-2">
                               <Label htmlFor="custom-color">Specify Custom Color</Label>
-                              <Input id="custom-color" placeholder="Enter color name or Pantone code" />
+                              <Input
+                                id="custom-color"
+                                value={customColorValue}
+                                onChange={(e) => setCustomColorValue(e.target.value)}
+                                placeholder="Enter color name or Pantone code"
+                              />
                             </div>
                           )}
                         </div>
@@ -291,7 +420,12 @@ export function CustomSolutions() {
                           {selectedThickness === "custom" && (
                             <div className="mt-4 space-y-2">
                               <Label htmlFor="custom-thickness">Specify Custom Thickness</Label>
-                              <Input id="custom-thickness" placeholder="Enter thickness in microns" />
+                              <Input
+                                id="custom-thickness"
+                                value={customThicknessValue}
+                                onChange={(e) => setCustomThicknessValue(e.target.value)}
+                                placeholder="Enter thickness in microns"
+                              />
                             </div>
                           )}
                         </div>
@@ -330,7 +464,17 @@ export function CustomSolutions() {
                             <div className="space-y-4">
                               <div>
                                 <Label htmlFor="logo-upload">Upload Your Logo</Label>
-                                <Input id="logo-upload" type="file" className="mt-1" />
+                                <Input
+                                  id="logo-upload"
+                                  type="file"
+                                  className="mt-1"
+                                  onChange={(e) =>
+                                    setFormData({
+                                      ...formData,
+                                      logoFile: e.target.files?.[0] || null,
+                                    })
+                                  }
+                                />
                                 <p className="text-xs text-gray-500 mt-1">
                                   Accepted formats: PNG, JPG, SVG. Max size: 5MB
                                 </p>
@@ -340,6 +484,9 @@ export function CustomSolutions() {
                                 <Label htmlFor="print-location">Print Location</Label>
                                 <select
                                   id="print-location"
+                                  name="printLocation"
+                                  value={formData.printLocation}
+                                  onChange={handleInputChange}
                                   className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md"
                                 >
                                   <option value="center">Center</option>
@@ -357,19 +504,58 @@ export function CustomSolutions() {
                                 <Label>Additional Printing Options</Label>
                                 <div className="space-y-2 mt-1">
                                   <div className="flex items-center space-x-2">
-                                    <Checkbox id="option-qr" aria-label="Include QR Code in printing" />
+                                    <Checkbox
+                                      id="option-qr"
+                                      name="printOptions.qrCode"
+                                      checked={formData.printOptions.qrCode}
+                                      onCheckedChange={(checked) =>
+                                        setFormData({
+                                          ...formData,
+                                          printOptions: {
+                                            ...formData.printOptions,
+                                            qrCode: !!checked,
+                                          },
+                                        })
+                                      }
+                                    />
                                     <label htmlFor="option-qr" className="text-sm">
                                       Include QR Code
                                     </label>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    <Checkbox id="option-serial" />
+                                    <Checkbox
+                                      id="option-serial"
+                                      name="printOptions.serialNumbers"
+                                      checked={formData.printOptions.serialNumbers}
+                                      onCheckedChange={(checked) =>
+                                        setFormData({
+                                          ...formData,
+                                          printOptions: {
+                                            ...formData.printOptions,
+                                            serialNumbers: !!checked,
+                                          },
+                                        })
+                                      }
+                                    />
                                     <label htmlFor="option-serial" className="text-sm">
                                       Add Serial Numbers
                                     </label>
                                   </div>
                                   <div className="flex items-center space-x-2">
-                                    <Checkbox id="option-emboss" />
+                                    <Checkbox
+                                      id="option-emboss"
+                                      name="printOptions.embossed"
+                                      checked={formData.printOptions.embossed}
+                                      onCheckedChange={(checked) =>
+                                        setFormData({
+                                          ...formData,
+                                          printOptions: {
+                                            ...formData.printOptions,
+                                            embossed: !!checked,
+                                          },
+                                        })
+                                      }
+                                    />
                                     <label htmlFor="option-emboss" className="text-sm">
                                       Embossed Effect
                                     </label>
@@ -381,6 +567,9 @@ export function CustomSolutions() {
                                 <Label htmlFor="print-notes">Special Instructions</Label>
                                 <Textarea
                                   id="print-notes"
+                                  name="printNotes"
+                                  value={formData.printNotes}
+                                  onChange={handleInputChange}
                                   placeholder="Any specific requirements for your printing"
                                   className="mt-1 h-20"
                                 />
@@ -401,7 +590,7 @@ export function CustomSolutions() {
                     )}
 
                     {activeStep === 3 && (
-                      <div className="space-y-6">
+                      <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="bg-green-50 p-4 rounded-md">
                           <h4 className="font-medium mb-2">Your Customization Summary</h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -411,16 +600,26 @@ export function CustomSolutions() {
                             </div>
                             <div>
                               <span className="font-medium block">Size:</span>
-                              <span>{customizationOptions.sizes.find((s) => s.value === selectedSize)?.label}</span>
+                              <span>
+                                {selectedSize === "custom"
+                                  ? customSizeValue
+                                  : customizationOptions.sizes.find((s) => s.value === selectedSize)?.label}
+                              </span>
                             </div>
                             <div>
                               <span className="font-medium block">Color:</span>
-                              <span>{customizationOptions.colors.find((c) => c.value === selectedColor)?.label}</span>
+                              <span>
+                                {selectedColor === "custom"
+                                  ? customColorValue
+                                  : customizationOptions.colors.find((c) => c.value === selectedColor)?.label}
+                              </span>
                             </div>
                             <div>
                               <span className="font-medium block">Thickness:</span>
                               <span>
-                                {customizationOptions.thickness.find((t) => t.value === selectedThickness)?.label}
+                                {selectedThickness === "custom"
+                                  ? customThicknessValue
+                                  : customizationOptions.thickness.find((t) => t.value === selectedThickness)?.label}
                               </span>
                             </div>
                             <div>
@@ -435,31 +634,74 @@ export function CustomSolutions() {
                         <div className="grid md:grid-cols-2 gap-6">
                           <div className="space-y-4">
                             <div>
-                              <Label htmlFor="company-name">Company Name</Label>
-                              <Input id="company-name" className="mt-1" />
+                              <Label htmlFor="company-name">Company Name*</Label>
+                              <Input
+                                id="company-name"
+                                name="companyName"
+                                value={formData.companyName}
+                                onChange={handleInputChange}
+                                className="mt-1"
+                                required
+                              />
                             </div>
                             <div>
-                              <Label htmlFor="contact-name">Contact Person</Label>
-                              <Input id="contact-name" className="mt-1" />
+                              <Label htmlFor="contact-name">Contact Person*</Label>
+                              <Input
+                                id="contact-name"
+                                name="contactName"
+                                value={formData.contactName}
+                                onChange={handleInputChange}
+                                className="mt-1"
+                                required
+                              />
                             </div>
                             <div>
-                              <Label htmlFor="email">Email Address</Label>
-                              <Input id="email" type="email" className="mt-1" />
+                              <Label htmlFor="email">Email Address*</Label>
+                              <Input
+                                id="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                type="email"
+                                className="mt-1"
+                                required
+                              />
                             </div>
                             <div>
                               <Label htmlFor="phone">Phone Number</Label>
-                              <Input id="phone" className="mt-1" />
+                              <Input
+                                id="phone"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleInputChange}
+                                className="mt-1"
+                              />
                             </div>
                           </div>
 
                           <div className="space-y-4">
                             <div>
-                              <Label htmlFor="quantity">Estimated Quantity</Label>
-                              <Input id="quantity" type="number" className="mt-1" />
+                              <Label htmlFor="quantity">Estimated Quantity*</Label>
+                              <Input
+                                id="quantity"
+                                name="quantity"
+                                value={formData.quantity}
+                                onChange={handleInputChange}
+                                type="number"
+                                className="mt-1"
+                                required
+                              />
                             </div>
                             <div>
-                              <Label htmlFor="timeline">Required Timeline</Label>
-                              <select id="timeline" className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
+                              <Label htmlFor="timeline">Required Timeline*</Label>
+                              <select
+                                id="timeline"
+                                name="timeline"
+                                value={formData.timeline}
+                                onChange={handleInputChange}
+                                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md"
+                                required
+                              >
                                 <option value="urgent">Urgent (1-2 weeks)</option>
                                 <option value="standard">Standard (3-4 weeks)</option>
                                 <option value="relaxed">Relaxed (5+ weeks)</option>
@@ -479,15 +721,24 @@ export function CustomSolutions() {
                         </div>
 
                         <div className="flex justify-between pt-4">
-                          <Button variant="outline" onClick={handlePrevStep}>
+                          <Button type="button" variant="outline" onClick={handlePrevStep}>
                             Back
                           </Button>
-                          <Button className="gap-2">
-                            <Send className="h-4 w-4" />
-                            Submit Request
+                          <Button type="submit" className="gap-2" disabled={isSubmitting}>
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                                Submitting...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4" />
+                                Submit Request
+                              </>
+                            )}
                           </Button>
                         </div>
-                      </div>
+                      </form>
                     )}
                   </div>
                 )}
@@ -513,9 +764,11 @@ export function CustomSolutions() {
                 <FileText className="h-4 w-4" />
                 Download Brochure
               </Button>
-              <Button className="gap-2">
-                <Send className="h-4 w-4" />
-                Contact for Consultation
+              <Button className="gap-2" asChild>
+                <a href="/contact">
+                  <Send className="h-4 w-4" />
+                  Contact for Consultation
+                </a>
               </Button>
             </div>
           </div>

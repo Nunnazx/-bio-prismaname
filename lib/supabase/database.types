@@ -9,7 +9,188 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
-      [_ in never]: never
+      products: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          features: string[] | null
+          specifications: Json | null
+          price: string | null
+          image_url: string | null
+          category: string | null
+          is_active: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          features?: string[] | null
+          specifications?: Json | null
+          price?: string | null
+          image_url?: string | null
+          category?: string | null
+          is_active?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          features?: string[] | null
+          specifications?: Json | null
+          price?: string | null
+          image_url?: string | null
+          category?: string | null
+          is_active?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          content: string | null
+          excerpt: string | null
+          author_id: string | null
+          category: string | null
+          tags: string[] | null
+          status: string | null
+          featured_image: string | null
+          seo_title: string | null
+          seo_description: string | null
+          seo_keywords: string | null
+          publish_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          content?: string | null
+          excerpt?: string | null
+          author_id?: string | null
+          category?: string | null
+          tags?: string[] | null
+          status?: string | null
+          featured_image?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          publish_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          content?: string | null
+          excerpt?: string | null
+          author_id?: string | null
+          category?: string | null
+          tags?: string[] | null
+          status?: string | null
+          featured_image?: string | null
+          seo_title?: string | null
+          seo_description?: string | null
+          seo_keywords?: string | null
+          publish_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      inquiries: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          company: string | null
+          phone: string | null
+          message: string
+          product_interest: string | null
+          status: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          company?: string | null
+          phone?: string | null
+          message: string
+          product_interest?: string | null
+          status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          company?: string | null
+          phone?: string | null
+          message?: string
+          product_interest?: string | null
+          status?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          first_name: string | null
+          last_name: string | null
+          avatar_url: string | null
+          company: string | null
+          position: string | null
+          phone: string | null
+          bio: string | null
+          role: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          first_name?: string | null
+          last_name?: string | null
+          avatar_url?: string | null
+          company?: string | null
+          position?: string | null
+          phone?: string | null
+          bio?: string | null
+          role?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string | null
+          last_name?: string | null
+          avatar_url?: string | null
+          company?: string | null
+          position?: string | null
+          phone?: string | null
+          bio?: string | null
+          role?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,9 +199,6 @@ export interface Database {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
       [_ in never]: never
     }
   }

@@ -131,7 +131,9 @@ export default async function ProductsPage({ params }: { params: { locale: strin
                             </div>
                           </CardContent>
                           <CardFooter className="flex gap-2">
-                            <Button className="w-full">Request Sample</Button>
+                            <Button className="w-full" asChild>
+                              <Link href={`/${params.locale}/contact`}>Request Sample</Link>
+                            </Button>
                           </CardFooter>
                         </Card>
                       )

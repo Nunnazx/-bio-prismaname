@@ -17,9 +17,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { getProducts } from "@/app/actions/products"
 
-// Mark this page as dynamic to prevent static generation errors with cookies
-export const dynamic = "force-dynamic"
-
 // Category display names
 const categoryNames = {
   granules: "Granules & Resins",

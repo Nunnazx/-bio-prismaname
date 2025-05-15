@@ -23,6 +23,11 @@ export function AdminSidebar() {
   const navigation = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { name: "Products", href: "/admin/products", icon: Package },
+    {
+      name: "Custom Orders",
+      href: "/admin/custom-orders",
+      icon: Package,
+    },
     { name: "Blog Posts", href: "/admin/blog", icon: FileText },
     { name: "Inquiries", href: "/admin/inquiries", icon: Mail },
     { name: "Users", href: "/admin/users", icon: Users },
