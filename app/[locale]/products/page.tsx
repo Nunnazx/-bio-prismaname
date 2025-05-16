@@ -4,11 +4,8 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { LanguageMeta } from "@/components/language-meta"
-import { OptimizedImage } from "@/components/optimized-image"
+import { ProductFilterClientWrapper } from "@/components/product-filter-client-wrapper"
 
 async function getProducts() {
   const supabase = createServerComponentClient({ cookies })
@@ -28,22 +25,6 @@ async function getProducts() {
 
 export default async function ProductsPage({ params }: { params: { locale: string } }) {
   const products = await getProducts()
-
-  // Group products by category
-  const productsByCategory = products.reduce(
-    (acc, product) => {
-      const category = product.category || "Other"
-      if (!acc[category]) {
-        acc[category] = []
-      }
-      acc[category].push(product)
-      return acc
-    },
-    {} as Record<string, any[]>,
-  )
-
-  // Get unique categories for tabs
-  const categories = Object.keys(productsByCategory)
 
   return (
     <>
@@ -79,74 +60,8 @@ export default async function ProductsPage({ params }: { params: { locale: strin
             </div>
           </div>
 
-          {categories.length > 0 ? (
-            <Tabs defaultValue={categories[0]} className="w-full">
-              <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${categories.length}, 1fr)` }}>
-                {categories.map((category) => (
-                  <TabsTrigger key={category} value={category}>
-                    {category}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-
-              {categories.map((category) => (
-                <TabsContent key={category} value={category} className="pt-6">
-                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {productsByCategory[category].map((product) => {
-                      // Parse features from JSONB
-                      const features = product.features?.features || []
-
-                      return (
-                        <Card key={product.id}>
-                          <CardHeader>
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle>{product.name}</CardTitle>
-                                <CardDescription>CODE: {product.code}</CardDescription>
-                              </div>
-                              <Badge className="bg-green-600">CPCB Certified</Badge>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="aspect-square overflow-hidden rounded-md mb-4 bg-gray-100 flex items-center justify-center">
-                              <OptimizedImage
-                                src={product.image_url || "/placeholder.svg?height=300&width=300&query=product"}
-                                alt={`${product.name} - ${product.description}`}
-                                width={300}
-                                height={300}
-                                className="object-cover"
-                              />
-                            </div>
-                            <div className="space-y-2">
-                              <h3 className="font-medium">Properties:</h3>
-                              <ul className="list-disc pl-5 space-y-1">
-                                {features.slice(0, 5).map((feature, index) => (
-                                  <li key={index}>{feature}</li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div className="mt-4 flex items-center gap-2 text-green-700 text-sm">
-                              <Leaf className="h-4 w-4" />
-                              <span>100% Biodegradable & Non-toxic</span>
-                            </div>
-                          </CardContent>
-                          <CardFooter className="flex gap-2">
-                            <Button className="w-full" asChild>
-                              <Link href={`/${params.locale}/contact`}>Request Sample</Link>
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      )
-                    })}
-                  </div>
-                </TabsContent>
-              ))}
-            </Tabs>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">No products found. Please add products through the admin dashboard.</p>
-            </div>
-          )}
+          {/* Product Filtering and Display */}
+          <ProductFilterClientWrapper products={products} locale={params.locale} />
 
           <div className="mt-12 p-6 bg-gray-50 rounded-lg">
             <div className="flex flex-col md:flex-row gap-6 items-center">

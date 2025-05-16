@@ -1,5 +1,8 @@
+"use client"
+
 import Image from "next/image"
 import { cn } from "@/lib/utils"
+import { useState } from "react"
 
 interface OptimizedImageProps {
   src: string
@@ -22,14 +25,18 @@ export function OptimizedImage({
   className,
   sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
 }: OptimizedImageProps) {
-  // Handle placeholder images
-  const isPlaceholder = src.startsWith("/placeholder.svg")
+  const [isError, setIsError] = useState(false)
 
-  // Handle missing images by providing a fallback
-  const imageSrc = src || "/colorful-abstract-flow.png"
+  // Handle errors and provide fallbacks
+  const handleError = () => {
+    setIsError(true)
+  }
+
+  // Use fallback image if original source fails
+  const imageSrc = isError ? "/abstract-colorful-swirls.png" : src || "/abstract-colorful-swirls.png"
 
   // Ensure alt text is always provided
-  const imageAlt = alt || "Product image"
+  const imageAlt = alt || "Image"
 
   return (
     <div className={cn("relative overflow-hidden", fill ? "w-full h-full" : "", className)}>
@@ -41,6 +48,8 @@ export function OptimizedImage({
           priority={priority}
           sizes={sizes}
           className={cn("object-cover", className)}
+          onError={handleError}
+          unoptimized={imageSrc.includes("placeholder.svg")}
         />
       ) : (
         <Image
@@ -51,6 +60,8 @@ export function OptimizedImage({
           priority={priority}
           sizes={sizes}
           className={cn(className)}
+          onError={handleError}
+          unoptimized={imageSrc.includes("placeholder.svg")}
         />
       )}
     </div>

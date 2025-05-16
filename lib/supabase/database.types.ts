@@ -47,6 +47,38 @@ export interface Database {
           updated_at?: string
         }
       }
+      product_images: {
+        Row: {
+          id: string
+          product_id: string
+          image_url: string
+          alt_text: string | null
+          is_primary: boolean
+          display_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          image_url: string
+          alt_text?: string | null
+          is_primary?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          image_url?: string
+          alt_text?: string | null
+          is_primary?: boolean
+          display_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
       blog_posts: {
         Row: {
           id: string
@@ -459,6 +491,99 @@ export interface Database {
           quote_amount?: number | null
           quote_date?: string | null
           notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      reviews: {
+        Row: {
+          id: string
+          product_id: string
+          user_id: string | null
+          name: string
+          email: string
+          rating: number
+          title: string
+          content: string
+          status: string
+          is_verified_purchase: boolean
+          helpful_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          user_id?: string | null
+          name: string
+          email: string
+          rating: number
+          title: string
+          content: string
+          status?: string
+          is_verified_purchase?: boolean
+          helpful_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          user_id?: string | null
+          name?: string
+          email?: string
+          rating?: number
+          title?: string
+          content?: string
+          status?: string
+          is_verified_purchase?: boolean
+          helpful_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      review_images: {
+        Row: {
+          id: string
+          review_id: string
+          image_url: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          review_id: string
+          image_url: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          review_id?: string
+          image_url?: string
+          created_at?: string
+        }
+      }
+      review_responses: {
+        Row: {
+          id: string
+          review_id: string
+          admin_id: string | null
+          content: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          review_id: string
+          admin_id?: string | null
+          content: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          review_id?: string
+          admin_id?: string | null
+          content?: string
           created_at?: string
           updated_at?: string
         }

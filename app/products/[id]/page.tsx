@@ -5,14 +5,21 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { OptimizedImage } from "@/components/optimized-image"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProductMediaGallery } from "@/components/product-media-gallery"
+import { ProductReviews } from "@/components/product-reviews"
 
 async function getProduct(id: string) {
   const supabase = createServerComponentClient({ cookies })
 
-  const { data: product, error } = await supabase.from("products").select("*").eq("id", id).single()
+  const { data: product, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      product_images(*)
+    `)
+    .eq("id", id)
+    .single()
 
   if (error || !product) {
     console.error("Error fetching product:", error)
@@ -33,6 +40,9 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
   const features = product.features?.features || []
   const specifications = product.specifications || {}
 
+  // Get 3D model URL if available
+  const modelUrl = product.model_url || null
+
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="flex flex-col gap-8">
@@ -46,26 +56,8 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
         </div>
 
         <div className="grid md:grid-cols-2 gap-12">
-          {/* Product Image */}
-          <div className="flex flex-col gap-6">
-            <div className="aspect-square overflow-hidden rounded-lg border bg-gray-100 flex items-center justify-center">
-              <OptimizedImage
-                src={product.image_url || "/placeholder.svg?height=600&width=600&query=product"}
-                alt={product.name}
-                width={600}
-                height={600}
-                className="object-cover"
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Badge className="bg-green-600">CPCB Certified</Badge>
-              <div className="flex items-center gap-2 text-green-700 text-sm">
-                <Leaf className="h-4 w-4" />
-                <span>100% Biodegradable</span>
-              </div>
-            </div>
-          </div>
+          {/* Product Media Gallery */}
+          <ProductMediaGallery images={product.product_images || []} productName={product.name} modelUrl={modelUrl} />
 
           {/* Product Details */}
           <div className="flex flex-col gap-6">
@@ -209,6 +201,11 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-12">
+          <ProductReviews productId={product.id} productName={product.name} />
         </div>
       </div>
     </div>
