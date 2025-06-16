@@ -588,6 +588,38 @@ export interface Database {
           updated_at?: string
         }
       }
+      newsletter_subscriptions: {
+        Row: {
+          id: string
+          email: string
+          is_subscribed: boolean
+          subscribed_at: string
+          unsubscribed_at: string | null
+          source: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          email: string
+          is_subscribed?: boolean
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          source?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          is_subscribed?: boolean
+          subscribed_at?: string
+          unsubscribed_at?: string | null
+          source?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 }

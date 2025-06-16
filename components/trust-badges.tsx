@@ -15,7 +15,7 @@ export function TrustBadges() {
           <div className="flex flex-col items-center text-center">
             <div className="bg-white p-3 rounded-full shadow-sm mb-2">
               <OptimizedImage
-                src="/cpcb-logo.png"
+                src="/images/logos/cpcb-logo.png"
                 alt="CPCB Certification"
                 width={60}
                 height={60}
@@ -30,7 +30,7 @@ export function TrustBadges() {
           <div className="flex flex-col items-center text-center">
             <div className="bg-white p-3 rounded-full shadow-sm mb-2">
               <OptimizedImage
-                src="/iso-logo.png"
+                src="/images/logos/iso-logo.png"
                 alt="ISO 17088:2021"
                 width={60}
                 height={60}
@@ -45,7 +45,7 @@ export function TrustBadges() {
           <div className="flex flex-col items-center text-center">
             <div className="bg-white p-3 rounded-full shadow-sm mb-2">
               <OptimizedImage
-                src="/cipet-logo.png"
+                src="/images/logos/cipet-logo.png"
                 alt="CIPET Tested"
                 width={60}
                 height={60}
@@ -60,7 +60,7 @@ export function TrustBadges() {
           <div className="flex flex-col items-center text-center">
             <div className="bg-white p-3 rounded-full shadow-sm mb-2">
               <OptimizedImage
-                src="/msme-logo.png"
+                src="/images/logos/msme-logo.png"
                 alt="MSME ZED Bronze"
                 width={60}
                 height={60}
@@ -75,7 +75,7 @@ export function TrustBadges() {
           <div className="flex flex-col items-center text-center">
             <div className="bg-white p-3 rounded-full shadow-sm mb-2">
               <OptimizedImage
-                src="/pwm-logo.png"
+                src="/images/logos/pwm-logo.png"
                 alt="PWM Compliant"
                 width={60}
                 height={60}

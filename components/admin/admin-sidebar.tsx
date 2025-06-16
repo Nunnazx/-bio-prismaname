@@ -15,6 +15,7 @@ import {
   Shield,
   Users,
   Star,
+  MailCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -30,6 +31,7 @@ export function AdminSidebar() {
       icon: Package,
     },
     { name: "Reviews", href: "/admin/reviews", icon: Star },
+    { name: "Newsletter", href: "/admin/newsletter", icon: MailCheck },
     { name: "Blog Posts", href: "/admin/blog", icon: FileText },
     { name: "Inquiries", href: "/admin/inquiries", icon: Mail },
     { name: "Users", href: "/admin/users", icon: Users },
