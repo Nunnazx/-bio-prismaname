@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic"
-import { getBlogPosts } from "@/app/actions/blog" // Fetch posts from the database
+import { getBlogPosts } from "@/app/actions/blog"
 import {
   ArrowLeft,
   Calendar,
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { format } from "date-fns"
+import { PostCardActions } from "@/components/blog/post-card-actions" // Import the new component
 
 // Helper function to calculate read time
 function calculateReadTime(content: string | null): string {
@@ -38,7 +39,6 @@ function formatDate(dateString: string | null): string {
   return format(new Date(dateString), "MMMM d, yyyy")
 }
 
-// Categories and tags can be fetched dynamically later
 const categories = [
   { name: "Sustainability", count: 12, slug: "sustainability" },
   { name: "Education", count: 8, slug: "education" },
@@ -84,12 +84,8 @@ export default async function BlogPage() {
   const featuredPost = publishedPosts[0]
   const regularPosts = publishedPosts.slice(1)
 
-  // Determine author name (simplified for now)
   const getAuthorName = (authorId: string | null | undefined): string => {
-    // In a real app, you'd fetch author details from `profiles`
-    // For now, if there's an author_id, assume it's an admin or specific author
-    // This logic should be enhanced to fetch actual author names
-    if (authorId) return "AICMT Admin" // Placeholder
+    if (authorId) return "AICMT Admin"
     return "AICMT Team"
   }
 
@@ -113,13 +109,12 @@ export default async function BlogPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {/* Main content - Blog posts */}
           <div className="md:col-span-2">
             <div className="grid gap-8">
               {/* Featured post */}
               <Card className="overflow-hidden">
                 {featuredPost.featured_image ? (
-                  <div className="relative aspect-video w-full">
+                  <Link href={`/blog/${featuredPost.slug}`} className="block relative aspect-video w-full">
                     <Image
                       src={featuredPost.featured_image || "/placeholder.svg"}
                       alt={featuredPost.title}
@@ -128,11 +123,14 @@ export default async function BlogPage() {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       priority
                     />
-                  </div>
+                  </Link>
                 ) : (
-                  <div className="aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                  <Link
+                    href={`/blog/${featuredPost.slug}`}
+                    className="block aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
+                  >
                     <Newspaper className="h-16 w-16 text-gray-300 dark:text-gray-600" />
-                  </div>
+                  </Link>
                 )}
                 <CardHeader>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2 flex-wrap">
@@ -151,13 +149,7 @@ export default async function BlogPage() {
                   <CardDescription>{featuredPost.excerpt}</CardDescription>
                 </CardHeader>
                 <CardFooter>
-                  <div className="flex flex-wrap gap-2">
-                    {featuredPost.tags?.map((tag, index) => (
-                      <Badge key={index} variant="outline" className="bg-green-50 hover:bg-green-100 transition-colors">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
+                  <PostCardActions slug={featuredPost.slug} title={featuredPost.title} />
                 </CardFooter>
               </Card>
 
@@ -166,7 +158,7 @@ export default async function BlogPage() {
                 {regularPosts.map((post) => (
                   <Card key={post.id} className="overflow-hidden flex flex-col">
                     {post.featured_image ? (
-                      <div className="relative aspect-video w-full">
+                      <Link href={`/blog/${post.slug}`} className="block relative aspect-video w-full">
                         <Image
                           src={post.featured_image || "/placeholder.svg"}
                           alt={post.title}
@@ -174,11 +166,14 @@ export default async function BlogPage() {
                           className="object-cover"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
-                      </div>
+                      </Link>
                     ) : (
-                      <div className="aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <Link
+                        href={`/blog/${post.slug}`}
+                        className="block aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
+                      >
                         <Newspaper className="h-12 w-12 text-gray-300 dark:text-gray-600" />
-                      </div>
+                      </Link>
                     )}
                     <CardHeader className="flex-grow">
                       <div className="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
@@ -187,9 +182,6 @@ export default async function BlogPage() {
                         <Separator orientation="vertical" className="h-3.5" />
                         <Clock className="h-3.5 w-3.5" />
                         <span>{calculateReadTime(post.content)}</span>
-                        {/* <Separator orientation="vertical" className="h-3.5" />
-                        <User className="h-3.5 w-3.5" />
-                        <span>{getAuthorName(post.author_id)}</span> */}
                       </div>
                       <CardTitle className="text-lg">
                         <Link href={`/blog/${post.slug}`}>{post.title}</Link>
@@ -197,11 +189,7 @@ export default async function BlogPage() {
                       <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
                     </CardHeader>
                     <CardFooter>
-                      <Link href={`/blog/${post.slug}`}>
-                        <Button variant="outline" size="sm">
-                          Read More
-                        </Button>
-                      </Link>
+                      <PostCardActions slug={post.slug} title={post.title} />
                     </CardFooter>
                   </Card>
                 ))}

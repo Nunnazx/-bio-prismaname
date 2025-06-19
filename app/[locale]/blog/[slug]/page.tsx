@@ -49,11 +49,13 @@ async function getRelatedPosts(currentPostId: string, tags: string[], limit = 3)
   if (posts.length < limit) {
     const neededPosts = limit - posts.length
     const existingIds = [currentPostId, ...posts.map((p) => p.id)]
+    // PostgREST needs the list formatted like '(id1,id2,...)'
+    const idsFilter = `(${existingIds.map((id) => `"${id}"`).join(",")})`
 
     const { data: recentPosts, error: recentError } = await supabase
       .from("blog_posts")
       .select("id, title, slug, featured_image")
-      .not("id", "in", existingIds)
+      .not("id", "in", idsFilter)
       .eq("status", "published")
       .order("publish_date", { ascending: false })
       .limit(neededPosts)
