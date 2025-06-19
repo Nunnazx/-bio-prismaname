@@ -9,6 +9,7 @@ const BlogPostSchema = z.object({
   slug: z.string().optional(), // Or .regex(/^[a-z0-9-]+$/, "Invalid slug format") if you have specific rules
   content: z.string().optional(),
   author_id: z.string().uuid().optional().nullable(),
+  category: z.string().optional().nullable(),
   featured_image: z.string().url().optional().nullable(),
   excerpt: z.string().optional().nullable(),
   tags: z.array(z.string()).optional().nullable(),
@@ -16,6 +17,7 @@ const BlogPostSchema = z.object({
   seo_title: z.string().optional().nullable(),
   seo_description: z.string().optional().nullable(),
   seo_keywords: z.array(z.string()).optional().nullable(), // Changed to array of strings
+  published_at: z.string().datetime({ offset: true }).optional().nullable(), // Changed from publish_date
   // id and created_at/updated_at are usually handled by the DB or later in the logic
 })
 
@@ -26,9 +28,9 @@ export async function getBlogPosts() {
     .from("blog_posts")
     .select(
       `
-      *,
-      author:profiles ( full_name )
-    `,
+*,
+author:profiles ( full_name )
+`,
     )
     .order("publish_date", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
@@ -48,9 +50,9 @@ export async function getBlogPost(id: string) {
     .from("blog_posts")
     .select(
       `
-      *,
-      author:profiles ( full_name, avatar_url )
-    `,
+*,
+author:profiles ( full_name, avatar_url )
+`,
     )
     .eq("id", id)
     .single()
@@ -70,9 +72,9 @@ export async function getBlogPostBySlug(slug: string) {
     .from("blog_posts")
     .select(
       `
-      *,
-      author:profiles ( full_name, avatar_url )
-    `,
+*,
+author:profiles ( full_name, avatar_url )
+`,
     )
     .eq("slug", slug)
     .single()

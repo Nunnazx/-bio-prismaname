@@ -1,6 +1,18 @@
 "use client"
 
-import { ArrowLeft, Calendar, Clock, Tag, User, Facebook, Twitter, Linkedin } from "lucide-react"
+import {
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Tag,
+  User,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Instagram,
+  MessageCircle,
+  LinkIcon,
+} from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useState } from "react"
@@ -11,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useToast } from "@/components/ui/use-toast"
 
 // This should be fetched dynamically in a real app
 const relatedPosts = [
@@ -37,6 +50,7 @@ type BlogPostClientProps = {
 
 export default function BlogPostClient({ params, blogPost }: BlogPostClientProps) {
   const [currentURL, setCurrentURL] = useState("")
+  const { toast } = useToast()
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -51,6 +65,16 @@ export default function BlogPostClient({ params, blogPost }: BlogPostClientProps
   const readTime = `${Math.ceil(numberOfWords / wordsPerMinute)} min read`
 
   const author = Array.isArray(blogPost.author) ? null : blogPost.author
+
+  const handleCopyLink = () => {
+    if (currentURL) {
+      navigator.clipboard.writeText(currentURL)
+      toast({
+        title: "Link Copied!",
+        description: "The article link has been copied to your clipboard.",
+      })
+    }
+  }
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -137,27 +161,27 @@ export default function BlogPostClient({ params, blogPost }: BlogPostClientProps
             </div>
           )}
 
-          <div className="mt-8 flex items-center gap-4">
-            <span className="font-medium">Share this article:</span>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="rounded-full" asChild>
-                <Link
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentURL)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Facebook className="h-4 w-4" />
-                  <span className="sr-only">Share on Facebook</span>
-                </Link>
-              </Button>
+          <div className="mt-10 pt-6 border-t">
+            <h3 className="text-lg font-semibold mb-3">Share this Article</h3>
+            <div className="flex flex-wrap gap-3 items-center">
               <Button variant="outline" size="icon" className="rounded-full" asChild>
                 <Link
                   href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentURL)}&text=${encodeURIComponent(blogPost.title)}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Share on Twitter"
                 >
-                  <Twitter className="h-4 w-4" />
-                  <span className="sr-only">Share on Twitter</span>
+                  <Twitter className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="icon" className="rounded-full" asChild>
+                <Link
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentURL)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on Facebook"
+                >
+                  <Facebook className="h-5 w-5" />
                 </Link>
               </Button>
               <Button variant="outline" size="icon" className="rounded-full" asChild>
@@ -165,10 +189,38 @@ export default function BlogPostClient({ params, blogPost }: BlogPostClientProps
                   href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(currentURL)}&title=${encodeURIComponent(blogPost.title)}&summary=${encodeURIComponent(blogPost.excerpt || "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label="Share on LinkedIn"
                 >
-                  <Linkedin className="h-4 w-4" />
-                  <span className="sr-only">Share on LinkedIn</span>
+                  <Linkedin className="h-5 w-5" />
                 </Link>
+              </Button>
+              <Button variant="outline" size="icon" className="rounded-full" asChild>
+                <Link
+                  href={`https://wa.me/?text=${encodeURIComponent(blogPost.title + " " + currentURL)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Share on WhatsApp"
+                >
+                  <MessageCircle className="h-5 w-5" /> {/* Using MessageCircle for WhatsApp */}
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                onClick={handleCopyLink}
+                aria-label="Copy link to share on Instagram or elsewhere"
+              >
+                <Instagram className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full"
+                onClick={handleCopyLink}
+                aria-label="Copy article link"
+              >
+                <LinkIcon className="h-5 w-5" />
               </Button>
             </div>
           </div>

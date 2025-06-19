@@ -37,7 +37,7 @@ async function getRelatedPosts(currentPostId: string, tags: string[], limit = 3)
     .select("id, title, slug, featured_image")
     .neq("id", currentPostId)
     .eq("status", "published")
-    .in("tags", tags)
+    .overlaps("tags", tags) // fetch posts that share at least one tag
     .limit(limit)
 
   if (error) {

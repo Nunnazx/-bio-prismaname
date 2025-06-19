@@ -1,5 +1,11 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
+// Define the ENUM type for post_status_enum
+export type BlogPostStatus = "draft" | "published" | "archived"
+
+// Define the ENUM type for research post status
+export type PostStatusEnum = "draft" | "published" | "archived"
+
 export interface Database {
   public: {
     Tables: {
@@ -89,7 +95,7 @@ export interface Database {
           author_id: string | null
           category: string | null
           tags: string[] | null
-          status: string
+          status: BlogPostStatus | null
           featured_image: string | null
           seo_title: string | null
           seo_description: string | null
@@ -107,11 +113,11 @@ export interface Database {
           author_id?: string | null
           category?: string | null
           tags?: string[] | null
-          status?: string
+          status?: BlogPostStatus | null
           featured_image?: string | null
           seo_title?: string | null
           seo_description?: string | null
-          seo_keywords: string[] | null
+          seo_keywords?: string[] | null
           publish_date?: string | null
           created_at?: string
           updated_at?: string
@@ -125,7 +131,7 @@ export interface Database {
           author_id?: string | null
           category?: string | null
           tags?: string[] | null
-          status?: string
+          status?: BlogPostStatus | null
           featured_image?: string | null
           seo_title?: string | null
           seo_description?: string | null
@@ -620,6 +626,113 @@ export interface Database {
           updated_at?: string
         }
       }
+      // New Tables for Innovation Hub / Research
+      categories: {
+        Row: {
+          id: number // bigserial maps to number
+          name: string
+          slug: string
+          description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          slug: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          slug?: string
+          description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      tags: {
+        Row: {
+          id: number // bigserial maps to number
+          name: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          created_at?: string
+        }
+      }
+      research_posts: {
+        Row: {
+          id: string // uuid
+          created_at: string
+          updated_at: string
+          title: string
+          slug: string
+          content: Json | null // Assuming jsonb for block editor, or string for Markdown
+          excerpt: string | null
+          featured_image_url: string | null
+          status: PostStatusEnum // Using the defined ENUM type
+          author_id: string | null // uuid, FK to profiles.id
+          category_id: number | null // FK to categories.id
+          published_at: string | null
+        }
+        Insert: {
+          id?: string // uuid
+          created_at?: string
+          updated_at?: string
+          title: string
+          slug: string
+          content?: Json | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          status?: PostStatusEnum
+          author_id?: string | null
+          category_id?: number | null
+          published_at?: string | null
+        }
+        Update: {
+          id?: string // uuid
+          created_at?: string
+          updated_at?: string
+          title?: string
+          slug?: string
+          content?: Json | null
+          excerpt?: string | null
+          featured_image_url?: string | null
+          status?: PostStatusEnum
+          author_id?: string | null
+          category_id?: number | null
+          published_at?: string | null
+        }
+      }
+      research_post_tags: {
+        Row: {
+          post_id: string // uuid, FK to research_posts.id
+          tag_id: number // FK to tags.id
+        }
+        Insert: {
+          post_id: string
+          tag_id: number
+        }
+        Update: {
+          post_id?: string
+          tag_id?: number
+        }
+      }
+    }
+    // ... Enums, Functions, etc. ...
+    Enums: {
+      post_status_enum: BlogPostStatus // Ensure this matches your DB enum name
+      post_status_enum_research: PostStatusEnum
     }
   }
 }
