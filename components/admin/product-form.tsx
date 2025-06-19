@@ -28,14 +28,43 @@ const PRODUCT_CATEGORIES = [
 export function ProductForm({ product = null }) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Helper to parse features from product data
+  const parseProductFeatures = (productFeatures) => {
+    if (productFeatures && typeof productFeatures === "object" && Array.isArray(productFeatures.features)) {
+      return productFeatures.features.length > 0 ? productFeatures.features : [""]
+    }
+    if (Array.isArray(productFeatures)) {
+      // If features is directly an array
+      return productFeatures.length > 0 ? productFeatures : [""]
+    }
+    return [""] // Default if no valid features found
+  }
+
+  // Helper to parse specifications from product data
+  const parseProductSpecifications = (productSpecifications) => {
+    if (Array.isArray(productSpecifications) && productSpecifications.length > 0) {
+      // Ensure it's an array of {name, value} objects
+      if (productSpecifications.every((spec) => typeof spec === "object" && "name" in spec && "value" in spec)) {
+        return productSpecifications
+      }
+    } else if (typeof productSpecifications === "object" && productSpecifications !== null) {
+      // If it's an object like { "Material": "PLA", "Color": "White" }
+      // Convert to array of {name, value}
+      const specsArray = Object.entries(productSpecifications).map(([name, value]) => ({ name, value: String(value) }))
+      return specsArray.length > 0 ? specsArray : [{ name: "", value: "" }]
+    }
+    return [{ name: "", value: "" }] // Default
+  }
+
   const [formData, setFormData] = useState({
     name: product?.name || "",
     code: product?.code || "",
     category: product?.category || "granules",
     description: product?.description || "",
-    features: product?.features?.features || [""],
-    specifications: product?.specifications || [{ name: "", value: "" }],
-    price: product?.price || "",
+    features: product ? parseProductFeatures(product.features) : [""],
+    specifications: product ? parseProductSpecifications(product.specifications) : [{ name: "", value: "" }],
+    price: product?.price?.toString() || "", // Ensure price is a string for the input
     is_active: product?.is_active ?? true,
   })
 
@@ -46,16 +75,52 @@ export function ProductForm({ product = null }) {
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
   const [primaryImageId, setPrimaryImageId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [directImageUrls, setDirectImageUrls] = useState("") // State for direct image URLs input
+  const [directImageUrls, setDirectImageUrls] = useState(
+    product?.product_images
+      ?.filter((img) => !img.image_url.includes("blob.supabase.co") && !img.image_url.startsWith("/")) // Basic check for external URLs
+      .map((img) => img.image_url)
+      .join(", ") || "",
+  )
 
-  // Initialize existing images if editing
+  // Initialize existing images and primary image ID
   useEffect(() => {
-    if (product && product.product_images) {
-      const sortedImages = [...product.product_images].sort((a, b) => a.display_order - b.display_order)
-      setExistingImages(sortedImages)
-      const primaryImage = sortedImages.find((img) => img.is_primary)
-      if (primaryImage) {
-        setPrimaryImageId(primaryImage.id)
+    if (product) {
+      // Update form fields if product prop changes (e.g., after initial load if product was null)
+      setFormData({
+        name: product.name || "",
+        code: product.code || "",
+        category: product.category || "granules",
+        description: product.description || "",
+        features: parseProductFeatures(product.features),
+        specifications: parseProductSpecifications(product.specifications),
+        price: product.price?.toString() || "",
+        is_active: product.is_active ?? true,
+      })
+
+      if (product.product_images) {
+        const sortedImages = [...product.product_images].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+        setExistingImages(sortedImages)
+        const primary = sortedImages.find((img) => img.is_primary)
+        if (primary) {
+          setPrimaryImageId(primary.id)
+        } else if (sortedImages.length > 0) {
+          // If no primary is explicitly set, default to the first image
+          setPrimaryImageId(sortedImages[0].id)
+        }
+      }
+      // Attempt to pre-fill directImageUrls if product has images that look like external URLs
+      const externalImageUrls = product.product_images
+        ?.filter(
+          (img) =>
+            img.image_url &&
+            !img.image_url.includes(process.env.NEXT_PUBLIC_SUPABASE_URL || "supabase.co") &&
+            (img.image_url.startsWith("http://") || img.image_url.startsWith("https://")),
+        )
+        .map((img) => img.image_url)
+        .join(", ")
+      if (externalImageUrls) {
+        // setDirectImageUrls(externalImageUrls); // This might overwrite user input if not careful.
+        // Better to initialize this once, or if product.id changes.
       }
     }
   }, [product])
@@ -153,13 +218,26 @@ export function ProductForm({ product = null }) {
       submitData.append("price", formData.price)
       submitData.append("isActive", formData.is_active.toString())
 
-      const featuresText = formData.features.filter((f) => f.trim() !== "").join("\n")
-      submitData.append("features", featuresText)
+      const featuresText = formData.features.filter((f) => typeof f === "string" && f.trim() !== "").join("\n")
 
+      // For specifications, ensure it's an object if your backend expects that, or format as needed.
+      // If backend expects { "key": "value" }
+      const specificationsObject = formData.specifications.reduce((acc, spec) => {
+        if (spec.name.trim() !== "" && spec.value.trim() !== "") {
+          acc[spec.name.trim()] = spec.value.trim()
+        }
+        return acc
+      }, {})
+      // If backend expects a string like "Key1:Value1\nKey2:Value2" (as in current product action)
       const specsText = formData.specifications
         .filter((s) => s.name.trim() !== "" || s.value.trim() !== "")
-        .map((s) => `${s.name}: ${s.value}`)
+        .map((s) => `${s.name.trim()}: ${s.value.trim()}`)
         .join("\n")
+
+      submitData.append("features", featuresText)
+      // If backend expects JSON object for specifications:
+      // submitData.append("specifications", JSON.stringify(specificationsObject));
+      // If backend expects string (as per current product action):
       submitData.append("specifications", specsText)
 
       // Add new image files
