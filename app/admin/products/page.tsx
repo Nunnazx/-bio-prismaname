@@ -27,7 +27,21 @@ const categoryNames = {
 }
 
 export default async function ProductsPage() {
-  const products = await getProducts()
+  const { products, error } = await getProducts()
+
+  if (error) {
+    return (
+      <div className="container px-4 py-12 md:px-6 md:py-24">
+        <div className="flex flex-col items-center justify-center gap-4 text-center">
+          <h2 className="text-2xl font-bold">Error Loading Products</h2>
+          <p className="text-red-500">{error}</p>
+          <Link href="/admin/dashboard">
+            <Button>Return to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -122,7 +136,7 @@ export default async function ProductsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {products.map((product) => (
+                  {(products || []).map((product) => (
                     <TableRow key={product.id}>
                       <TableCell>
                         <Checkbox />
