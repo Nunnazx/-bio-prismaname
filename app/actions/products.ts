@@ -73,6 +73,15 @@ export async function createProduct(formData: FormData) {
     const price = formData.get("price") as string
     const isActive = formData.get("isActive") === "true"
 
+    // Get image URLs from text input
+    const imageUrlsInput = formData.get("imageUrls") as string // e.g., comma-separated URLs from a text input
+    const directImageUrls = imageUrlsInput
+      ? imageUrlsInput
+          .split(",")
+          .map((url) => url.trim())
+          .filter(Boolean)
+      : []
+
     // Parse features
     const featuresString = formData.get("features") as string
     const features = featuresString
@@ -115,39 +124,65 @@ export async function createProduct(formData: FormData) {
     }
 
     // Handle images
-    const images = formData.getAll("images") as File[]
-    if (images && images.length > 0 && images[0].size > 0) {
-      for (let i = 0; i < images.length; i++) {
-        const image = images[i]
+    const uploadedImages = formData.getAll("images") as File[]
+    let imageCounter = 0
+    const imageRecords = []
+
+    // Process uploaded files
+    if (uploadedImages && uploadedImages.length > 0 && uploadedImages[0].size > 0) {
+      for (const image of uploadedImages) {
         const fileName = `${Date.now()}-${image.name}`
         const filePath = `products/${product.id}/${fileName}`
 
-        // Upload image to storage
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from("product-images")
-          .upload(filePath, image)
+        const { error: uploadError } = await supabase.storage.from("product-images").upload(filePath, image)
 
         if (uploadError) {
-          console.error("Error uploading image:", uploadError)
-          continue
+          console.error("Error uploading image file:", uploadError)
+          continue // Skip this image
         }
 
-        // Get public URL
         const { data: publicUrlData } = supabase.storage.from("product-images").getPublicUrl(filePath)
 
-        // Insert image record
-        await supabase.from("product_images").insert({
+        imageRecords.push({
           product_id: product.id,
           image_url: publicUrlData.publicUrl,
-          alt_text: name,
-          is_primary: i === 0, // First image is primary
-          display_order: i,
+          alt_text: name, // Product name as alt text
+          is_primary: imageCounter === 0,
+          display_order: imageCounter,
         })
+        imageCounter++
+      }
+    }
 
-        // If this is the first image, also update the product's image_url for backward compatibility
-        if (i === 0) {
-          await supabase.from("products").update({ image_url: publicUrlData.publicUrl }).eq("id", product.id)
-        }
+    // Process direct image URLs
+    for (const url of directImageUrls) {
+      // Basic URL validation (you might want a more robust one)
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        imageRecords.push({
+          product_id: product.id,
+          image_url: url,
+          alt_text: name, // Product name as alt text
+          is_primary: imageCounter === 0, // Only primary if no files were uploaded
+          display_order: imageCounter,
+        })
+        imageCounter++
+      } else {
+        console.warn(`Invalid URL skipped: ${url}`)
+      }
+    }
+
+    // Batch insert image records if any
+    if (imageRecords.length > 0) {
+      const { error: imageInsertError } = await supabase.from("product_images").insert(imageRecords)
+
+      if (imageInsertError) {
+        console.error("Error inserting image records:", imageInsertError)
+        // Potentially return an error or handle partial success
+      }
+
+      // If the first image (overall) was a direct URL or an uploaded file, update product's main image_url
+      if (imageRecords[0]) {
+        await supabase.from("products").update({ image_url: imageRecords[0].image_url }).eq("id", product.id)
       }
     }
 

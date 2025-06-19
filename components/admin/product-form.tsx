@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Plus, Trash, Star, StarOff, GripVertical } from "lucide-react"
+import { Loader2, Plus, Trash, Star, StarOff, GripVertical, LinkIcon } from "lucide-react" // Added LinkIcon
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
 
 import { Button } from "@/components/ui/button"
@@ -46,15 +46,13 @@ export function ProductForm({ product = null }) {
   const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
   const [primaryImageId, setPrimaryImageId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [directImageUrls, setDirectImageUrls] = useState("") // State for direct image URLs input
 
   // Initialize existing images if editing
   useEffect(() => {
     if (product && product.product_images) {
-      // Sort images by display order
       const sortedImages = [...product.product_images].sort((a, b) => a.display_order - b.display_order)
       setExistingImages(sortedImages)
-
-      // Set primary image
       const primaryImage = sortedImages.find((img) => img.is_primary)
       if (primaryImage) {
         setPrimaryImageId(primaryImage.id)
@@ -102,62 +100,43 @@ export function ProductForm({ product = null }) {
     setFormData((prev) => ({ ...prev, specifications: newSpecs }))
   }
 
-  // Handle image selection
   const handleImageSelect = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files)
       setNewImages((prev) => [...prev, ...selectedFiles])
-
-      // Create preview URLs
       const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file))
       setNewImagePreviews((prev) => [...prev, ...newPreviews])
     }
   }
 
-  // Remove a new image
   const removeNewImage = (index) => {
-    // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(newImagePreviews[index])
-
     const updatedImages = [...newImages]
     const updatedPreviews = [...newImagePreviews]
-
     updatedImages.splice(index, 1)
     updatedPreviews.splice(index, 1)
-
     setNewImages(updatedImages)
     setNewImagePreviews(updatedPreviews)
   }
 
-  // Remove an existing image
   const removeExistingImage = (id) => {
     setExistingImages((prev) => prev.filter((img) => img.id !== id))
     setDeletedImageIds((prev) => [...prev, id])
-
-    // If this was the primary image, reset primaryImageId
     if (id === primaryImageId) {
       const remainingImages = existingImages.filter((img) => img.id !== id)
-      if (remainingImages.length > 0) {
-        setPrimaryImageId(remainingImages[0].id)
-      } else {
-        setPrimaryImageId(null)
-      }
+      setPrimaryImageId(remainingImages.length > 0 ? remainingImages[0].id : null)
     }
   }
 
-  // Set an image as primary
   const setPrimaryImage = (id) => {
     setPrimaryImageId(id)
   }
 
-  // Handle drag and drop reordering
   const handleDragEnd = (result) => {
     if (!result.destination) return
-
     const items = Array.from(existingImages)
     const [reorderedItem] = items.splice(result.source.index, 1)
     items.splice(result.destination.index, 0, reorderedItem)
-
     setExistingImages(items)
   }
 
@@ -166,10 +145,7 @@ export function ProductForm({ product = null }) {
     setIsSubmitting(true)
 
     try {
-      // Create FormData object
       const submitData = new FormData()
-
-      // Add basic product data
       submitData.append("name", formData.name)
       submitData.append("code", formData.code)
       submitData.append("category", formData.category)
@@ -177,69 +153,57 @@ export function ProductForm({ product = null }) {
       submitData.append("price", formData.price)
       submitData.append("isActive", formData.is_active.toString())
 
-      // Add features
       const featuresText = formData.features.filter((f) => f.trim() !== "").join("\n")
       submitData.append("features", featuresText)
 
-      // Add specifications
       const specsText = formData.specifications
         .filter((s) => s.name.trim() !== "" || s.value.trim() !== "")
         .map((s) => `${s.name}: ${s.value}`)
         .join("\n")
       submitData.append("specifications", specsText)
 
-      // Add new images
+      // Add new image files
       newImages.forEach((image) => {
-        submitData.append("newImages", image)
+        // Use "newImages" to match the server action when editing
+        // Use "images" when creating a new product (if your createProduct action expects "images")
+        submitData.append(product ? "newImages" : "images", image)
       })
 
-      // Add deleted image IDs
-      if (deletedImageIds.length > 0) {
-        submitData.append("deletedImageIds", deletedImageIds.join(","))
+      // Add direct image URLs
+      if (directImageUrls.trim() !== "") {
+        submitData.append("imageUrls", directImageUrls) // Send comma-separated URLs
       }
-
-      // Add primary image ID
-      if (primaryImageId) {
-        submitData.append("primaryImageId", primaryImageId)
-      }
-
-      // Add image order
-      const orderMap = {}
-      existingImages.forEach((img, index) => {
-        orderMap[img.id] = index
-      })
-      submitData.append("imageOrder", JSON.stringify(orderMap))
 
       if (product) {
-        // Update existing product
+        // When updating
+        if (deletedImageIds.length > 0) {
+          submitData.append("deletedImageIds", deletedImageIds.join(","))
+        }
+        if (primaryImageId) {
+          submitData.append("primaryImageId", primaryImageId)
+        }
+        const orderMap = {}
+        existingImages.forEach((img, index) => {
+          orderMap[img.id] = index
+        })
+        submitData.append("imageOrder", JSON.stringify(orderMap))
         await updateProduct(product.id, submitData)
-        toast({
-          title: "Product updated",
-          description: "The product has been updated successfully.",
-        })
+        toast({ title: "Product updated", description: "Product updated successfully." })
       } else {
-        // Create new product
+        // When creating
         await createProduct(submitData)
-        toast({
-          title: "Product created",
-          description: "The product has been created successfully.",
-        })
+        toast({ title: "Product created", description: "Product created successfully." })
       }
 
       router.push("/admin/products")
     } catch (error) {
       console.error("Error saving product:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save product. Please try again.",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to save product.", variant: "destructive" })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  // Clean up object URLs when component unmounts
   useEffect(() => {
     return () => {
       newImagePreviews.forEach((url) => URL.revokeObjectURL(url))
@@ -256,6 +220,7 @@ export function ProductForm({ product = null }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* ... other form fields remain the same ... */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-2">
@@ -325,12 +290,13 @@ export function ProductForm({ product = null }) {
             </div>
           </div>
 
-          {/* Product Images */}
+          {/* Product Images Section */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Product Images</Label>
+            <Label>Product Images</Label>
+            {/* File Upload Input */}
+            <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                <Plus className="h-4 w-4 mr-2" /> Add Images
+                <Plus className="h-4 w-4 mr-2" /> Add Image Files
               </Button>
               <input
                 ref={fileInputRef}
@@ -342,19 +308,47 @@ export function ProductForm({ product = null }) {
               />
             </div>
 
+            {/* Direct Image URLs Input */}
+            <div className="space-y-2">
+              <Label htmlFor="directImageUrls">Or Add Image URLs (comma-separated)</Label>
+              <div className="flex items-center gap-2">
+                <LinkIcon className="h-5 w-5 text-gray-500" />
+                <Input
+                  id="directImageUrls"
+                  name="directImageUrls"
+                  value={directImageUrls}
+                  onChange={(e) => setDirectImageUrls(e.target.value)}
+                  placeholder="e.g., https://example.com/image1.jpg, https://example.com/image2.png"
+                />
+              </div>
+              <p className="text-xs text-gray-500">
+                Pasted URLs will be added to the product. They won&apos;t be re-hosted on your storage.
+              </p>
+            </div>
+
             {/* Existing Images */}
             {existingImages.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Current Images</h4>
+                <h4 className="text-sm font-medium">Current Images (Drag to reorder)</h4>
                 <DragDropContext onDragEnd={handleDragEnd}>
                   <Droppable droppableId="existing-images" direction="horizontal">
                     {(provided) => (
-                      <div {...provided.droppableProps} ref={provided.innerRef} className="flex flex-wrap gap-4">
+                      <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        className="flex flex-wrap gap-4 p-2 border rounded-md bg-muted/30"
+                      >
                         {existingImages.map((image, index) => (
                           <Draggable key={image.id} draggableId={image.id} index={index}>
-                            {(provided) => (
-                              <div ref={provided.innerRef} {...provided.draggableProps} className="relative group">
-                                <div className="border rounded-md overflow-hidden w-24 h-24">
+                            {(
+                              providedDrag, // Renamed to avoid conflict
+                            ) => (
+                              <div
+                                ref={providedDrag.innerRef}
+                                {...providedDrag.draggableProps}
+                                className="relative group w-28 h-28"
+                              >
+                                <div className="border rounded-md overflow-hidden w-full h-full">
                                   <div className="relative w-full h-full">
                                     <OptimizedImage
                                       src={image.image_url}
@@ -363,24 +357,24 @@ export function ProductForm({ product = null }) {
                                       className="object-cover"
                                     />
                                     {image.id === primaryImageId && (
-                                      <div className="absolute top-0 right-0 bg-yellow-400 text-xs px-1 rounded-bl">
+                                      <div className="absolute top-0 right-0 bg-yellow-400 text-black text-xs px-1 py-0.5 rounded-bl-md font-semibold">
                                         Primary
                                       </div>
                                     )}
                                   </div>
                                 </div>
-                                <div className="absolute top-0 right-0 flex opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Button
                                     type="button"
                                     variant="destructive"
                                     size="icon"
-                                    className="h-6 w-6 rounded-full"
+                                    className="h-6 w-6 rounded-full shadow-md"
                                     onClick={() => removeExistingImage(image.id)}
                                   >
                                     <Trash className="h-3 w-3" />
                                   </Button>
                                 </div>
-                                <div className="absolute bottom-0 left-0 right-0 flex justify-between bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-1 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-b-md">
                                   <Button
                                     type="button"
                                     variant="ghost"
@@ -388,15 +382,20 @@ export function ProductForm({ product = null }) {
                                     className="h-6 w-6 text-white hover:text-yellow-400"
                                     onClick={() => setPrimaryImage(image.id)}
                                     disabled={image.id === primaryImageId}
+                                    title={image.id === primaryImageId ? "Primary Image" : "Set as primary"}
                                   >
                                     {image.id === primaryImageId ? (
-                                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                     ) : (
-                                      <StarOff className="h-3 w-3" />
+                                      <StarOff className="h-4 w-4" />
                                     )}
                                   </Button>
-                                  <div {...provided.dragHandleProps} className="cursor-move p-1">
-                                    <GripVertical className="h-3 w-3" />
+                                  <div
+                                    {...providedDrag.dragHandleProps}
+                                    className="cursor-move p-1"
+                                    title="Drag to reorder"
+                                  >
+                                    <GripVertical className="h-4 w-4" />
                                   </div>
                                 </div>
                               </div>
@@ -411,25 +410,27 @@ export function ProductForm({ product = null }) {
               </div>
             )}
 
-            {/* New Images */}
+            {/* New Images Previews */}
             {newImagePreviews.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">New Images</h4>
-                <div className="flex flex-wrap gap-4">
+                <h4 className="text-sm font-medium">New Images to Upload</h4>
+                <div className="flex flex-wrap gap-4 p-2 border rounded-md">
                   {newImagePreviews.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <div className="border rounded-md overflow-hidden w-24 h-24">
+                    <div key={index} className="relative group w-28 h-28">
+                      <div className="border rounded-md overflow-hidden w-full h-full">
                         <div className="relative w-full h-full">
                           <OptimizedImage src={url} alt={`New image ${index + 1}`} fill className="object-cover" />
-                          <div className="absolute top-0 right-0 bg-blue-400 text-xs px-1 rounded-bl">New</div>
+                          <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-bl-md font-semibold">
+                            New
+                          </div>
                         </div>
                       </div>
-                      <div className="absolute top-0 right-0 flex opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           type="button"
                           variant="destructive"
                           size="icon"
-                          className="h-6 w-6 rounded-full"
+                          className="h-6 w-6 rounded-full shadow-md"
                           onClick={() => removeNewImage(index)}
                         >
                           <Trash className="h-3 w-3" />
@@ -441,18 +442,19 @@ export function ProductForm({ product = null }) {
               </div>
             )}
 
-            {existingImages.length === 0 && newImagePreviews.length === 0 && (
+            {existingImages.length === 0 && newImagePreviews.length === 0 && directImageUrls.trim() === "" && (
               <div className="border border-dashed rounded-md p-8 text-center">
                 <div className="flex justify-center mb-2">
                   <Plus className="h-8 w-8 text-gray-400" />
                 </div>
                 <p className="text-sm text-gray-500">
-                  No images added yet. Click "Add Images" to upload product images.
+                  No images added yet. Click "Add Image Files" or paste URLs above.
                 </p>
               </div>
             )}
           </div>
 
+          {/* Features and Specifications */}
           <div className="space-y-4">
             <div>
               <Label>Features</Label>
@@ -469,7 +471,7 @@ export function ProductForm({ product = null }) {
                       variant="outline"
                       size="icon"
                       onClick={() => removeFeature(index)}
-                      disabled={formData.features.length <= 1}
+                      disabled={formData.features.length <= 1 && feature.trim() === ""}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
@@ -489,13 +491,13 @@ export function ProductForm({ product = null }) {
                     <Input
                       value={spec.name}
                       onChange={(e) => handleSpecChange(index, "name", e.target.value)}
-                      placeholder="Specification name"
+                      placeholder="Specification name (e.g., Material)"
                       className="flex-1"
                     />
                     <Input
                       value={spec.value}
                       onChange={(e) => handleSpecChange(index, "value", e.target.value)}
-                      placeholder="Value"
+                      placeholder="Value (e.g., Corn Starch PLA)"
                       className="flex-1"
                     />
                     <Button
@@ -503,7 +505,9 @@ export function ProductForm({ product = null }) {
                       variant="outline"
                       size="icon"
                       onClick={() => removeSpec(index)}
-                      disabled={formData.specifications.length <= 1}
+                      disabled={
+                        formData.specifications.length <= 1 && spec.name.trim() === "" && spec.value.trim() === ""
+                      }
                     >
                       <Trash className="h-4 w-4" />
                     </Button>

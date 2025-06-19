@@ -53,7 +53,7 @@ export function ProductMediaGallery({ images, productName, modelUrl }: ProductMe
       : [
           {
             id: "placeholder",
-            image_url: "/diverse-products-still-life.png",
+            image_url: "/generic-product-display.png",
             alt_text: productName,
             is_primary: true,
             display_order: 0,

@@ -15,7 +15,7 @@ interface OptimizedImageProps {
   sizes?: string
 }
 
-const FALLBACK_IMAGE = "/abstract-colorful-swirls.png" // Define fallback image path
+const FALLBACK_IMAGE = "/generic-product-display.png" // Define fallback image path
 
 export function OptimizedImage({
   src,
