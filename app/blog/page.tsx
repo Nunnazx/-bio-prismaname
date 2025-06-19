@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic"
 import { getBlogPosts } from "@/app/actions/blog" // Fetch posts from the database
 import { ArrowLeft, Calendar, Clock, User, ChevronLeft, ChevronRight, Search, Newspaper } from "lucide-react"
 import Link from "next/link"
