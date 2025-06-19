@@ -1,4 +1,5 @@
-import { ArrowLeft, Calendar, Clock, User, ChevronLeft, ChevronRight, Search } from "lucide-react"
+import { getBlogPosts } from "@/app/actions/blog" // Fetch posts from the database
+import { ArrowLeft, Calendar, Clock, User, ChevronLeft, ChevronRight, Search, Newspaper } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -7,90 +8,24 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { format } from "date-fns"
 
-// Sample blog data
-const blogPosts = [
-  {
-    id: 1,
-    title: "The Future of Compostable Plastics in a Circular Economy",
-    slug: "future-compostable-plastics-circular-economy",
-    excerpt:
-      "Explore how compostable plastics are playing a crucial role in the transition to a circular economy and reducing plastic pollution.",
-    image: "/eco-friendly-packaging.png",
-    date: "April 15, 2023",
-    author: "Dr. Priya Sharma",
-    readTime: "8 min read",
-    category: "Sustainability",
-    tags: ["Circular Economy", "Plastic Alternatives", "Sustainability"],
-  },
-  {
-    id: 2,
-    title: "Understanding Biodegradation: How Compostable Plastics Break Down",
-    slug: "understanding-biodegradation-compostable-plastics",
-    excerpt:
-      "A detailed look at the science behind biodegradation and how compostable plastics return to nature without harmful residues.",
-    image: "/microbial-decomposition.png",
-    date: "March 22, 2023",
-    author: "Rajesh Kumar",
-    readTime: "6 min read",
-    category: "Education",
-    tags: ["Biodegradation", "Science", "Composting"],
-  },
-  {
-    id: 3,
-    title: "AICMT Receives MSME ZED Bronze Certification",
-    slug: "aicmt-receives-msme-zed-bronze-certification",
-    excerpt:
-      "We're proud to announce that AICMT International has been awarded the MSME ZED Bronze certification for our zero efficiency defects production process.",
-    image: "/placeholder.svg?height=400&width=600&query=certification award ceremony",
-    date: "February 10, 2023",
-    author: "Amit Patel",
-    readTime: "4 min read",
-    category: "Company News",
-    tags: ["Certification", "Achievement", "Quality"],
-  },
-  {
-    id: 4,
-    title: "5 Ways Businesses Can Reduce Their Plastic Footprint",
-    slug: "5-ways-businesses-reduce-plastic-footprint",
-    excerpt:
-      "Practical strategies for businesses looking to minimize their plastic usage and transition to more sustainable alternatives.",
-    image: "/placeholder.svg?height=400&width=600&query=business sustainability practices",
-    date: "January 18, 2023",
-    author: "Sunita Reddy",
-    readTime: "5 min read",
-    category: "Tips & Guides",
-    tags: ["Business Sustainability", "Plastic Reduction", "Best Practices"],
-  },
-  {
-    id: 5,
-    title: "The Impact of India's Plastic Ban on Packaging Industry",
-    slug: "impact-india-plastic-ban-packaging-industry",
-    excerpt:
-      "An analysis of how India's single-use plastic ban is reshaping the packaging industry and creating opportunities for sustainable alternatives.",
-    image: "/placeholder.svg?height=400&width=600&query=plastic ban india",
-    date: "December 5, 2022",
-    author: "Vikram Singh",
-    readTime: "7 min read",
-    category: "Industry Insights",
-    tags: ["Plastic Ban", "Regulations", "Industry Trends"],
-  },
-  {
-    id: 6,
-    title: "Case Study: How GreenRetail Reduced Plastic Waste by 85%",
-    slug: "case-study-greenretail-reduced-plastic-waste",
-    excerpt:
-      "Learn how GreenRetail Solutions partnered with AICMT to replace conventional plastic bags with compostable alternatives, significantly reducing their environmental impact.",
-    image: "/placeholder.svg?height=400&width=600&query=retail sustainability case study",
-    date: "November 12, 2022",
-    author: "Dr. Priya Sharma",
-    readTime: "9 min read",
-    category: "Case Studies",
-    tags: ["Success Story", "Retail", "Waste Reduction"],
-  },
-]
+// Helper function to calculate read time
+function calculateReadTime(content: string | null): string {
+  if (!content) return "1 min read"
+  const wordsPerMinute = 200
+  const textLength = content.split(/\s+/).length
+  const readTime = Math.ceil(textLength / wordsPerMinute)
+  return `${readTime} min read`
+}
 
-// Categories for sidebar
+// Helper function to format dates
+function formatDate(dateString: string | null): string {
+  if (!dateString) return "No date"
+  return format(new Date(dateString), "MMMM d, yyyy")
+}
+
+// Categories and tags can be fetched dynamically later
 const categories = [
   { name: "Sustainability", count: 12 },
   { name: "Education", count: 8 },
@@ -100,7 +35,6 @@ const categories = [
   { name: "Case Studies", count: 4 },
 ]
 
-// Popular tags
 const popularTags = [
   "Biodegradable",
   "Compostable",
@@ -112,7 +46,22 @@ const popularTags = [
   "Waste Management",
 ]
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const allPosts = await getBlogPosts()
+  const publishedPosts = allPosts.filter((post) => post.status === "published")
+
+  if (publishedPosts.length === 0) {
+    return (
+      <div className="container px-4 py-12 md:px-6 md:py-24 text-center">
+        <h1 className="text-3xl font-bold">No Blog Posts Found</h1>
+        <p className="text-gray-500 mt-2">Check back later for more updates!</p>
+      </div>
+    )
+  }
+
+  const featuredPost = publishedPosts[0]
+  const regularPosts = publishedPosts.slice(1)
+
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
       <div className="flex flex-col gap-8">
@@ -138,31 +87,41 @@ export default function BlogPage() {
             <div className="grid gap-8">
               {/* Featured post */}
               <Card className="overflow-hidden">
-                <div className="relative aspect-video w-full">
-                  <Image
-                    src={blogPosts[0].image || "/placeholder.svg"}
-                    alt={blogPosts[0].title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
+                {featuredPost.featured_image ? (
+                  <div className="relative aspect-video w-full">
+                    <Image
+                      src={featuredPost.featured_image || "/placeholder.svg"}
+                      alt={featuredPost.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                ) : (
+                  <div className="aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                    <Newspaper className="h-16 w-16 text-gray-300 dark:text-gray-600" />
+                  </div>
+                )}
                 <CardHeader>
                   <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                     <Calendar className="h-4 w-4" />
-                    <span>{blogPosts[0].date}</span>
+                    <span>{formatDate(featuredPost.publish_date || featuredPost.created_at)}</span>
                     <Separator orientation="vertical" className="h-4" />
                     <User className="h-4 w-4" />
-                    <span>{blogPosts[0].author}</span>
+                    {/* Replace with author name when available */}
+                    <span>{featuredPost.author_id ? "Admin" : "AICMT Team"}</span>
                     <Separator orientation="vertical" className="h-4" />
                     <Clock className="h-4 w-4" />
-                    <span>{blogPosts[0].readTime}</span>
+                    <span>{calculateReadTime(featuredPost.content)}</span>
                   </div>
-                  <CardTitle className="text-2xl">{blogPosts[0].title}</CardTitle>
-                  <CardDescription>{blogPosts[0].excerpt}</CardDescription>
+                  <CardTitle className="text-2xl">
+                    <Link href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
+                  </CardTitle>
+                  <CardDescription>{featuredPost.excerpt}</CardDescription>
                 </CardHeader>
                 <CardFooter>
                   <div className="flex flex-wrap gap-2">
-                    {blogPosts[0].tags.map((tag, index) => (
+                    {featuredPost.tags?.map((tag, index) => (
                       <Badge key={index} variant="outline" className="bg-green-50">
                         {tag}
                       </Badge>
@@ -173,18 +132,32 @@ export default function BlogPage() {
 
               {/* Regular posts */}
               <div className="grid gap-6 sm:grid-cols-2">
-                {blogPosts.slice(1).map((post) => (
-                  <Card key={post.id} className="overflow-hidden">
-                    <div className="relative aspect-video w-full">
-                      <Image src={post.image || "/placeholder.svg"} alt={post.title} fill className="object-cover" />
-                    </div>
-                    <CardHeader>
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                        <span>{post.date}</span>
-                        <Separator orientation="vertical" className="h-3" />
-                        <span>{post.readTime}</span>
+                {regularPosts.map((post) => (
+                  <Card key={post.id} className="overflow-hidden flex flex-col">
+                    {post.featured_image ? (
+                      <div className="relative aspect-video w-full">
+                        <Image
+                          src={post.featured_image || "/placeholder.svg"}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                       </div>
-                      <CardTitle className="text-lg">{post.title}</CardTitle>
+                    ) : (
+                      <div className="aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                        <Newspaper className="h-12 w-12 text-gray-300 dark:text-gray-600" />
+                      </div>
+                    )}
+                    <CardHeader className="flex-grow">
+                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                        <span>{formatDate(post.publish_date || post.created_at)}</span>
+                        <Separator orientation="vertical" className="h-3" />
+                        <span>{calculateReadTime(post.content)}</span>
+                      </div>
+                      <CardTitle className="text-lg">
+                        <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+                      </CardTitle>
                       <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
                     </CardHeader>
                     <CardFooter>

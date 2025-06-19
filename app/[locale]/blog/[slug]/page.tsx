@@ -18,7 +18,6 @@ async function getBlogPost(slug: string) {
     .from("blog_posts")
     .select("*, profiles(first_name, last_name)")
     .eq("slug", slug)
-    .eq("status", "published")
     .single()
 
   if (error || !post) {
@@ -77,6 +76,15 @@ export default async function BlogPostPage({ params }: { params: { locale: strin
     notFound()
   }
 
+  let draftBanner = null
+  if (post.status !== "published") {
+    draftBanner = (
+      <div className="mb-4 rounded bg-yellow-100 px-3 py-2 text-sm font-medium text-yellow-800">
+        Draft preview &mdash; this post is not yet public.
+      </div>
+    )
+  }
+
   const relatedPosts = await getRelatedPosts(post.id, post.tags || [], 3)
 
   // Format date for display
@@ -99,6 +107,8 @@ export default async function BlogPostPage({ params }: { params: { locale: strin
             </Button>
           </Link>
         </div>
+
+        {draftBanner}
 
         <article className="space-y-8">
           <div className="space-y-4">

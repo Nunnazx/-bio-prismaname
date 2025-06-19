@@ -93,7 +93,7 @@ export interface Database {
           featured_image: string | null
           seo_title: string | null
           seo_description: string | null
-          seo_keywords: string | null
+          seo_keywords: string[] | null
           publish_date: string | null
           created_at: string
           updated_at: string
@@ -111,7 +111,7 @@ export interface Database {
           featured_image?: string | null
           seo_title?: string | null
           seo_description?: string | null
-          seo_keywords?: string | null
+          seo_keywords: string[] | null
           publish_date?: string | null
           created_at?: string
           updated_at?: string
@@ -129,7 +129,7 @@ export interface Database {
           featured_image?: string | null
           seo_title?: string | null
           seo_description?: string | null
-          seo_keywords?: string | null
+          seo_keywords?: string[] | null
           publish_date?: string | null
           created_at?: string
           updated_at?: string
