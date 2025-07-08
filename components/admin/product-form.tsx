@@ -1,9 +1,11 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Plus, Trash, Star, StarOff, GripVertical, LinkIcon } from "lucide-react" // Added LinkIcon
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd"
+import { Loader2, Plus, Trash, Upload, X } from "lucide-react"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,9 +14,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { OptimizedImage } from "@/components/optimized-image"
-import { createProduct, updateProduct } from "@/app/actions/products"
 import { toast } from "@/components/ui/use-toast"
+import { createProduct, updateProduct } from "@/app/actions/products"
 
 // Product categories
 const PRODUCT_CATEGORIES = [
@@ -25,36 +26,40 @@ const PRODUCT_CATEGORIES = [
   { id: "custom", name: "Custom Solutions" },
 ]
 
-export function ProductForm({ product = null }) {
+interface ProductFormProps {
+  product?: any
+}
+
+export function ProductForm({ product = null }: ProductFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Helper to parse features from product data
-  const parseProductFeatures = (productFeatures) => {
+  const parseProductFeatures = (productFeatures: any) => {
     if (productFeatures && typeof productFeatures === "object" && Array.isArray(productFeatures.features)) {
       return productFeatures.features.length > 0 ? productFeatures.features : [""]
     }
     if (Array.isArray(productFeatures)) {
-      // If features is directly an array
       return productFeatures.length > 0 ? productFeatures : [""]
     }
-    return [""] // Default if no valid features found
+    return [""]
   }
 
   // Helper to parse specifications from product data
-  const parseProductSpecifications = (productSpecifications) => {
+  const parseProductSpecifications = (productSpecifications: any) => {
     if (Array.isArray(productSpecifications) && productSpecifications.length > 0) {
-      // Ensure it's an array of {name, value} objects
       if (productSpecifications.every((spec) => typeof spec === "object" && "name" in spec && "value" in spec)) {
         return productSpecifications
       }
     } else if (typeof productSpecifications === "object" && productSpecifications !== null) {
-      // If it's an object like { "Material": "PLA", "Color": "White" }
-      // Convert to array of {name, value}
-      const specsArray = Object.entries(productSpecifications).map(([name, value]) => ({ name, value: String(value) }))
+      const specsArray = Object.entries(productSpecifications).map(([name, value]) => ({
+        name,
+        value: String(value),
+      }))
       return specsArray.length > 0 ? specsArray : [{ name: "", value: "" }]
     }
-    return [{ name: "", value: "" }] // Default
+    return [{ name: "", value: "" }]
   }
 
   const [formData, setFormData] = useState({
@@ -64,73 +69,29 @@ export function ProductForm({ product = null }) {
     description: product?.description || "",
     features: product ? parseProductFeatures(product.features) : [""],
     specifications: product ? parseProductSpecifications(product.specifications) : [{ name: "", value: "" }],
-    price: product?.price?.toString() || "", // Ensure price is a string for the input
+    price: product?.price?.toString() || "",
     is_active: product?.is_active ?? true,
   })
 
   // Image handling
-  const [newImages, setNewImages] = useState<File[]>([])
-  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([])
+  const [selectedImages, setSelectedImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [existingImages, setExistingImages] = useState<any[]>([])
-  const [deletedImageIds, setDeletedImageIds] = useState<string[]>([])
-  const [primaryImageId, setPrimaryImageId] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [directImageUrls, setDirectImageUrls] = useState(
-    product?.product_images
-      ?.filter((img) => !img.image_url.includes("blob.supabase.co") && !img.image_url.startsWith("/")) // Basic check for external URLs
-      .map((img) => img.image_url)
-      .join(", ") || "",
-  )
 
-  // Initialize existing images and primary image ID
+  // Initialize existing images
   useEffect(() => {
-    if (product) {
-      // Update form fields if product prop changes (e.g., after initial load if product was null)
-      setFormData({
-        name: product.name || "",
-        code: product.code || "",
-        category: product.category || "granules",
-        description: product.description || "",
-        features: parseProductFeatures(product.features),
-        specifications: parseProductSpecifications(product.specifications),
-        price: product.price?.toString() || "",
-        is_active: product.is_active ?? true,
-      })
-
-      if (product.product_images) {
-        const sortedImages = [...product.product_images].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-        setExistingImages(sortedImages)
-        const primary = sortedImages.find((img) => img.is_primary)
-        if (primary) {
-          setPrimaryImageId(primary.id)
-        } else if (sortedImages.length > 0) {
-          // If no primary is explicitly set, default to the first image
-          setPrimaryImageId(sortedImages[0].id)
-        }
-      }
-      // Attempt to pre-fill directImageUrls if product has images that look like external URLs
-      const externalImageUrls = product.product_images
-        ?.filter(
-          (img) =>
-            img.image_url &&
-            !img.image_url.includes(process.env.NEXT_PUBLIC_SUPABASE_URL || "supabase.co") &&
-            (img.image_url.startsWith("http://") || img.image_url.startsWith("https://")),
-        )
-        .map((img) => img.image_url)
-        .join(", ")
-      if (externalImageUrls) {
-        // setDirectImageUrls(externalImageUrls); // This might overwrite user input if not careful.
-        // Better to initialize this once, or if product.id changes.
-      }
+    if (product?.product_images) {
+      const sortedImages = [...product.product_images].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+      setExistingImages(sortedImages)
     }
   }, [product])
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleFeatureChange = (index, value) => {
+  const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...formData.features]
     newFeatures[index] = value
     setFormData((prev) => ({ ...prev, features: newFeatures }))
@@ -140,13 +101,13 @@ export function ProductForm({ product = null }) {
     setFormData((prev) => ({ ...prev, features: [...prev.features, ""] }))
   }
 
-  const removeFeature = (index) => {
+  const removeFeature = (index: number) => {
     const newFeatures = [...formData.features]
     newFeatures.splice(index, 1)
     setFormData((prev) => ({ ...prev, features: newFeatures }))
   }
 
-  const handleSpecChange = (index, field, value) => {
+  const handleSpecChange = (index: number, field: "name" | "value", value: string) => {
     const newSpecs = [...formData.specifications]
     newSpecs[index] = { ...newSpecs[index], [field]: value }
     setFormData((prev) => ({ ...prev, specifications: newSpecs }))
@@ -159,53 +120,34 @@ export function ProductForm({ product = null }) {
     }))
   }
 
-  const removeSpec = (index) => {
+  const removeSpec = (index: number) => {
     const newSpecs = [...formData.specifications]
     newSpecs.splice(index, 1)
     setFormData((prev) => ({ ...prev, specifications: newSpecs }))
   }
 
-  const handleImageSelect = (e) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const selectedFiles = Array.from(e.target.files)
-      setNewImages((prev) => [...prev, ...selectedFiles])
-      const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file))
-      setNewImagePreviews((prev) => [...prev, ...newPreviews])
+      const files = Array.from(e.target.files)
+      setSelectedImages((prev) => [...prev, ...files])
+
+      // Create previews
+      const newPreviews = files.map((file) => URL.createObjectURL(file))
+      setImagePreviews((prev) => [...prev, ...newPreviews])
     }
   }
 
-  const removeNewImage = (index) => {
-    URL.revokeObjectURL(newImagePreviews[index])
-    const updatedImages = [...newImages]
-    const updatedPreviews = [...newImagePreviews]
+  const removeImage = (index: number) => {
+    URL.revokeObjectURL(imagePreviews[index])
+    const updatedImages = [...selectedImages]
+    const updatedPreviews = [...imagePreviews]
     updatedImages.splice(index, 1)
     updatedPreviews.splice(index, 1)
-    setNewImages(updatedImages)
-    setNewImagePreviews(updatedPreviews)
+    setSelectedImages(updatedImages)
+    setImagePreviews(updatedPreviews)
   }
 
-  const removeExistingImage = (id) => {
-    setExistingImages((prev) => prev.filter((img) => img.id !== id))
-    setDeletedImageIds((prev) => [...prev, id])
-    if (id === primaryImageId) {
-      const remainingImages = existingImages.filter((img) => img.id !== id)
-      setPrimaryImageId(remainingImages.length > 0 ? remainingImages[0].id : null)
-    }
-  }
-
-  const setPrimaryImage = (id) => {
-    setPrimaryImageId(id)
-  }
-
-  const handleDragEnd = (result) => {
-    if (!result.destination) return
-    const items = Array.from(existingImages)
-    const [reorderedItem] = items.splice(result.source.index, 1)
-    items.splice(result.destination.index, 0, reorderedItem)
-    setExistingImages(items)
-  }
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
 
@@ -218,75 +160,60 @@ export function ProductForm({ product = null }) {
       submitData.append("price", formData.price)
       submitData.append("isActive", formData.is_active.toString())
 
-      const featuresText = formData.features.filter((f) => typeof f === "string" && f.trim() !== "").join("\n")
+      // Add features
+      const featuresText = formData.features.filter((f) => f.trim() !== "").join("\n")
+      submitData.append("features", featuresText)
 
-      // For specifications, ensure it's an object if your backend expects that, or format as needed.
-      // If backend expects { "key": "value" }
-      const specificationsObject = formData.specifications.reduce((acc, spec) => {
-        if (spec.name.trim() !== "" && spec.value.trim() !== "") {
-          acc[spec.name.trim()] = spec.value.trim()
-        }
-        return acc
-      }, {})
-      // If backend expects a string like "Key1:Value1\nKey2:Value2" (as in current product action)
+      // Add specifications
       const specsText = formData.specifications
-        .filter((s) => s.name.trim() !== "" || s.value.trim() !== "")
+        .filter((s) => s.name.trim() !== "" && s.value.trim() !== "")
         .map((s) => `${s.name.trim()}: ${s.value.trim()}`)
         .join("\n")
-
-      submitData.append("features", featuresText)
-      // If backend expects JSON object for specifications:
-      // submitData.append("specifications", JSON.stringify(specificationsObject));
-      // If backend expects string (as per current product action):
       submitData.append("specifications", specsText)
 
-      // Add new image files
-      newImages.forEach((image) => {
-        // Use "newImages" to match the server action when editing
-        // Use "images" when creating a new product (if your createProduct action expects "images")
+      // Add images
+      selectedImages.forEach((image) => {
         submitData.append(product ? "newImages" : "images", image)
       })
 
-      // Add direct image URLs
-      if (directImageUrls.trim() !== "") {
-        submitData.append("imageUrls", directImageUrls) // Send comma-separated URLs
-      }
-
+      let result
       if (product) {
-        // When updating
-        if (deletedImageIds.length > 0) {
-          submitData.append("deletedImageIds", deletedImageIds.join(","))
-        }
-        if (primaryImageId) {
-          submitData.append("primaryImageId", primaryImageId)
-        }
-        const orderMap = {}
-        existingImages.forEach((img, index) => {
-          orderMap[img.id] = index
-        })
-        submitData.append("imageOrder", JSON.stringify(orderMap))
-        await updateProduct(product.id, submitData)
-        toast({ title: "Product updated", description: "Product updated successfully." })
+        result = await updateProduct(product.id, submitData)
       } else {
-        // When creating
-        await createProduct(submitData)
-        toast({ title: "Product created", description: "Product created successfully." })
+        result = await createProduct(submitData)
       }
 
-      router.push("/admin/products")
+      if (result.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Success",
+          description: product ? "Product updated successfully" : "Product created successfully",
+        })
+        router.push("/admin/products")
+      }
     } catch (error) {
       console.error("Error saving product:", error)
-      toast({ title: "Error", description: "Failed to save product.", variant: "destructive" })
+      toast({
+        title: "Error",
+        description: "Failed to save product",
+        variant: "destructive",
+      })
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
-      newImagePreviews.forEach((url) => URL.revokeObjectURL(url))
+      imagePreviews.forEach((url) => URL.revokeObjectURL(url))
     }
-  }, [newImagePreviews])
+  }, [imagePreviews])
 
   return (
     <form onSubmit={handleSubmit}>
@@ -298,21 +225,35 @@ export function ProductForm({ product = null }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* ... other form fields remain the same ... */}
+          {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Product Name</Label>
-                <Input id="name" name="name" value={formData.name} onChange={handleChange} required />
+                <Label htmlFor="name">Product Name *</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter product name"
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="code">Product Code</Label>
-                <Input id="code" name="code" value={formData.code} onChange={handleChange} required />
+                <Label htmlFor="code">Product Code *</Label>
+                <Input
+                  id="code"
+                  name="code"
+                  value={formData.code}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter product code"
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="category">Category *</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
@@ -337,8 +278,9 @@ export function ProductForm({ product = null }) {
                   name="price"
                   value={formData.price}
                   onChange={handleChange}
-                  type="text"
-                  placeholder="Contact for pricing"
+                  type="number"
+                  step="0.01"
+                  placeholder="Enter price or leave blank"
                 />
                 <p className="text-xs text-gray-500">Leave blank if price is variable or on request</p>
               </div>
@@ -355,26 +297,28 @@ export function ProductForm({ product = null }) {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Description *</Label>
                 <Textarea
                   id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  rows={4}
+                  rows={6}
                   required
+                  placeholder="Enter product description"
                 />
               </div>
             </div>
           </div>
 
-          {/* Product Images Section */}
+          {/* Product Images */}
           <div className="space-y-4">
             <Label>Product Images</Label>
-            {/* File Upload Input */}
+
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-                <Plus className="h-4 w-4 mr-2" /> Add Image Files
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Images
               </Button>
               <input
                 ref={fileInputRef}
@@ -386,218 +330,139 @@ export function ProductForm({ product = null }) {
               />
             </div>
 
-            {/* Direct Image URLs Input */}
-            <div className="space-y-2">
-              <Label htmlFor="directImageUrls">Or Add Image URLs (comma-separated)</Label>
-              <div className="flex items-center gap-2">
-                <LinkIcon className="h-5 w-5 text-gray-500" />
-                <Input
-                  id="directImageUrls"
-                  name="directImageUrls"
-                  value={directImageUrls}
-                  onChange={(e) => setDirectImageUrls(e.target.value)}
-                  placeholder="e.g., https://example.com/image1.jpg, https://example.com/image2.png"
-                />
-              </div>
-              <p className="text-xs text-gray-500">
-                Pasted URLs will be added to the product. They won&apos;t be re-hosted on your storage.
-              </p>
-            </div>
-
             {/* Existing Images */}
             {existingImages.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-sm font-medium">Current Images (Drag to reorder)</h4>
-                <DragDropContext onDragEnd={handleDragEnd}>
-                  <Droppable droppableId="existing-images" direction="horizontal">
-                    {(provided) => (
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className="flex flex-wrap gap-4 p-2 border rounded-md bg-muted/30"
-                      >
-                        {existingImages.map((image, index) => (
-                          <Draggable key={image.id} draggableId={image.id} index={index}>
-                            {(
-                              providedDrag, // Renamed to avoid conflict
-                            ) => (
-                              <div
-                                ref={providedDrag.innerRef}
-                                {...providedDrag.draggableProps}
-                                className="relative group w-28 h-28"
-                              >
-                                <div className="border rounded-md overflow-hidden w-full h-full">
-                                  <div className="relative w-full h-full">
-                                    <OptimizedImage
-                                      src={image.image_url}
-                                      alt={image.alt_text || formData.name}
-                                      fill
-                                      className="object-cover"
-                                    />
-                                    {image.id === primaryImageId && (
-                                      <div className="absolute top-0 right-0 bg-yellow-400 text-black text-xs px-1 py-0.5 rounded-bl-md font-semibold">
-                                        Primary
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="h-6 w-6 rounded-full shadow-md"
-                                    onClick={() => removeExistingImage(image.id)}
-                                  >
-                                    <Trash className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-1 bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity rounded-b-md">
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 text-white hover:text-yellow-400"
-                                    onClick={() => setPrimaryImage(image.id)}
-                                    disabled={image.id === primaryImageId}
-                                    title={image.id === primaryImageId ? "Primary Image" : "Set as primary"}
-                                  >
-                                    {image.id === primaryImageId ? (
-                                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                    ) : (
-                                      <StarOff className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                  <div
-                                    {...providedDrag.dragHandleProps}
-                                    className="cursor-move p-1"
-                                    title="Drag to reorder"
-                                  >
-                                    <GripVertical className="h-4 w-4" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
+                <h4 className="text-sm font-medium">Current Images</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {existingImages.map((image, index) => (
+                    <div key={image.id} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden border">
+                        <Image
+                          src={image.image_url || "/placeholder.svg"}
+                          alt={image.alt_text || formData.name}
+                          width={200}
+                          height={200}
+                          className="object-cover w-full h-full"
+                        />
                       </div>
-                    )}
-                  </Droppable>
-                </DragDropContext>
-              </div>
-            )}
-
-            {/* New Images Previews */}
-            {newImagePreviews.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">New Images to Upload</h4>
-                <div className="flex flex-wrap gap-4 p-2 border rounded-md">
-                  {newImagePreviews.map((url, index) => (
-                    <div key={index} className="relative group w-28 h-28">
-                      <div className="border rounded-md overflow-hidden w-full h-full">
-                        <div className="relative w-full h-full">
-                          <OptimizedImage src={url} alt={`New image ${index + 1}`} fill className="object-cover" />
-                          <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-1 py-0.5 rounded-bl-md font-semibold">
-                            New
-                          </div>
+                      {image.is_primary && (
+                        <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
+                          Primary
                         </div>
-                      </div>
-                      <div className="absolute top-1 right-1 flex opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon"
-                          className="h-6 w-6 rounded-full shadow-md"
-                          onClick={() => removeNewImage(index)}
-                        >
-                          <Trash className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {existingImages.length === 0 && newImagePreviews.length === 0 && directImageUrls.trim() === "" && (
-              <div className="border border-dashed rounded-md p-8 text-center">
-                <div className="flex justify-center mb-2">
-                  <Plus className="h-8 w-8 text-gray-400" />
+            {/* New Images Preview */}
+            {imagePreviews.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">New Images</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {imagePreviews.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <div className="aspect-square rounded-lg overflow-hidden border">
+                        <Image
+                          src={url || "/placeholder.svg"}
+                          alt={`New image ${index + 1}`}
+                          width={200}
+                          height={200}
+                          className="object-cover w-full h-full"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-sm text-gray-500">
-                  No images added yet. Click "Add Image Files" or paste URLs above.
-                </p>
+              </div>
+            )}
+
+            {existingImages.length === 0 && imagePreviews.length === 0 && (
+              <div className="border border-dashed rounded-lg p-8 text-center">
+                <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                <p className="text-sm text-gray-500">No images uploaded yet</p>
               </div>
             )}
           </div>
 
-          {/* Features and Specifications */}
+          {/* Features */}
           <div className="space-y-4">
-            <div>
-              <Label>Features</Label>
-              <div className="space-y-2 mt-2">
-                {formData.features.map((feature, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={feature}
-                      onChange={(e) => handleFeatureChange(index, e.target.value)}
-                      placeholder="Product feature"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeFeature(index)}
-                      disabled={formData.features.length <= 1 && feature.trim() === ""}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={addFeature} className="mt-2">
-                  <Plus className="h-4 w-4 mr-2" /> Add Feature
-                </Button>
-              </div>
+            <Label>Features</Label>
+            <div className="space-y-2">
+              {formData.features.map((feature, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={feature}
+                    onChange={(e) => handleFeatureChange(index, e.target.value)}
+                    placeholder="Enter product feature"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeFeature(index)}
+                    disabled={formData.features.length <= 1}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addFeature}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Feature
+              </Button>
             </div>
+          </div>
 
-            <div>
-              <Label>Specifications</Label>
-              <div className="space-y-2 mt-2">
-                {formData.specifications.map((spec, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={spec.name}
-                      onChange={(e) => handleSpecChange(index, "name", e.target.value)}
-                      placeholder="Specification name (e.g., Material)"
-                      className="flex-1"
-                    />
-                    <Input
-                      value={spec.value}
-                      onChange={(e) => handleSpecChange(index, "value", e.target.value)}
-                      placeholder="Value (e.g., Corn Starch PLA)"
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => removeSpec(index)}
-                      disabled={
-                        formData.specifications.length <= 1 && spec.name.trim() === "" && spec.value.trim() === ""
-                      }
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" size="sm" onClick={addSpec} className="mt-2">
-                  <Plus className="h-4 w-4 mr-2" /> Add Specification
-                </Button>
-              </div>
+          {/* Specifications */}
+          <div className="space-y-4">
+            <Label>Specifications</Label>
+            <div className="space-y-2">
+              {formData.specifications.map((spec, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    value={spec.name}
+                    onChange={(e) => handleSpecChange(index, "name", e.target.value)}
+                    placeholder="Specification name"
+                    className="flex-1"
+                  />
+                  <Input
+                    value={spec.value}
+                    onChange={(e) => handleSpecChange(index, "value", e.target.value)}
+                    placeholder="Value"
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeSpec(index)}
+                    disabled={formData.specifications.length <= 1}
+                  >
+                    <Trash className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addSpec}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Specification
+              </Button>
             </div>
           </div>
         </CardContent>
+
         <CardFooter className="flex justify-between">
           <Button variant="outline" type="button" onClick={() => router.back()}>
             Cancel

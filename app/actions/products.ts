@@ -1,28 +1,63 @@
 "use server"
 
-import { createServerActionClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
-// Get all products
-export async function getProducts() {
-  const supabase = createServerActionClient({ cookies })
+// Get all products with optional filtering
+export async function getProducts(filters?: {
+  search?: string
+  category?: string
+  status?: string
+  page?: number
+  limit?: number
+}) {
+  const supabase = createClient()
 
   try {
-    const { data: products, error } = await supabase
-      .from("products")
-      .select(`
+    let query = supabase.from("products").select(`
         *,
         product_images(*)
       `)
-      .order("created_at", { ascending: false })
+
+    // Apply filters
+    if (filters?.search) {
+      query = query.or(
+        `name.ilike.%${filters.search}%,code.ilike.%${filters.search}%,description.ilike.%${filters.search}%`,
+      )
+    }
+
+    if (filters?.category && filters.category !== "all") {
+      query = query.eq("category", filters.category)
+    }
+
+    if (filters?.status && filters.status !== "all") {
+      const isActive = filters.status === "active"
+      query = query.eq("is_active", isActive)
+    }
+
+    // Apply pagination
+    const page = filters?.page || 1
+    const limit = filters?.limit || 10
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    query = query.range(from, to)
+
+    // Order by creation date
+    query = query.order("created_at", { ascending: false })
+
+    const { data: products, error, count } = await query
 
     if (error) {
       console.error("Error fetching products:", error)
       return { error: error.message }
     }
 
-    return { products }
+    return {
+      products: products || [],
+      totalCount: count || 0,
+      totalPages: Math.ceil((count || 0) / limit),
+    }
   } catch (error) {
     console.error("Error in getProducts:", error)
     return { error: "An unexpected error occurred" }
@@ -31,7 +66,7 @@ export async function getProducts() {
 
 // Get a single product by ID
 export async function getProductById(productId: string) {
-  const supabase = createServerActionClient({ cookies })
+  const supabase = createClient()
 
   try {
     const { data: product, error } = await supabase
@@ -62,7 +97,7 @@ export async function getProduct(id: string) {
 
 // Create a new product
 export async function createProduct(formData: FormData) {
-  const supabase = createServerActionClient({ cookies })
+  const supabase = createClient()
 
   try {
     // Get form data
@@ -72,15 +107,6 @@ export async function createProduct(formData: FormData) {
     const description = formData.get("description") as string
     const price = formData.get("price") as string
     const isActive = formData.get("isActive") === "true"
-
-    // Get image URLs from text input
-    const imageUrlsInput = formData.get("imageUrls") as string // e.g., comma-separated URLs from a text input
-    const directImageUrls = imageUrlsInput
-      ? imageUrlsInput
-          .split(",")
-          .map((url) => url.trim())
-          .filter(Boolean)
-      : []
 
     // Parse features
     const featuresString = formData.get("features") as string
@@ -112,7 +138,7 @@ export async function createProduct(formData: FormData) {
         description,
         features,
         specifications,
-        price,
+        price: price || null,
         is_active: isActive,
       })
       .select()
@@ -126,7 +152,6 @@ export async function createProduct(formData: FormData) {
     // Handle images
     const uploadedImages = formData.getAll("images") as File[]
     let imageCounter = 0
-    const imageRecords = []
 
     // Process uploaded files
     if (uploadedImages && uploadedImages.length > 0 && uploadedImages[0].size > 0) {
@@ -143,46 +168,20 @@ export async function createProduct(formData: FormData) {
 
         const { data: publicUrlData } = supabase.storage.from("product-images").getPublicUrl(filePath)
 
-        imageRecords.push({
+        await supabase.from("product_images").insert({
           product_id: product.id,
           image_url: publicUrlData.publicUrl,
-          alt_text: name, // Product name as alt text
+          alt_text: name,
           is_primary: imageCounter === 0,
           display_order: imageCounter,
         })
+
+        // Update product's main image_url with first image
+        if (imageCounter === 0) {
+          await supabase.from("products").update({ image_url: publicUrlData.publicUrl }).eq("id", product.id)
+        }
+
         imageCounter++
-      }
-    }
-
-    // Process direct image URLs
-    for (const url of directImageUrls) {
-      // Basic URL validation (you might want a more robust one)
-      if (url.startsWith("http://") || url.startsWith("https://")) {
-        imageRecords.push({
-          product_id: product.id,
-          image_url: url,
-          alt_text: name, // Product name as alt text
-          is_primary: imageCounter === 0, // Only primary if no files were uploaded
-          display_order: imageCounter,
-        })
-        imageCounter++
-      } else {
-        console.warn(`Invalid URL skipped: ${url}`)
-      }
-    }
-
-    // Batch insert image records if any
-    if (imageRecords.length > 0) {
-      const { error: imageInsertError } = await supabase.from("product_images").insert(imageRecords)
-
-      if (imageInsertError) {
-        console.error("Error inserting image records:", imageInsertError)
-        // Potentially return an error or handle partial success
-      }
-
-      // If the first image (overall) was a direct URL or an uploaded file, update product's main image_url
-      if (imageRecords[0]) {
-        await supabase.from("products").update({ image_url: imageRecords[0].image_url }).eq("id", product.id)
       }
     }
 
@@ -198,7 +197,7 @@ export async function createProduct(formData: FormData) {
 
 // Update an existing product
 export async function updateProduct(productId: string, formData: FormData) {
-  const supabase = createServerActionClient({ cookies })
+  const supabase = createClient()
 
   try {
     // Get form data
@@ -239,7 +238,7 @@ export async function updateProduct(productId: string, formData: FormData) {
         description,
         features,
         specifications,
-        price,
+        price: price || null,
         is_active: isActive,
       })
       .eq("id", productId)
@@ -312,7 +311,7 @@ export async function updateProduct(productId: string, formData: FormData) {
             // Get the first remaining image
             const { data: remainingImages } = await supabase
               .from("product_images")
-              .select("id")
+              .select("id, image_url")
               .eq("product_id", productId)
               .order("display_order", { ascending: true })
               .limit(1)
@@ -322,15 +321,7 @@ export async function updateProduct(productId: string, formData: FormData) {
               await supabase.from("product_images").update({ is_primary: true }).eq("id", remainingImages[0].id)
 
               // Also update the product's image_url
-              const { data: primaryImage } = await supabase
-                .from("product_images")
-                .select("image_url")
-                .eq("id", remainingImages[0].id)
-                .single()
-
-              if (primaryImage) {
-                await supabase.from("products").update({ image_url: primaryImage.image_url }).eq("id", productId)
-              }
+              await supabase.from("products").update({ image_url: remainingImages[0].image_url }).eq("id", productId)
             } else {
               // No images left, clear the product's image_url
               await supabase.from("products").update({ image_url: null }).eq("id", productId)
@@ -361,15 +352,6 @@ export async function updateProduct(productId: string, formData: FormData) {
       }
     }
 
-    // Handle image reordering
-    const imageOrder = formData.get("imageOrder") as string
-    if (imageOrder) {
-      const orderMap = JSON.parse(imageOrder)
-      for (const [id, order] of Object.entries(orderMap)) {
-        await supabase.from("product_images").update({ display_order: order }).eq("id", id)
-      }
-    }
-
     revalidatePath("/admin/products")
     revalidatePath(`/admin/products/edit/${productId}`)
     revalidatePath("/products")
@@ -384,9 +366,22 @@ export async function updateProduct(productId: string, formData: FormData) {
 
 // Delete a product
 export async function deleteProduct(productId: string) {
-  const supabase = createServerActionClient({ cookies })
+  const supabase = createClient()
 
   try {
+    // First, delete associated images from storage
+    const { data: images } = await supabase.from("product_images").select("image_url").eq("product_id", productId)
+
+    if (images) {
+      for (const image of images) {
+        // Extract file path from URL
+        const url = new URL(image.image_url)
+        const filePath = url.pathname.split("/").slice(-3).join("/") // Get last 3 parts of path
+
+        await supabase.storage.from("product-images").remove([filePath])
+      }
+    }
+
     // Delete the product (cascade will delete images)
     const { error } = await supabase.from("products").delete().eq("id", productId)
 
@@ -405,160 +400,83 @@ export async function deleteProduct(productId: string) {
   }
 }
 
-// Set image as primary
-export async function setImageAsPrimary(imageId: string) {
-  const supabase = createServerActionClient({ cookies })
+// Bulk delete products
+export async function bulkDeleteProducts(productIds: string[]) {
+  const supabase = createClient()
 
   try {
-    // Get the image to find its product_id
-    const { data: image, error: imageError } = await supabase
-      .from("product_images")
-      .select("product_id, image_url")
-      .eq("id", imageId)
-      .single()
+    // Delete associated images from storage for all products
+    const { data: images } = await supabase.from("product_images").select("image_url").in("product_id", productIds)
 
-    if (imageError) {
-      console.error("Error fetching image:", imageError)
-      return { error: imageError.message }
-    }
+    if (images) {
+      for (const image of images) {
+        const url = new URL(image.image_url)
+        const filePath = url.pathname.split("/").slice(-3).join("/")
 
-    // First, set all images for this product to non-primary
-    const { error: updateError1 } = await supabase
-      .from("product_images")
-      .update({ is_primary: false })
-      .eq("product_id", image.product_id)
-
-    if (updateError1) {
-      console.error("Error updating images:", updateError1)
-      return { error: updateError1.message }
-    }
-
-    // Then set the selected image as primary
-    const { error: updateError2 } = await supabase.from("product_images").update({ is_primary: true }).eq("id", imageId)
-
-    if (updateError2) {
-      console.error("Error updating image:", updateError2)
-      return { error: updateError2.message }
-    }
-
-    // Also update the product's image_url for backward compatibility
-    const { error: updateError3 } = await supabase
-      .from("products")
-      .update({ image_url: image.image_url })
-      .eq("id", image.product_id)
-
-    if (updateError3) {
-      console.error("Error updating product:", updateError3)
-      return { error: updateError3.message }
-    }
-
-    revalidatePath(`/admin/products/edit/${image.product_id}`)
-    revalidatePath(`/products/${image.product_id}`)
-
-    return { success: true }
-  } catch (error) {
-    console.error("Error in setImageAsPrimary:", error)
-    return { error: "An unexpected error occurred" }
-  }
-}
-
-// Delete an image
-export async function deleteProductImage(imageId: string) {
-  const supabase = createServerActionClient({ cookies })
-
-  try {
-    // Get the image to find its product_id and check if it's primary
-    const { data: image, error: imageError } = await supabase
-      .from("product_images")
-      .select("product_id, is_primary")
-      .eq("id", imageId)
-      .single()
-
-    if (imageError) {
-      console.error("Error fetching image:", imageError)
-      return { error: imageError.message }
-    }
-
-    // Delete the image
-    const { error: deleteError } = await supabase.from("product_images").delete().eq("id", imageId)
-
-    if (deleteError) {
-      console.error("Error deleting image:", deleteError)
-      return { error: deleteError.message }
-    }
-
-    // If it was a primary image, set a new primary image
-    if (image.is_primary) {
-      // Get the first remaining image
-      const { data: remainingImages } = await supabase
-        .from("product_images")
-        .select("id, image_url")
-        .eq("product_id", image.product_id)
-        .order("display_order", { ascending: true })
-        .limit(1)
-
-      if (remainingImages && remainingImages.length > 0) {
-        // Set it as primary
-        await supabase.from("product_images").update({ is_primary: true }).eq("id", remainingImages[0].id)
-
-        // Also update the product's image_url
-        await supabase.from("products").update({ image_url: remainingImages[0].image_url }).eq("id", image.product_id)
-      } else {
-        // No images left, clear the product's image_url
-        await supabase.from("products").update({ image_url: null }).eq("id", image.product_id)
+        await supabase.storage.from("product-images").remove([filePath])
       }
     }
 
-    revalidatePath(`/admin/products/edit/${image.product_id}`)
-    revalidatePath(`/products/${image.product_id}`)
+    // Delete the products
+    const { error } = await supabase.from("products").delete().in("id", productIds)
+
+    if (error) {
+      console.error("Error bulk deleting products:", error)
+      return { error: error.message }
+    }
+
+    revalidatePath("/admin/products")
+    revalidatePath("/products")
 
     return { success: true }
   } catch (error) {
-    console.error("Error in deleteProductImage:", error)
+    console.error("Error in bulkDeleteProducts:", error)
     return { error: "An unexpected error occurred" }
   }
 }
 
-// Update image order
-export async function updateImageOrder(imageId: string, newOrder: number) {
-  const supabase = createServerActionClient({ cookies })
+// Export products to CSV
+export async function exportProducts() {
+  const supabase = createClient()
 
   try {
-    // Get the image to find its product_id
-    const { data: image, error: imageError } = await supabase
-      .from("product_images")
-      .select("product_id")
-      .eq("id", imageId)
-      .single()
+    const { data: products, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false })
 
-    if (imageError) {
-      console.error("Error fetching image:", imageError)
-      return { error: imageError.message }
+    if (error) {
+      console.error("Error fetching products for export:", error)
+      return { error: error.message }
     }
 
-    // Update the image order
-    const { error: updateError } = await supabase
-      .from("product_images")
-      .update({ display_order: newOrder })
-      .eq("id", imageId)
+    // Convert to CSV format
+    const headers = ["ID", "Name", "Code", "Category", "Price", "Status", "Created At"]
+    const csvData = [
+      headers.join(","),
+      ...products.map((product) =>
+        [
+          product.id,
+          `"${product.name}"`,
+          product.code,
+          product.category,
+          product.price || "Contact for pricing",
+          product.is_active ? "Active" : "Draft",
+          new Date(product.created_at).toLocaleDateString(),
+        ].join(","),
+      ),
+    ].join("\n")
 
-    if (updateError) {
-      console.error("Error updating image order:", updateError)
-      return { error: updateError.message }
-    }
-
-    revalidatePath(`/admin/products/edit/${image.product_id}`)
-    revalidatePath(`/products/${image.product_id}`)
-
-    return { success: true }
+    return { success: true, csvData }
   } catch (error) {
-    console.error("Error in updateImageOrder:", error)
+    console.error("Error in exportProducts:", error)
     return { error: "An unexpected error occurred" }
   }
 }
 
+// Get product statistics
 export async function getProductStats() {
-  const supabase = createServerActionClient({ cookies })
+  const supabase = createClient()
 
   try {
     // Get total count
@@ -602,8 +520,9 @@ export async function getProductStats() {
   }
 }
 
+// Get top products
 export async function getTopProducts(limit = 5) {
-  const supabase = createServerActionClient({ cookies })
+  const supabase = createClient()
 
   try {
     const { data, error } = await supabase
