@@ -2,9 +2,9 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BlogPostsTable } from "@/components/admin/blog-posts-table"
-import { Plus } from "lucide-react"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { Plus, LayoutGrid, ListFilter, MessageSquare, Tag } from "lucide-react"
+import { getBlogPosts, getBlogStats } from "@/app/actions/blog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export const metadata = {
   title: "Blog Management | Admin Dashboard",
@@ -14,62 +14,6 @@ export const metadata = {
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-async function getBlogStats() {
-  const supabase = createServerComponentClient({ cookies })
-
-  // Get total posts
-  const { data: totalPosts, error: totalError } = await supabase.from("blog_posts").select("id", { count: "exact" })
-
-  // Get published posts
-  const { data: publishedPosts, error: publishedError } = await supabase
-    .from("blog_posts")
-    .select("id", { count: "exact" })
-    .eq("status", "published")
-
-  // Get draft posts
-  const { data: draftPosts, error: draftError } = await supabase
-    .from("blog_posts")
-    .select("id", { count: "exact" })
-    .eq("status", "draft")
-
-  // Get categories
-  const { data: categoriesData, error: categoriesError } = await supabase
-    .from("blog_posts")
-    .select("category")
-    .not("category", "is", null)
-
-  const uniqueCategories = new Set()
-  if (categoriesData) {
-    categoriesData.forEach((post) => {
-      if (post.category) uniqueCategories.add(post.category)
-    })
-  }
-
-  if (totalError || publishedError || draftError || categoriesError) {
-    console.error("Error fetching blog stats:", totalError || publishedError || draftError || categoriesError)
-  }
-
-  return {
-    total: totalPosts?.length || 0,
-    published: publishedPosts?.length || 0,
-    drafts: draftPosts?.length || 0,
-    categories: uniqueCategories.size || 0,
-  }
-}
-
-async function getBlogPosts() {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data, error } = await supabase.from("blog_posts").select("*").order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("Error fetching blog posts:", error)
-    return []
-  }
-
-  return data || []
-}
-
 export default async function BlogManagementPage() {
   const stats = await getBlogStats()
   const posts = await getBlogPosts()
@@ -78,12 +22,20 @@ export default async function BlogManagementPage() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Blog Management</h1>
-        <Button asChild>
-          <Link href="/admin/blog/new">
-            <Plus className="mr-2 h-4 w-4" />
-            New Post
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/blog/categories">
+              <LayoutGrid className="mr-2 h-4 w-4" />
+              Categories
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/admin/blog/new">
+              <Plus className="mr-2 h-4 w-4" />
+              New Post
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -124,15 +76,69 @@ export default async function BlogManagementPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Blog Posts</CardTitle>
-          <CardDescription>Manage your blog posts, edit content, and control publication status</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BlogPostsTable initialPosts={posts} />
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="posts" className="w-full">
+        <TabsList>
+          <TabsTrigger value="posts">
+            <ListFilter className="mr-2 h-4 w-4" />
+            Posts
+          </TabsTrigger>
+          <TabsTrigger value="comments">
+            <MessageSquare className="mr-2 h-4 w-4" />
+            Comments ({stats.comments})
+          </TabsTrigger>
+          <TabsTrigger value="tags">
+            <Tag className="mr-2 h-4 w-4" />
+            Tags
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="posts" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Blog Posts</CardTitle>
+              <CardDescription>Manage your blog posts, edit content, and control publication status</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BlogPostsTable initialPosts={posts} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="comments" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Comments</CardTitle>
+              <CardDescription>Manage and moderate user comments on your blog posts</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Button asChild>
+                  <Link href="/admin/blog/comments">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    View All Comments
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="tags" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tags</CardTitle>
+              <CardDescription>View and manage tags used across your blog posts</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <Button asChild>
+                  <Link href="/admin/blog/tags">
+                    <Tag className="mr-2 h-4 w-4" />
+                    Manage Tags
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

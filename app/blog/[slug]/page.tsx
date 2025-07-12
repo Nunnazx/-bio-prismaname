@@ -1,54 +1,42 @@
-import { getBlogPostBySlug } from "@/app/actions/blog"
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import BlogPostClient from "./BlogPostClient"
+import { getBlogPostBySlug } from "@/app/actions/blog"
+import BlogPostClientPage from "./BlogPostClientPage"
 
-type BlogPostPageProps = {
-  params: { slug: string; locale: string }
+interface BlogPostPageProps {
+  params: { slug: string }
 }
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const blogPost = await getBlogPostBySlug(params.slug)
+  const post = await getBlogPostBySlug(params.slug)
 
-  if (!blogPost) {
+  if (!post) {
     return {
-      title: "Blog Post Not Found",
+      title: "Post Not Found | AICMT International Blog",
     }
   }
 
-  const authorName = Array.isArray(blogPost.author) ? "AICMT Team" : blogPost.author?.full_name || "AICMT Team"
-
   return {
-    title: blogPost.seo_title || blogPost.title,
-    description: blogPost.seo_description || blogPost.excerpt,
-    keywords: blogPost.seo_keywords || blogPost.tags || [],
-    authors: [{ name: authorName }],
+    title: post.seo_title || `${post.title} | AICMT International Blog`,
+    description: post.seo_description || post.excerpt || `Read about ${post.title} on AICMT International blog.`,
+    keywords: post.seo_keywords || post.tags || [],
     openGraph: {
-      title: blogPost.seo_title || blogPost.title,
-      description: blogPost.seo_description || blogPost.excerpt || "",
-      url: `/${params.locale}/blog/${params.slug}`,
-      siteName: "AICMT",
-      images: blogPost.featured_image ? [blogPost.featured_image] : ["/blog-post-concept.png"],
-      locale: params.locale,
+      title: post.title,
+      description: post.excerpt || `Read about ${post.title} on AICMT International blog.`,
+      images: post.featured_image ? [{ url: post.featured_image }] : [],
       type: "article",
-      publishedTime: blogPost.publish_date || blogPost.created_at,
+      publishedTime: post.publish_date || post.created_at,
+      authors: post.author ? [`${post.author.first_name || ""} ${post.author.last_name || ""}`.trim()] : [],
+      tags: post.tags || [],
     },
     twitter: {
       card: "summary_large_image",
-      title: blogPost.seo_title || blogPost.title,
-      description: blogPost.seo_description || blogPost.excerpt || "",
-      images: blogPost.featured_image ? [blogPost.featured_image] : ["/blog-post-concept.png"],
+      title: post.title,
+      description: post.excerpt || `Read about ${post.title} on AICMT International blog.`,
+      images: post.featured_image ? [post.featured_image] : [],
     },
   }
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const blogPost = await getBlogPostBySlug(params.slug)
-
-  // If no post is found, render the 404 page.
-  if (!blogPost) {
-    notFound()
-  }
-
-  return <BlogPostClient params={params} blogPost={blogPost} />
+  return <BlogPostClientPage params={params} />
 }

@@ -1,12 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import {
   Bold,
   Italic,
-  Link,
   List,
   ListOrdered,
+  Link,
   ImageIcon,
   Heading1,
   Heading2,
@@ -14,165 +14,172 @@ import {
   Quote,
   Code,
 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 
-export function RichTextEditor({ initialValue = "", onChange }) {
-  const [content, setContent] = useState(initialValue)
-  const [view, setView] = useState("write")
+interface RichTextEditorProps {
+  value: string
+  onChange: (value: string) => void
+  className?: string
+}
 
-  const handleChange = (e) => {
-    setContent(e.target.value)
-    onChange(e.target.value)
-  }
+export function RichTextEditor({ value, onChange, className }: RichTextEditorProps) {
+  const [tab, setTab] = useState<"write" | "preview">("write")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const insertMarkdown = (markdownSyntax, placeholder = "") => {
-    const textarea = document.getElementById("editor-textarea")
-    if (!textarea) return
+  // Handle markdown formatting
+  const handleFormat = (format: string) => {
+    if (!textareaRef.current) return
 
+    const textarea = textareaRef.current
     const start = textarea.selectionStart
     const end = textarea.selectionEnd
-    const selectedText = content.substring(start, end) || placeholder
+    const selectedText = value.substring(start, end)
+    let replacement = ""
 
-    const beforeText = content.substring(0, start)
-    const afterText = content.substring(end)
-
-    let newText
-    if (markdownSyntax === "heading") {
-      newText = `${beforeText}## ${selectedText}${afterText}`
-    } else if (markdownSyntax === "heading1") {
-      newText = `${beforeText}# ${selectedText}${afterText}`
-    } else if (markdownSyntax === "heading2") {
-      newText = `${beforeText}## ${selectedText}${afterText}`
-    } else if (markdownSyntax === "heading3") {
-      newText = `${beforeText}### ${selectedText}${afterText}`
-    } else if (markdownSyntax === "bold") {
-      newText = `${beforeText}**${selectedText}**${afterText}`
-    } else if (markdownSyntax === "italic") {
-      newText = `${beforeText}_${selectedText}_${afterText}`
-    } else if (markdownSyntax === "link") {
-      newText = `${beforeText}[${selectedText}](url)${afterText}`
-    } else if (markdownSyntax === "image") {
-      newText = `${beforeText}![${selectedText}](image-url)${afterText}`
-    } else if (markdownSyntax === "list") {
-      newText = `${beforeText}\n- ${selectedText}\n- Item 2\n- Item 3${afterText}`
-    } else if (markdownSyntax === "ordered-list") {
-      newText = `${beforeText}\n1. ${selectedText}\n2. Item 2\n3. Item 3${afterText}`
-    } else if (markdownSyntax === "quote") {
-      newText = `${beforeText}\n> ${selectedText}\n${afterText}`
-    } else if (markdownSyntax === "code") {
-      newText = `${beforeText}\`\`\`\n${selectedText}\n\`\`\`${afterText}`
+    switch (format) {
+      case "bold":
+        replacement = `**${selectedText}**`
+        break
+      case "italic":
+        replacement = `*${selectedText}*`
+        break
+      case "ul":
+        replacement = selectedText
+          .split("\n")
+          .map((line) => `- ${line}`)
+          .join("\n")
+        break
+      case "ol":
+        replacement = selectedText
+          .split("\n")
+          .map((line, i) => `${i + 1}. ${line}`)
+          .join("\n")
+        break
+      case "link":
+        replacement = `[${selectedText}](url)`
+        break
+      case "image":
+        replacement = `![${selectedText || "alt text"}](url)`
+        break
+      case "h1":
+        replacement = `# ${selectedText}`
+        break
+      case "h2":
+        replacement = `## ${selectedText}`
+        break
+      case "h3":
+        replacement = `### ${selectedText}`
+        break
+      case "quote":
+        replacement = `> ${selectedText}`
+        break
+      case "code":
+        replacement = `\`\`\`\n${selectedText}\n\`\`\``
+        break
+      default:
+        break
     }
 
-    setContent(newText)
-    onChange(newText)
+    const newValue = value.substring(0, start) + replacement + value.substring(end)
+    onChange(newValue)
 
-    // Reset focus to the textarea
+    // Set cursor position after the inserted markdown
     setTimeout(() => {
       textarea.focus()
-      textarea.setSelectionRange(
-        start + markdownSyntax.length + 2,
-        start + markdownSyntax.length + 2 + selectedText.length,
-      )
+      textarea.setSelectionRange(start + replacement.length, start + replacement.length)
     }, 0)
   }
 
+  // Simple markdown to HTML converter for preview
+  const markdownToHtml = (markdown: string) => {
+    const html = markdown
+      // Headers
+      .replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
+      .replace(/^## (.*$)/gm, '<h2 class="text-xl font-bold mt-4 mb-2">$1</h2>')
+      .replace(/^### (.*$)/gm, '<h3 class="text-lg font-bold mt-4 mb-2">$1</h3>')
+      // Bold and Italic
+      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.*?)\*/g, "<em>$1</em>")
+      // Lists
+      .replace(/^\s*- (.*$)/gm, '<li class="ml-4">$1</li>')
+      .replace(/^\s*\d+\. (.*$)/gm, '<li class="ml-4">$1</li>')
+      // Links and Images
+      .replace(/\[(.*?)\]$$(.*?)$$/g, '<a href="$2" class="text-blue-600 hover:underline">$1</a>')
+      .replace(/!\[(.*?)\]$$(.*?)$$/g, '<img src="$2" alt="$1" class="max-w-full h-auto my-2 rounded" />')
+      // Blockquotes
+      .replace(/^> (.*$)/gm, '<blockquote class="pl-4 border-l-4 border-gray-300 italic">$1</blockquote>')
+      // Code blocks
+      .replace(/```([\s\S]*?)```/g, '<pre class="bg-gray-100 p-2 rounded my-2 overflow-x-auto"><code>$1</code></pre>')
+      // Line breaks
+      .replace(/\n/g, "<br />")
+
+    return html
+  }
+
   return (
-    <div className="border rounded-md">
-      <div className="border-b p-2">
-        <ToggleGroup type="multiple" className="flex flex-wrap gap-1">
-          <ToggleGroupItem
-            value="heading1"
-            aria-label="Heading 1"
-            onClick={() => insertMarkdown("heading1", "Heading")}
-          >
-            <Heading1 className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="heading2"
-            aria-label="Heading 2"
-            onClick={() => insertMarkdown("heading2", "Heading")}
-          >
-            <Heading2 className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="heading3"
-            aria-label="Heading 3"
-            onClick={() => insertMarkdown("heading3", "Heading")}
-          >
-            <Heading3 className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="bold" aria-label="Bold" onClick={() => insertMarkdown("bold", "Bold text")}>
-            <Bold className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="italic" aria-label="Italic" onClick={() => insertMarkdown("italic", "Italic text")}>
-            <Italic className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="link" aria-label="Link" onClick={() => insertMarkdown("link", "Link text")}>
-            <Link className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="image" aria-label="Image" onClick={() => insertMarkdown("image", "Image alt text")}>
-            <ImageIcon className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="list" aria-label="Bullet List" onClick={() => insertMarkdown("list", "List item")}>
-            <List className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem
-            value="ordered-list"
-            aria-label="Numbered List"
-            onClick={() => insertMarkdown("ordered-list", "List item")}
-          >
-            <ListOrdered className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="quote" aria-label="Quote" onClick={() => insertMarkdown("quote", "Quoted text")}>
-            <Quote className="h-4 w-4" />
-          </ToggleGroupItem>
-          <ToggleGroupItem value="code" aria-label="Code Block" onClick={() => insertMarkdown("code", "Code snippet")}>
-            <Code className="h-4 w-4" />
-          </ToggleGroupItem>
-        </ToggleGroup>
-      </div>
-
-      <Tabs value={view} onValueChange={setView} className="w-full">
-        <div className="border-b px-3">
-          <TabsList className="h-9 bg-transparent">
-            <TabsTrigger
-              value="write"
-              className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
-            >
-              Write
-            </TabsTrigger>
-            <TabsTrigger
-              value="preview"
-              className="rounded-none data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none"
-            >
-              Preview
-            </TabsTrigger>
-          </TabsList>
+    <div className={cn("border rounded-md", className)}>
+      <div className="flex items-center gap-1 p-1 border-b bg-muted/50">
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("bold")} title="Bold">
+          <Bold className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("italic")} title="Italic">
+          <Italic className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("h1")} title="Heading 1">
+          <Heading1 className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("h2")} title="Heading 2">
+          <Heading2 className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("h3")} title="Heading 3">
+          <Heading3 className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("ul")} title="Bullet List">
+          <List className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("ol")} title="Numbered List">
+          <ListOrdered className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("link")} title="Link">
+          <Link className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("image")} title="Image">
+          <ImageIcon className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("quote")} title="Quote">
+          <Quote className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" onClick={() => handleFormat("code")} title="Code Block">
+          <Code className="h-4 w-4" />
+        </Button>
+        <div className="ml-auto">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as "write" | "preview")}>
+            <TabsList className="grid w-[180px] grid-cols-2">
+              <TabsTrigger value="write">Write</TabsTrigger>
+              <TabsTrigger value="preview">Preview</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
-
-        <TabsContent value="write" className="p-0 border-0 mt-0">
+      </div>
+      <div className="min-h-[300px]">
+        {tab === "write" ? (
           <Textarea
-            id="editor-textarea"
-            value={content}
-            onChange={handleChange}
+            ref={textareaRef}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="min-h-[300px] border-0 focus-visible:ring-0 resize-none"
             placeholder="Write your content here..."
-            className="min-h-[300px] border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
           />
-        </TabsContent>
-
-        <TabsContent value="preview" className="p-4 border-0 mt-0">
-          {content ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              {/* In a real implementation, you would render Markdown here */}
-              <div className="whitespace-pre-wrap">{content}</div>
-            </div>
-          ) : (
-            <div className="text-muted-foreground text-center py-12">Nothing to preview</div>
-          )}
-        </TabsContent>
-      </Tabs>
+        ) : (
+          <div
+            className="prose prose-sm max-w-none p-4 min-h-[300px] overflow-auto"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(value) }}
+          />
+        )}
+      </div>
     </div>
   )
 }

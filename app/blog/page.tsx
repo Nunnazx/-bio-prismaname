@@ -1,316 +1,191 @@
-export const dynamic = "force-dynamic"
-import { getBlogPosts } from "@/app/actions/blog"
-import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  User,
-  ChevronLeft,
-  ChevronRight,
-  Search,
-  Newspaper,
-  TagIcon,
-  ListIcon,
-  MailIcon,
-} from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
-
+import { Suspense } from "react"
+import type { Metadata } from "next"
+import { BlogPostCard } from "@/components/blog/blog-post-card"
+import { BlogSidebar } from "@/components/blog/blog-sidebar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { format } from "date-fns"
-import { PostCardActions } from "@/components/blog/post-card-actions" // Import the new component
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { getPublishedBlogPosts, searchBlogPosts } from "@/app/actions/blog"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
 
-// Helper function to calculate read time
-function calculateReadTime(content: string | null): string {
-  if (!content) return "1 min read"
-  const wordsPerMinute = 200
-  const textLength = content.split(/\s+/).length
-  const readTime = Math.ceil(textLength / wordsPerMinute)
-  return `${readTime} min read`
+export const metadata: Metadata = {
+  title: "Blog | AICMT International",
+  description:
+    "Latest insights on biodegradable plastics, sustainability, and environmental innovation from AICMT International.",
+  keywords: ["biodegradable plastics", "sustainability", "environment", "innovation", "blog"],
 }
 
-// Helper function to format dates
-function formatDate(dateString: string | null): string {
-  if (!dateString) return "No date"
-  return format(new Date(dateString), "MMMM d, yyyy")
+interface BlogPageProps {
+  searchParams: {
+    page?: string
+    search?: string
+    category?: string
+    tag?: string
+  }
 }
 
-const categories = [
-  { name: "Sustainability", count: 12, slug: "sustainability" },
-  { name: "Education", count: 8, slug: "education" },
-  { name: "Company News", count: 5, slug: "company-news" },
-  { name: "Tips & Guides", count: 7, slug: "tips-guides" },
-  { name: "Industry Insights", count: 9, slug: "industry-insights" },
-  { name: "Case Studies", count: 4, slug: "case-studies" },
-]
+const POSTS_PER_PAGE = 9
 
-const popularTags = [
-  { name: "Biodegradable", slug: "biodegradable" },
-  { name: "Compostable", slug: "compostable" },
-  { name: "Sustainability", slug: "sustainability" },
-  { name: "Plastic Alternatives", slug: "plastic-alternatives" },
-  { name: "Circular Economy", slug: "circular-economy" },
-  { name: "Regulations", slug: "regulations" },
-  { name: "Innovation", slug: "innovation" },
-  { name: "Waste Management", slug: "waste-management" },
-]
+export default async function BlogPage({ searchParams }: BlogPageProps) {
+  const page = Number.parseInt(searchParams.page || "1", 10)
+  const searchQuery = searchParams.search
+  const categorySlug = searchParams.category
+  const tagName = searchParams.tag
 
-export default async function BlogPage() {
-  const allPosts = await getBlogPosts()
-  const publishedPosts = allPosts.filter((post) => post.status === "published")
+  const offset = (page - 1) * POSTS_PER_PAGE
 
-  if (publishedPosts.length === 0) {
-    return (
-      <div className="container px-4 py-12 md:px-6 md:py-24 text-center">
-        <div className="flex justify-center mb-4">
-          <Newspaper className="h-16 w-16 text-gray-400" />
-        </div>
-        <h1 className="text-3xl font-bold">No Blog Posts Found</h1>
-        <p className="text-gray-500 mt-2">Check back later for more updates!</p>
-        <Link href="/" className="mt-6 inline-block">
-          <Button variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
-          </Button>
-        </Link>
-      </div>
-    )
+  let posts: any[] = []
+  let totalCount = 0
+  let pageTitle = "Latest Blog Posts"
+
+  try {
+    if (searchQuery) {
+      posts = await searchBlogPosts(searchQuery)
+      totalCount = posts.length
+      pageTitle = `Search Results for "${searchQuery}"`
+    } else {
+      const result = await getPublishedBlogPosts(POSTS_PER_PAGE, offset)
+      posts = result.data || []
+      totalCount = result.count || 0
+    }
+  } catch (error) {
+    console.error("Error fetching blog posts:", error)
+    posts = []
+    totalCount = 0
   }
 
-  const featuredPost = publishedPosts[0]
-  const regularPosts = publishedPosts.slice(1)
-
-  const getAuthorName = (authorId: string | null | undefined): string => {
-    if (authorId) return "AICMT Admin"
-    return "AICMT Team"
-  }
+  const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE)
+  const hasNextPage = page < totalPages
+  const hasPrevPage = page > 1
 
   return (
-    <div className="container px-4 py-12 md:px-6 md:py-24">
-      <div className="flex flex-col gap-8">
-        <div className="flex items-center gap-2">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
-            </Button>
-          </Link>
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-r from-green-50 to-blue-50 py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">{pageTitle}</h1>
+            <p className="text-lg text-gray-600 mb-8">
+              Discover insights on sustainable packaging, biodegradable materials, and environmental innovation
+            </p>
+          </div>
         </div>
+      </section>
 
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Blog & News</h1>
-          <p className="max-w-[700px] text-gray-500 md:text-xl">
-            Insights, updates, and resources on compostable plastics and sustainability
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          <div className="md:col-span-2">
-            <div className="grid gap-8">
-              {/* Featured post */}
-              <Card className="overflow-hidden">
-                {featuredPost.featured_image ? (
-                  <Link href={`/blog/${featuredPost.slug}`} className="block relative aspect-video w-full">
-                    <Image
-                      src={featuredPost.featured_image || "/placeholder.svg"}
-                      alt={featuredPost.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority
-                    />
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/blog/${featuredPost.slug}`}
-                    className="block aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
-                  >
-                    <Newspaper className="h-16 w-16 text-gray-300 dark:text-gray-600" />
-                  </Link>
-                )}
-                <CardHeader>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-2 flex-wrap">
-                    <Calendar className="h-4 w-4" />
-                    <span>{formatDate(featuredPost.publish_date || featuredPost.created_at)}</span>
-                    <Separator orientation="vertical" className="h-4" />
-                    <User className="h-4 w-4" />
-                    <span>{getAuthorName(featuredPost.author_id)}</span>
-                    <Separator orientation="vertical" className="h-4" />
-                    <Clock className="h-4 w-4" />
-                    <span>{calculateReadTime(featuredPost.content)}</span>
+      {/* Main Content */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Blog Posts */}
+            <div className="lg:col-span-3">
+              {posts.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+                    {posts.map((post) => (
+                      <BlogPostCard
+                        key={post.id}
+                        post={post}
+                        showExcerpt={true}
+                        showAuthor={true}
+                        showCategory={true}
+                        showTags={true}
+                        showStats={true}
+                      />
+                    ))}
                   </div>
-                  <CardTitle className="text-2xl">
-                    <Link href={`/blog/${featuredPost.slug}`}>{featuredPost.title}</Link>
-                  </CardTitle>
-                  <CardDescription>{featuredPost.excerpt}</CardDescription>
-                </CardHeader>
-                <CardFooter>
-                  <PostCardActions slug={featuredPost.slug} title={featuredPost.title} />
-                </CardFooter>
-              </Card>
 
-              {/* Regular posts */}
-              <div className="grid gap-6 sm:grid-cols-2">
-                {regularPosts.map((post) => (
-                  <Card key={post.id} className="overflow-hidden flex flex-col">
-                    {post.featured_image ? (
-                      <Link href={`/blog/${post.slug}`} className="block relative aspect-video w-full">
-                        <Image
-                          src={post.featured_image || "/placeholder.svg"}
-                          alt={post.title}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        />
-                      </Link>
-                    ) : (
-                      <Link
-                        href={`/blog/${post.slug}`}
-                        className="block aspect-video w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
-                      >
-                        <Newspaper className="h-12 w-12 text-gray-300 dark:text-gray-600" />
-                      </Link>
-                    )}
-                    <CardHeader className="flex-grow">
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-1 flex-wrap">
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>{formatDate(post.publish_date || post.created_at)}</span>
-                        <Separator orientation="vertical" className="h-3.5" />
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>{calculateReadTime(post.content)}</span>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2">
+                      {hasPrevPage && (
+                        <Button asChild variant="outline">
+                          <Link
+                            href={`/blog?page=${page - 1}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""}`}
+                          >
+                            <ChevronLeft className="mr-2 h-4 w-4" />
+                            Previous
+                          </Link>
+                        </Button>
+                      )}
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const pageNum = i + 1
+                          const isCurrentPage = pageNum === page
+
+                          return (
+                            <Button key={pageNum} asChild variant={isCurrentPage ? "default" : "outline"} size="sm">
+                              <Link
+                                href={`/blog?page=${pageNum}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""}`}
+                              >
+                                {pageNum}
+                              </Link>
+                            </Button>
+                          )
+                        })}
                       </div>
-                      <CardTitle className="text-lg">
-                        <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                      </CardTitle>
-                      <CardDescription className="line-clamp-2">{post.excerpt}</CardDescription>
-                    </CardHeader>
-                    <CardFooter>
-                      <PostCardActions slug={post.slug} title={post.title} />
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
 
-              {/* Pagination */}
-              <div className="flex justify-center mt-8">
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" disabled>
-                    <ChevronLeft className="h-4 w-4 mr-1" />
-                    Previous
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-10">
-                    1
-                  </Button>
-                  {/* <Button variant="outline" size="sm" className="w-10">
-                    2
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-10">
-                    3
-                  </Button> */}
-                  <Button variant="outline" size="sm" disabled>
-                    {" "}
-                    {/* Assuming only 1 page for now */}
-                    Next
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
+                      {hasNextPage && (
+                        <Button asChild variant="outline">
+                          <Link
+                            href={`/blog?page=${page + 1}${searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : ""}`}
+                          >
+                            Next
+                            <ChevronRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <h3 className="text-lg font-semibold mb-2">No posts found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      {searchQuery
+                        ? `No posts match your search for "${searchQuery}"`
+                        : "No blog posts are available at the moment."}
+                    </p>
+                    {searchQuery && (
+                      <Button asChild variant="outline">
+                        <Link href="/blog">View All Posts</Link>
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Sidebar */}
+            <div className="lg:col-span-1">
+              <Suspense fallback={<BlogSidebarSkeleton />}>
+                <BlogSidebar />
+              </Suspense>
             </div>
           </div>
-
-          {/* Sidebar */}
-          <div className="space-y-8">
-            {/* Search */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Search className="h-5 w-5" /> Search
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Input placeholder="Search articles..." />
-                  <Button aria-label="Search">
-                    <Search className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Categories */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ListIcon className="h-5 w-5" /> Categories
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2">
-                  {categories.map((category) => (
-                    <li key={category.slug}>
-                      <Link
-                        href={`/blog/category/${category.slug}`}
-                        className="flex justify-between items-center py-2 hover:text-green-600 transition-colors"
-                      >
-                        <span>{category.name}</span>
-                        <Badge variant="outline">{category.count}</Badge>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Popular Tags */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TagIcon className="h-5 w-5" /> Popular Tags
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {popularTags.map((tag) => (
-                    <Link key={tag.slug} href={`/blog/tag/${tag.slug}`}>
-                      <Badge
-                        variant="outline"
-                        className="bg-green-50 hover:bg-green-100 transition-colors cursor-pointer"
-                      >
-                        {tag.name}
-                      </Badge>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Newsletter Signup */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MailIcon className="h-5 w-5" /> Subscribe to Our Newsletter
-                </CardTitle>
-                <CardDescription>
-                  Stay updated with the latest news and insights on sustainable plastics
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {/* Replace with NewsletterForm component if available and suitable */}
-                <form className="space-y-4">
-                  <div className="space-y-2">
-                    <Input placeholder="Your email address" type="email" />
-                  </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700">Subscribe</Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
         </div>
-      </div>
+      </section>
+    </div>
+  )
+}
+
+function BlogSidebarSkeleton() {
+  return (
+    <div className="space-y-6">
+      {[1, 2, 3].map((i) => (
+        <Card key={i}>
+          <div className="p-4">
+            <Skeleton className="h-4 w-24 mb-4" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          </div>
+        </Card>
+      ))}
     </div>
   )
 }

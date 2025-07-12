@@ -1,4 +1,5 @@
 import { BlogPostForm } from "@/components/admin/blog-post-form"
+import { getBlogCategories } from "@/app/actions/blog"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -6,16 +7,12 @@ export const metadata: Metadata = {
   description: "Create a new blog post.",
 }
 
-// You might want to fetch authors and categories here if they are dynamic
-// For simplicity, we'll assume they are static or handled within the form for now.
-
 export default async function NewBlogPostPage() {
-  // const authors = await getAuthors(); // Example
-  // const categories = await getCategories(); // Example
+  const categories = await getBlogCategories()
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <BlogPostForm /* authors={authors} categories={categories} */ />
+      <BlogPostForm categories={categories} />
     </div>
   )
 }
