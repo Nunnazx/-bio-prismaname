@@ -1,4 +1,4 @@
-import { Building, Mail, MapPin, Phone } from "lucide-react"
+import { Building, Mail, Phone } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
@@ -83,25 +83,31 @@ export default function ContactPage() {
                 <div className="flex items-start gap-3">
                   <Building className="h-5 w-5 text-green-600 mt-0.5" />
                   <div>
-                    <h3 className="font-medium">AICMT International Pvt. Ltd.</h3>
-                    <p className="text-sm text-gray-500">CIN: U51909TG2021PTC152560</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-green-600 mt-0.5" />
-                  <div>
-                    <h3 className="font-medium">Address</h3>
+                    <h3 className="font-medium">Corporate Office</h3>
                     <p className="text-sm text-gray-500">
-                      Bharath's 63 Noth, Plot #63 & 64, Ground floor, 3rd-Lane, Adithya Gardens, Near Sai Nagar Main
-                      Road, Bachupally, Telangana, 500090
+                      Flat No 201, 2nd Floor, Basaveswara Nilayam, Plot No 05, Above Vijaya Diagnostics, Near ALEAP
+                      Circle, Pragathi Nagar, Hyderabad, Telangana – 500 090
                     </p>
                   </div>
                 </div>
+
+                <div className="flex items-start gap-3">
+                  <Building className="h-5 w-5 text-green-600 mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Manufacturing Unit</h3>
+                    <p className="text-sm text-gray-500">
+                      Plot No 77/A, Kondapur Industrial Park, Kondapur Village, Manoharabad Mandal, Medak (Dist),
+                      Telangana – 502102
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex items-start gap-3">
                   <Phone className="h-5 w-5 text-green-600 mt-0.5" />
                   <div>
                     <h3 className="font-medium">Phone</h3>
-                    <p className="text-sm text-gray-500">+91 70755 00878, +91 75780 07116</p>
+                    <p className="text-sm text-gray-500">+91-7075500868 / +91-7358536074</p>
+                    <p className="text-sm text-gray-500">WhatsApp: +91-7578007116</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -122,12 +128,8 @@ export default function ContactPage() {
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span>Monday - Friday</span>
-                    <span>9:00 AM - 6:00 PM</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Saturday</span>
-                    <span>10:00 AM - 4:00 PM</span>
+                    <span>Monday - Saturday</span>
+                    <span>10:00 AM - 5:00 PM</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Sunday</span>
@@ -145,7 +147,7 @@ export default function ContactPage() {
               <CardContent>
                 <div className="rounded-md overflow-hidden mb-4">
                   <Image
-                    src="/placeholder.svg?height=200&width=400&query=modern manufacturing facility"
+                    src="/placeholder.svg?height=200&width=400"
                     alt="AICMT Manufacturing Facility"
                     width={400}
                     height={200}
@@ -156,7 +158,7 @@ export default function ContactPage() {
                   Our state-of-the-art manufacturing facility spans 10,000 Square Feet and is equipped with the latest
                   technology for producing high-quality compostable plastics.
                 </p>
-                <Button variant="outline" className="mt-4 w-full">
+                <Button variant="outline" className="mt-4 w-full bg-transparent">
                   Schedule a Visit
                 </Button>
               </CardContent>

@@ -17,13 +17,17 @@ import { Switch } from "@/components/ui/switch"
 import { toast } from "@/components/ui/use-toast"
 import { createProduct, updateProduct } from "@/app/actions/products"
 
-// Product categories
+// Updated product categories to match actual products
 const PRODUCT_CATEGORIES = [
-  { id: "granules", name: "Granules & Resins" },
-  { id: "bags", name: "Carry Bags" },
-  { id: "packaging", name: "Food Packaging" },
-  { id: "films", name: "Films & Wraps" },
-  { id: "custom", name: "Custom Solutions" },
+  { id: "filler-master-batches", name: "Filler Master Batches" },
+  { id: "carry-bags-plain", name: "Carry Bags / Shopping Bags Plain" },
+  { id: "carry-bags-private-label", name: "Carry Bags / Shopping Bags With Private Labelling" },
+  { id: "grocery-pouches", name: "Grocery Pouches" },
+  { id: "supermarket-pouches", name: "Supermarket Pouches with Perforation Rolls" },
+  { id: "d-cut-garment-bags", name: "D-Cut Garment Bags" },
+  { id: "garbage-bags", name: "Garbage Bags" },
+  { id: "tiffin-sheets", name: "Tiffin Sheets" },
+  { id: "packaging-sheets-rolls", name: "Packaging Sheets in Rolls Form" },
 ]
 
 interface ProductFormProps {
@@ -65,7 +69,7 @@ export function ProductForm({ product = null }: ProductFormProps) {
   const [formData, setFormData] = useState({
     name: product?.name || "",
     code: product?.code || "",
-    category: product?.category || "granules",
+    category: product?.category || "filler-master-batches",
     description: product?.description || "",
     features: product ? parseProductFeatures(product.features) : [""],
     specifications: product ? parseProductSpecifications(product.specifications) : [{ name: "", value: "" }],

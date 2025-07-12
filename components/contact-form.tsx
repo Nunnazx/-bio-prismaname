@@ -124,13 +124,14 @@ export function ContactForm({ createInquiry }) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
+          <Label htmlFor="phone">Phone *</Label>
           <Input
             id="phone"
             name="phone"
             value={formData.phone}
             onChange={handleChange}
             placeholder="Your phone number"
+            required
           />
         </div>
       </div>
@@ -149,7 +150,7 @@ export function ContactForm({ createInquiry }) {
             <SelectItem value="product">Product Information</SelectItem>
             <SelectItem value="quote">Request a Quote</SelectItem>
             <SelectItem value="sample">Request a Sample</SelectItem>
-            <SelectItem value="partnership">Partnership Opportunity</SelectItem>
+            <SelectItem value="marketing-partner">Be our Marketing Partner</SelectItem>
             <SelectItem value="other">Other</SelectItem>
           </SelectContent>
         </Select>

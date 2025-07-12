@@ -87,6 +87,65 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* Founders Section */}
+        <section className="py-12">
+          <div className="space-y-4 text-center mb-12">
+            <h2 className="text-3xl font-bold">Our Leadership</h2>
+            <p className="text-gray-500 max-w-3xl mx-auto">Founded by Alumni of IIT Kharagpur & IBS Dehradun</p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 items-center">
+            <div>
+              <h3 className="text-xl font-bold mb-4">Visionary Leadership</h3>
+              <p className="text-gray-600 mb-4">
+                Our company was founded by distinguished alumni from India's premier institutions - IIT Kharagpur and
+                IBS Dehradun. This unique combination of technical excellence and business acumen drives our innovation
+                in sustainable plastic alternatives.
+              </p>
+              <p className="text-gray-600">
+                With deep expertise in materials science and sustainable business practices, our leadership team is
+                committed to creating solutions that benefit both businesses and the environment.
+              </p>
+            </div>
+            <div className="rounded-lg overflow-hidden">
+              <OptimizedImage
+                src="/sustainable-factory-exterior.png"
+                alt="AICMT International Factory"
+                width={500}
+                height={300}
+                className="w-full rounded-lg"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Manufacturing Excellence Section */}
+        <section className="py-12">
+          <div className="space-y-4 text-center mb-12">
+            <h2 className="text-3xl font-bold">State-of-the-Art Manufacturing</h2>
+            <p className="text-gray-500 max-w-3xl mx-auto">
+              Our production facility combines advanced technology with sustainable practices
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <OptimizedImage
+              src="/eco-factory-innovation.png"
+              alt="Production Floor"
+              width={500}
+              height={300}
+              className="w-full rounded-lg"
+            />
+            <OptimizedImage
+              src="/biodegradable-plastic-granules.png"
+              alt="Manufacturing Process"
+              width={500}
+              height={300}
+              className="w-full rounded-lg"
+            />
+          </div>
+        </section>
+
         {/* CTA Section */}
         <section className="py-12 bg-green-600 text-white rounded-lg p-8 text-center">
           <h2 className="text-3xl font-bold mb-4">{t("about.cta.title")}</h2>
@@ -96,7 +155,7 @@ export default function AboutPage() {
               <Button className="bg-white text-green-600 hover:bg-gray-100">{t("about.cta.contactButton")}</Button>
             </Link>
             <Link href="/products">
-              <Button variant="outline" className="text-white border-white hover:bg-green-700">
+              <Button variant="outline" className="text-white border-white hover:bg-green-700 bg-transparent">
                 {t("about.cta.productsButton")}
               </Button>
             </Link>

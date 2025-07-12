@@ -3,6 +3,19 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
+// Updated product categories to match actual products
+const PRODUCT_CATEGORIES = {
+  "filler-master-batches": "Filler Master Batches",
+  "carry-bags-plain": "Carry Bags / Shopping Bags Plain",
+  "carry-bags-private-label": "Carry Bags / Shopping Bags With Private Labelling",
+  "grocery-pouches": "Grocery Pouches",
+  "supermarket-pouches": "Supermarket Pouches with Perforation Rolls",
+  "d-cut-garment-bags": "D-Cut Garment Bags",
+  "garbage-bags": "Garbage Bags",
+  "tiffin-sheets": "Tiffin Sheets",
+  "packaging-sheets-rolls": "Packaging Sheets in Rolls Form",
+}
+
 // Get all products with optional filtering
 export async function getProducts(filters?: {
   search?: string
@@ -459,7 +472,7 @@ export async function exportProducts() {
           product.id,
           `"${product.name}"`,
           product.code,
-          product.category,
+          PRODUCT_CATEGORIES[product.category] || product.category,
           product.price || "Contact for pricing",
           product.is_active ? "Active" : "Draft",
           new Date(product.created_at).toLocaleDateString(),
@@ -501,7 +514,8 @@ export async function getProductStats() {
 
     // Count products by category
     const categories = categoryData.reduce((acc, product) => {
-      acc[product.category] = (acc[product.category] || 0) + 1
+      const categoryName = PRODUCT_CATEGORIES[product.category] || product.category
+      acc[categoryName] = (acc[categoryName] || 0) + 1
       return acc
     }, {})
 
@@ -540,3 +554,6 @@ export async function getTopProducts(limit = 5) {
     return []
   }
 }
+
+// Export the categories for use in other components
+export { PRODUCT_CATEGORIES }

@@ -94,11 +94,12 @@ export default async function ProductsPage({ params }: { params: { locale: strin
                     All our products are certified by the Central Pollution Control Board
                   </p>
                 </div>
+                {/* Updated Safety and Certification Section */}
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <Leaf className="h-8 w-8 text-green-600" />
                   </div>
-                  <h3 className="font-bold mb-2">100% Biodegradable</h3>
+                  <h3 className="font-bold mb-2">Biodegradable & Compostable</h3>
                   <p className="text-sm text-gray-600">
                     Our products completely break down into natural elements within 180 days
                   </p>

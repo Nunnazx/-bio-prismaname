@@ -19,16 +19,13 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
-import { getProducts, bulkDeleteProducts, exportProducts, deleteProduct } from "@/app/actions/products"
-
-// Category display names
-const categoryNames = {
-  granules: "Granules & Resins",
-  bags: "Carry Bags",
-  packaging: "Food Packaging",
-  films: "Films & Wraps",
-  custom: "Custom Solutions",
-}
+import {
+  getProducts,
+  bulkDeleteProducts,
+  exportProducts,
+  deleteProduct,
+  PRODUCT_CATEGORIES,
+} from "@/app/actions/products"
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([])
@@ -287,7 +284,7 @@ export default function ProductsPage() {
                     <DropdownMenuLabel>Filter by Category</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => handleCategoryFilter("all")}>All Categories</DropdownMenuItem>
-                    {Object.entries(categoryNames).map(([key, name]) => (
+                    {Object.entries(PRODUCT_CATEGORIES).map(([key, name]) => (
                       <DropdownMenuItem key={key} onClick={() => handleCategoryFilter(key)}>
                         {name}
                       </DropdownMenuItem>
@@ -370,7 +367,7 @@ export default function ProductsPage() {
                         </TableCell>
                         <TableCell className="font-mono text-xs">{product.code}</TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{categoryNames[product.category] || product.category}</TableCell>
+                        <TableCell>{PRODUCT_CATEGORIES[product.category] || product.category}</TableCell>
                         <TableCell>{product.price ? `₹${product.price}` : "Contact for pricing"}</TableCell>
                         <TableCell>
                           <Badge
