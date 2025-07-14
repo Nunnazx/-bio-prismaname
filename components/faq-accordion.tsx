@@ -76,7 +76,7 @@ const faqData = [
       {
         question: "What is the minimum order quantity?",
         answer:
-          "Our minimum order quantities are: For Granules - Multiples of 40 Kgs, and for Compostable Bags of each size - 40 Kgs minimum. For custom solutions, please contact our sales team for specific requirements.",
+          "Our minimum order quantities vary by product type. For standard products, we typically have a minimum order of 25 kg for granules and 1,000 pieces for bags and packaging products. For custom solutions, please contact our sales team for specific requirements.",
       },
       {
         question: "Do you offer custom printing on your products?",

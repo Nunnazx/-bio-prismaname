@@ -1,23 +1,3 @@
--- Insert blog categories
-INSERT INTO blog_categories (name, slug, description, color) VALUES
-('Sustainability', 'sustainability', 'Articles about environmental sustainability and eco-friendly practices', '#10B981'),
-('Product Updates', 'product-updates', 'Latest updates about our biodegradable and compostable products', '#3B82F6'),
-('Industry News', 'industry-news', 'News and trends in the biodegradable plastics industry', '#8B5CF6'),
-('Company News', 'company-news', 'Updates and announcements from AICMT International', '#F59E0B');
-
--- Insert blog tags
-INSERT INTO blog_tags (name, slug) VALUES
-('Biodegradable', 'biodegradable'),
-('Compostable', 'compostable'),
-('Sustainability', 'sustainability'),
-('Environment', 'environment'),
-('Plastic Pollution', 'plastic-pollution'),
-('Green Technology', 'green-technology'),
-('CPCB', 'cpcb'),
-('Manufacturing', 'manufacturing'),
-('Innovation', 'innovation'),
-('Eco-friendly', 'eco-friendly');
-
 -- Insert sample blog posts with proper content
 INSERT INTO blog_posts (
   title,
@@ -128,17 +108,13 @@ Compostable materials are a subset of biodegradable materials that break down un
 
 ### International Standards:
 - **ASTM D6400**: American standard for compostable plastics
-- **EN 13432**: European standard for packaging recoverable through composting and biodegradation
-- **ISO 17088**: Compostability and biodegradation evaluation
-- **ISO 16620**: Biobased content determination
-- **ISO 14855**: Biodegradability under controlled composting conditions
+- **EN 13432**: European standard for packaging recoverable through composting
+- **AS 4736**: Australian standard for biodegradable plastics
 
 ### Certification Bodies:
 - BPI (Biodegradable Products Institute)
 - TÜV AUSTRIA
 - DIN CERTCO
-- JBPA (Japan BioPlastics Association)
-- ABA (Australasian Bioplastics Association)
 
 ## Practical Applications
 
@@ -637,96 +613,7 @@ The regulatory landscape for biodegradable plastics continues to evolve, reflect
   ARRAY['biodegradable plastics regulations', 'global standards', 'compliance', 'certification'],
   NOW() - INTERVAL '4 days',
   78
-),
-(
-  'The Future of Biodegradable Plastics in India',
-  'future-of-biodegradable-plastics-india',
-  '<h2>Introduction</h2><p>The plastic pollution crisis has reached alarming levels globally, and India is no exception. With over 3.3 million tonnes of plastic waste generated annually, the need for sustainable alternatives has never been more urgent.</p><h2>The Rise of Biodegradable Plastics</h2><p>Biodegradable plastics offer a promising solution to this environmental challenge. Unlike conventional plastics that can take hundreds of years to decompose, biodegradable alternatives break down naturally within months under proper conditions.</p><h2>AICMT International''s Contribution</h2><p>At AICMT International, we are proud to be at the forefront of this revolution. Our CPCB-certified biodegradable and compostable products are designed to meet the growing demand for sustainable packaging solutions.</p><h2>Benefits for Businesses</h2><ul><li>Compliance with environmental regulations</li><li>Enhanced brand reputation</li><li>Cost-effective sustainable solutions</li><li>Reduced environmental impact</li></ul><h2>Conclusion</h2><p>The future of packaging lies in biodegradable alternatives. By choosing sustainable options, businesses can contribute to a cleaner, greener India while meeting their packaging needs effectively.</p>',
-  'Exploring how biodegradable plastics are revolutionizing the packaging industry in India and contributing to a sustainable future.',
-  (SELECT id FROM blog_categories WHERE slug = 'sustainability'),
-  ARRAY['biodegradable', 'sustainability', 'environment'],
-  'published',
-  '/sustainable-future-city.png',
-  'The Future of Biodegradable Plastics in India | AICMT International',
-  'Discover how biodegradable plastics are transforming India''s packaging industry and creating a sustainable future.',
-  5,
-  true
-),
-(
-  'Understanding CPCB Certification for Compostable Plastics',
-  'understanding-cpcb-certification-compostable-plastics',
-  '<h2>What is CPCB Certification?</h2><p>The Central Pollution Control Board (CPCB) certification is a mandatory requirement for compostable plastic products in India. This certification ensures that products meet strict environmental and safety standards.</p><h2>Why CPCB Certification Matters</h2><p>CPCB certification provides several key benefits:</p><ul><li>Ensures product safety and environmental compliance</li><li>Builds consumer trust and confidence</li><li>Meets regulatory requirements</li><li>Demonstrates commitment to sustainability</li></ul><h2>The Certification Process</h2><p>The CPCB certification process involves rigorous testing and evaluation of biodegradable plastic products. This includes testing for biodegradability, compostability, and safety standards.</p><h2>AICMT International''s CPCB Certification</h2><p>All our products are CPCB certified, ensuring that they meet the highest standards for environmental safety and biodegradability. Our certification can be verified through the official CPCB portal.</p><h2>Conclusion</h2><p>CPCB certification is not just a regulatory requirement – it''s a commitment to environmental responsibility and product quality.</p>',
-  'A comprehensive guide to CPCB certification and why it matters for biodegradable plastic products in India.',
-  (SELECT id FROM blog_categories WHERE slug = 'industry-news'),
-  ARRAY['cpcb', 'compostable', 'biodegradable'],
-  'published',
-  '/green-leaf-certificate.png',
-  'CPCB Certification Guide for Compostable Plastics | AICMT',
-  'Learn about CPCB certification requirements and why it''s essential for biodegradable plastic products.',
-  4,
-  false
-),
-(
-  'From Nature to Nature: Our Manufacturing Philosophy',
-  'from-nature-to-nature-manufacturing-philosophy',
-  '<h2>Our Philosophy</h2><p>"From Nature to Nature" is more than just a slogan – it''s the core philosophy that guides everything we do at AICMT International. This principle reflects our commitment to creating products that come from natural sources and return to nature safely.</p><h2>Sustainable Raw Materials</h2><p>We use renewable raw materials like PBAT (Polybutylene Adipate Terephthalate) and PLA (Polylactic Acid) derived from natural sources. These materials form the foundation of our biodegradable and compostable products.</p><h2>Eco-Friendly Manufacturing</h2><p>Our state-of-the-art manufacturing facility in Telangana is designed with sustainability in mind:</p><ul><li>Energy-efficient production processes</li><li>Minimal waste generation</li><li>Water conservation systems</li><li>Renewable energy integration</li></ul><h2>Complete Lifecycle Approach</h2><p>We consider the entire lifecycle of our products, from raw material sourcing to end-of-life disposal. This holistic approach ensures minimal environmental impact at every stage.</p><h2>Innovation and Research</h2><p>Our team, led by alumni from IIT Kharagpur and IBS Dehradun, continuously innovates to improve our products and processes, always keeping sustainability at the forefront.</p>',
-  'Discover how AICMT International''s "From Nature to Nature" philosophy drives our sustainable manufacturing processes.',
-  (SELECT id FROM blog_categories WHERE slug = 'company-news'),
-  ARRAY['manufacturing', 'sustainability', 'innovation'],
-  'published',
-  '/sustainable-factory-exterior.png',
-  'From Nature to Nature: AICMT''s Manufacturing Philosophy',
-  'Explore AICMT International''s sustainable manufacturing philosophy and commitment to environmental responsibility.',
-  6,
-  true
 );
-
--- Link posts to tags
-INSERT INTO blog_post_tags (post_id, tag_id) VALUES
--- First post tags
-((SELECT id FROM blog_posts WHERE slug = 'future-biodegradable-plastics-packaging'), (SELECT id FROM blog_tags WHERE slug = 'biodegradable')),
-((SELECT id FROM blog_posts WHERE slug = 'future-biodegradable-plastics-packaging'), (SELECT id FROM blog_tags WHERE slug = 'sustainability')),
-((SELECT id FROM blog_posts WHERE slug = 'future-biodegradable-plastics-packaging'), (SELECT id FROM blog_tags WHERE slug = 'environment')),
-((SELECT id FROM blog_posts WHERE slug = 'future-biodegradable-plastics-packaging'), (SELECT id FROM blog_tags WHERE slug = 'innovation')),
-
--- Second post tags
-((SELECT id FROM blog_posts WHERE slug = 'biodegradable-vs-compostable-materials'), (SELECT id FROM blog_tags WHERE slug = 'biodegradable')),
-((SELECT id FROM blog_posts WHERE slug = 'biodegradable-vs-compostable-materials'), (SELECT id FROM blog_tags WHERE slug = 'compostable')),
-((SELECT id FROM blog_posts WHERE slug = 'biodegradable-vs-compostable-materials'), (SELECT id FROM blog_tags WHERE slug = 'sustainability')),
-((SELECT id FROM blog_posts WHERE slug = 'biodegradable-vs-compostable-materials'), (SELECT id FROM blog_tags WHERE slug = 'environment')),
-
--- Third post tags
-((SELECT id FROM blog_posts WHERE slug = 'corporate-sustainability-reducing-plastic-waste'), (SELECT id FROM blog_tags WHERE slug = 'corporate')),
-((SELECT id FROM blog_posts WHERE slug = 'corporate-sustainability-reducing-plastic-waste'), (SELECT id FROM blog_tags WHERE slug = 'sustainability')),
-((SELECT id FROM blog_posts WHERE slug = 'corporate-sustainability-reducing-plastic-waste'), (SELECT id FROM blog_tags WHERE slug = 'plastic-pollution')),
-((SELECT id FROM blog_posts WHERE slug = 'corporate-sustainability-reducing-plastic-waste'), (SELECT id FROM blog_tags WHERE slug = 'eco-friendly')),
-
--- Fourth post tags
-((SELECT id FROM blog_posts WHERE slug = 'innovation-biodegradable-materials-research'), (SELECT id FROM blog_tags WHERE slug = 'innovation')),
-((SELECT id FROM blog_posts WHERE slug = 'innovation-biodegradable-materials-research'), (SELECT id FROM blog_tags WHERE slug = 'research')),
-((SELECT id FROM blog_posts WHERE slug = 'innovation-biodegradable-materials-research'), (SELECT id FROM blog_tags WHERE slug = 'biodegradable')),
-((SELECT id FROM blog_posts WHERE slug = 'innovation-biodegradable-materials-research'), (SELECT id FROM blog_tags WHERE slug = 'green-technology')),
-
--- Fifth post tags
-((SELECT id FROM blog_posts WHERE slug = 'regulatory-landscape-global-standards-biodegradable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'regulations')),
-((SELECT id FROM blog_posts WHERE slug = 'regulatory-landscape-global-standards-biodegradable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'standards')),
-((SELECT id FROM blog_posts WHERE slug = 'regulatory-landscape-global-standards-biodegradable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'compostable')),
-((SELECT id FROM blog_posts WHERE slug = 'regulatory-landscape-global-standards-biodegradable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'biodegradable')),
-
--- Sixth post tags
-((SELECT id FROM blog_posts WHERE slug = 'future-of-biodegradable-plastics-india'), (SELECT id FROM blog_tags WHERE slug = 'biodegradable')),
-((SELECT id FROM blog_posts WHERE slug = 'future-of-biodegradable-plastics-india'), (SELECT id FROM blog_tags WHERE slug = 'sustainability')),
-((SELECT id FROM blog_posts WHERE slug = 'future-of-biodegradable-plastics-india'), (SELECT id FROM blog_tags WHERE slug = 'environment')),
-
--- Seventh post tags
-((SELECT id FROM blog_posts WHERE slug = 'understanding-cpcb-certification-compostable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'cpcb')),
-((SELECT id FROM blog_posts WHERE slug = 'understanding-cpcb-certification-compostable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'compostable')),
-((SELECT id FROM blog_posts WHERE slug = 'understanding-cpcb-certification-compostable-plastics'), (SELECT id FROM blog_tags WHERE slug = 'biodegradable')),
-
--- Eighth post tags
-((SELECT id FROM blog_posts WHERE slug = 'from-nature-to-nature-manufacturing-philosophy'), (SELECT id FROM blog_tags WHERE slug = 'manufacturing')),
-((SELECT id FROM blog_posts WHERE slug = 'from-nature-to-nature-manufacturing-philosophy'), (SELECT id FROM blog_tags WHERE slug = 'sustainability')),
-((SELECT id FROM blog_posts WHERE slug = 'from-nature-to-nature-manufacturing-philosophy'), (SELECT id FROM blog_tags WHERE slug = 'innovation'));
 
 -- Update the view counts for some variety
 UPDATE blog_posts SET views_count = views_count + FLOOR(RANDOM() * 100) WHERE status = 'published';

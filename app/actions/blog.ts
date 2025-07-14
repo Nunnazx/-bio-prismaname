@@ -1,7 +1,6 @@
 "use server"
 
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 
@@ -41,7 +40,6 @@ export type BlogCategory = {
   created_at: string
   updated_at: string
   post_count?: number
-  color?: string
 }
 
 export type BlogComment = {
@@ -54,18 +52,6 @@ export type BlogComment = {
   is_approved: boolean
   created_at: string
   updated_at: string
-  parent_id?: string
-  status?: string
-}
-
-// Helper function to generate slug
-function generateSlug(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .trim()
 }
 
 // Validation schemas
@@ -89,7 +75,6 @@ const BlogCategorySchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   slug: z.string().optional(),
   description: z.string().optional().nullable(),
-  color: z.string().optional().default("#10B981"),
 })
 
 const BlogCommentSchema = z.object({
@@ -99,13 +84,11 @@ const BlogCommentSchema = z.object({
   email: z.string().email("Invalid email address"),
   content: z.string().min(1, "Comment content is required"),
   is_approved: z.boolean().default(false),
-  parent_id: z.string().uuid("Invalid parent ID").optional().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]).default("pending"),
 })
 
 // Blog Post Actions
 export async function getBlogPosts() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -125,7 +108,7 @@ export async function getBlogPosts() {
 }
 
 export async function getPublishedBlogPosts(limit?: number, offset?: number) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   let query = supabase
     .from("blog_posts")
@@ -156,7 +139,7 @@ export async function getPublishedBlogPosts(limit?: number, offset?: number) {
 }
 
 export async function getBlogPost(id: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -177,7 +160,7 @@ export async function getBlogPost(id: string) {
 }
 
 export async function getBlogPostBySlug(slug: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -206,235 +189,146 @@ export async function getBlogPostBySlug(slug: string) {
 }
 
 export async function createBlogPost(formData: FormData) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const title = formData.get("title") as string
-    const content = formData.get("content") as string
-    const excerpt = formData.get("excerpt") as string
-    const categoryId = formData.get("categoryId") as string
-    const featuredImageUrl = formData.get("featuredImageUrl") as string
-    const status = formData.get("status") as string
-    const featured = formData.get("featured") === "true"
-    const metaTitle = formData.get("metaTitle") as string
-    const metaDescription = formData.get("metaDescription") as string
-    const tags = formData.get("tags") as string
-
-    if (!title || !content) {
-      return { success: false, error: "Title and content are required" }
-    }
-
-    const slug = generateSlug(title)
-
-    // Check if slug already exists
-    const { data: existingPost } = await supabase.from("blog_posts").select("id").eq("slug", slug).single()
-
-    if (existingPost) {
-      return { success: false, error: "A post with this title already exists" }
-    }
-
-    // Get current user
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      return { success: false, error: "User not authenticated" }
-    }
-
-    // Create blog post
-    const { data: post, error: postError } = await supabase
-      .from("blog_posts")
-      .insert({
-        title,
-        slug,
-        content,
-        excerpt,
-        category_id: categoryId || null,
-        featured_image_url: featuredImageUrl || null,
-        author_id: user.id,
-        status: status || "draft",
-        featured,
-        meta_title: metaTitle || title,
-        meta_description: metaDescription || excerpt,
-        published_at: status === "published" ? new Date().toISOString() : null,
-        reading_time: Math.ceil(content.split(" ").length / 200), // Estimate reading time
-      })
-      .select()
-      .single()
-
-    if (postError) {
-      console.error("Error creating blog post:", postError)
-      return { success: false, error: "Failed to create blog post" }
-    }
-
-    // Handle tags if provided
-    if (tags && post) {
-      const tagNames = tags
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean)
-
-      for (const tagName of tagNames) {
-        const tagSlug = generateSlug(tagName)
-
-        // Create tag if it doesn't exist
-        const { data: existingTag } = await supabase.from("blog_tags").select("id").eq("slug", tagSlug).single()
-
-        let tagId = existingTag?.id
-
-        if (!existingTag) {
-          const { data: newTag } = await supabase
-            .from("blog_tags")
-            .insert({ name: tagName, slug: tagSlug })
-            .select("id")
-            .single()
-
-          tagId = newTag?.id
-        }
-
-        // Link tag to post
-        if (tagId) {
-          await supabase.from("blog_post_tags").insert({ post_id: post.id, tag_id: tagId })
+  // Extract form data
+  const rawData: Record<string, any> = {}
+  formData.forEach((value, key) => {
+    if (key === "tags" || key === "seo_keywords") {
+      // Handle arrays
+      const existingValue = rawData[key] || []
+      if (typeof value === "string") {
+        if (value.includes(",")) {
+          // Handle comma-separated values
+          const values = value
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+          rawData[key] = [...existingValue, ...values]
+        } else {
+          rawData[key] = [...existingValue, value]
         }
       }
+    } else {
+      rawData[key] = value
     }
+  })
 
-    revalidatePath("/admin/blog")
-    return { success: true, data: post }
-  } catch (error) {
-    console.error("Error in createBlogPost:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  // Validate data
+  const validationResult = BlogPostSchema.safeParse(rawData)
+  if (!validationResult.success) {
+    console.error("Validation errors:", validationResult.error.flatten().fieldErrors)
+    return { error: `Invalid blog post data: ${JSON.stringify(validationResult.error.flatten().fieldErrors)}` }
   }
+
+  const postData = validationResult.data
+
+  // Set publish date if status is published and no date is provided
+  if (postData.status === "published" && !postData.publish_date) {
+    postData.publish_date = new Date().toISOString()
+  }
+
+  // Insert post
+  const { data, error } = await supabase.from("blog_posts").insert([postData]).select().single()
+
+  if (error) {
+    console.error("Error creating blog post:", error)
+    return { error: `Failed to create blog post: ${error.message}` }
+  }
+
+  revalidatePath("/admin/blog")
+  revalidatePath("/blog")
+
+  return { data }
 }
 
 export async function updateBlogPost(id: string, formData: FormData) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const title = formData.get("title") as string
-    const content = formData.get("content") as string
-    const excerpt = formData.get("excerpt") as string
-    const categoryId = formData.get("categoryId") as string
-    const featuredImageUrl = formData.get("featuredImageUrl") as string
-    const status = formData.get("status") as string
-    const featured = formData.get("featured") === "true"
-    const metaTitle = formData.get("metaTitle") as string
-    const metaDescription = formData.get("metaDescription") as string
-    const tags = formData.get("tags") as string
-
-    if (!title || !content) {
-      return { success: false, error: "Title and content are required" }
-    }
-
-    const slug = generateSlug(title)
-
-    // Check if slug already exists for other posts
-    const { data: existingPost } = await supabase
-      .from("blog_posts")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", id)
-      .single()
-
-    if (existingPost) {
-      return { success: false, error: "A post with this title already exists" }
-    }
-
-    // Update blog post
-    const { data: post, error: postError } = await supabase
-      .from("blog_posts")
-      .update({
-        title,
-        slug,
-        content,
-        excerpt,
-        category_id: categoryId || null,
-        featured_image_url: featuredImageUrl || null,
-        status: status || "draft",
-        featured,
-        meta_title: metaTitle || title,
-        meta_description: metaDescription || excerpt,
-        published_at: status === "published" ? new Date().toISOString() : null,
-        reading_time: Math.ceil(content.split(" ").length / 200),
-      })
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (postError) {
-      console.error("Error updating blog post:", postError)
-      return { success: false, error: "Failed to update blog post" }
-    }
-
-    // Update tags
-    if (post) {
-      // Remove existing tags
-      await supabase.from("blog_post_tags").delete().eq("post_id", id)
-
-      // Add new tags
-      if (tags) {
-        const tagNames = tags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter(Boolean)
-
-        for (const tagName of tagNames) {
-          const tagSlug = generateSlug(tagName)
-
-          // Create tag if it doesn't exist
-          const { data: existingTag } = await supabase.from("blog_tags").select("id").eq("slug", tagSlug).single()
-
-          let tagId = existingTag?.id
-
-          if (!existingTag) {
-            const { data: newTag } = await supabase
-              .from("blog_tags")
-              .insert({ name: tagName, slug: tagSlug })
-              .select("id")
-              .single()
-
-            tagId = newTag?.id
-          }
-
-          // Link tag to post
-          if (tagId) {
-            await supabase.from("blog_post_tags").insert({ post_id: id, tag_id: tagId })
-          }
+  // Extract form data
+  const rawData: Record<string, any> = {}
+  formData.forEach((value, key) => {
+    if (key === "tags" || key === "seo_keywords") {
+      // Handle arrays
+      const existingValue = rawData[key] || []
+      if (typeof value === "string") {
+        if (value.includes(",")) {
+          // Handle comma-separated values
+          const values = value
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+          rawData[key] = [...existingValue, ...values]
+        } else {
+          rawData[key] = [...existingValue, value]
         }
       }
+    } else {
+      rawData[key] = value
     }
+  })
 
-    revalidatePath("/admin/blog")
-    revalidatePath(`/blog/${slug}`)
-    return { success: true, data: post }
-  } catch (error) {
-    console.error("Error in updateBlogPost:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  // Don't allow changing the ID
+  delete rawData.id
+
+  // Validate data
+  const validationResult = BlogPostSchema.partial().safeParse(rawData)
+  if (!validationResult.success) {
+    console.error("Validation errors:", validationResult.error.flatten().fieldErrors)
+    return { error: `Invalid blog post data: ${JSON.stringify(validationResult.error.flatten().fieldErrors)}` }
   }
+
+  const postData = validationResult.data
+
+  // Set publish date if status is published and no date is provided
+  if (postData.status === "published" && !postData.publish_date) {
+    postData.publish_date = new Date().toISOString()
+  }
+
+  // Update post
+  const { data, error } = await supabase.from("blog_posts").update(postData).eq("id", id).select().single()
+
+  if (error) {
+    console.error("Error updating blog post:", error)
+    return { error: `Failed to update blog post: ${error.message}` }
+  }
+
+  revalidatePath("/admin/blog")
+  revalidatePath(`/admin/blog/edit/${id}`)
+  revalidatePath("/blog")
+  if (data?.slug) {
+    revalidatePath(`/blog/${data.slug}`)
+  }
+
+  return { data }
 }
 
 export async function deleteBlogPost(id: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const { error } = await supabase.from("blog_posts").delete().eq("id", id)
+  // Get the slug before deleting for revalidation
+  const { data: post } = await supabase.from("blog_posts").select("slug").eq("id", id).single()
 
-    if (error) {
-      console.error("Error deleting blog post:", error)
-      return { success: false, error: "Failed to delete blog post" }
-    }
+  // Delete the post
+  const { error } = await supabase.from("blog_posts").delete().eq("id", id)
 
-    revalidatePath("/admin/blog")
-    return { success: true }
-  } catch (error) {
-    console.error("Error in deleteBlogPost:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  if (error) {
+    console.error("Error deleting blog post:", error)
+    return { error: `Failed to delete blog post: ${error.message}` }
   }
+
+  revalidatePath("/admin/blog")
+  revalidatePath("/blog")
+  if (post?.slug) {
+    revalidatePath(`/blog/${post.slug}`)
+  }
+
+  return { success: true }
 }
 
 // Blog Category Actions
 export async function getBlogCategories() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase.from("blog_categories").select("*").order("name")
 
@@ -447,7 +341,7 @@ export async function getBlogCategories() {
 }
 
 export async function getBlogCategoriesWithCount() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   // First get all categories
   const { data: categories, error: categoriesError } = await supabase.from("blog_categories").select("*").order("name")
@@ -486,7 +380,7 @@ export async function getBlogCategoriesWithCount() {
 }
 
 export async function getBlogCategory(id: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase.from("blog_categories").select("*").eq("id", id).single()
 
@@ -499,7 +393,7 @@ export async function getBlogCategory(id: string) {
 }
 
 export async function getBlogCategoryBySlug(slug: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase.from("blog_categories").select("*").eq("slug", slug).single()
 
@@ -512,104 +406,119 @@ export async function getBlogCategoryBySlug(slug: string) {
 }
 
 export async function createBlogCategory(formData: FormData) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const name = formData.get("name") as string
-    const description = formData.get("description") as string
-    const color = formData.get("color") as string
+  const rawData = Object.fromEntries(formData.entries())
 
-    if (!name) {
-      return { success: false, error: "Category name is required" }
-    }
-
-    const slug = generateSlug(name)
-
-    const { data, error } = await supabase
-      .from("blog_categories")
-      .insert({
-        name,
-        slug,
-        description,
-        color: color || "#10B981",
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating blog category:", error)
-      return { success: false, error: "Failed to create category" }
-    }
-
-    revalidatePath("/admin/blog/categories")
-    return { success: true, data }
-  } catch (error) {
-    console.error("Error in createBlogCategory:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  // Validate data
+  const validationResult = BlogCategorySchema.safeParse(rawData)
+  if (!validationResult.success) {
+    console.error("Validation errors:", validationResult.error.flatten().fieldErrors)
+    return { error: `Invalid blog category data: ${JSON.stringify(validationResult.error.flatten().fieldErrors)}` }
   }
+
+  const categoryData = validationResult.data
+
+  // Generate slug if not provided
+  if (!categoryData.slug) {
+    categoryData.slug = categoryData.name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/--+/g, "-")
+      .trim()
+  }
+
+  // Insert category
+  const { data, error } = await supabase.from("blog_categories").insert([categoryData]).select().single()
+
+  if (error) {
+    console.error("Error creating blog category:", error)
+    return { error: `Failed to create blog category: ${error.message}` }
+  }
+
+  revalidatePath("/admin/blog/categories")
+  revalidatePath("/blog")
+
+  return { data }
 }
 
 export async function updateBlogCategory(id: string, formData: FormData) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const name = formData.get("name") as string
-    const description = formData.get("description") as string
-    const color = formData.get("color") as string
+  const rawData = Object.fromEntries(formData.entries())
 
-    if (!name) {
-      return { success: false, error: "Category name is required" }
-    }
+  // Don't allow changing the ID
+  delete rawData.id
 
-    const slug = generateSlug(name)
-
-    const { data, error } = await supabase
-      .from("blog_categories")
-      .update({
-        name,
-        slug,
-        description,
-        color: color || "#10B981",
-      })
-      .eq("id", id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error updating blog category:", error)
-      return { success: false, error: "Failed to update category" }
-    }
-
-    revalidatePath("/admin/blog/categories")
-    return { success: true, data }
-  } catch (error) {
-    console.error("Error in updateBlogCategory:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  // Validate data
+  const validationResult = BlogCategorySchema.partial().safeParse(rawData)
+  if (!validationResult.success) {
+    console.error("Validation errors:", validationResult.error.flatten().fieldErrors)
+    return { error: `Invalid blog category data: ${JSON.stringify(validationResult.error.flatten().fieldErrors)}` }
   }
+
+  const categoryData = validationResult.data
+
+  // Generate slug if name is changed and slug is not provided
+  if (categoryData.name && !categoryData.slug) {
+    categoryData.slug = categoryData.name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/--+/g, "-")
+      .trim()
+  }
+
+  // Update category
+  const { data, error } = await supabase.from("blog_categories").update(categoryData).eq("id", id).select().single()
+
+  if (error) {
+    console.error("Error updating blog category:", error)
+    return { error: `Failed to update blog category: ${error.message}` }
+  }
+
+  revalidatePath("/admin/blog/categories")
+  revalidatePath("/blog")
+
+  return { data }
 }
 
 export async function deleteBlogCategory(id: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const { error } = await supabase.from("blog_categories").delete().eq("id", id)
+  // Check if category has posts
+  const { count, error: countError } = await supabase
+    .from("blog_posts")
+    .select("*", { count: "exact", head: true })
+    .eq("category_id", id)
 
-    if (error) {
-      console.error("Error deleting blog category:", error)
-      return { success: false, error: "Failed to delete category" }
-    }
-
-    revalidatePath("/admin/blog/categories")
-    return { success: true }
-  } catch (error) {
-    console.error("Error in deleteBlogCategory:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  if (countError) {
+    console.error("Error checking category posts:", countError)
+    return { error: `Failed to check if category has posts: ${countError.message}` }
   }
+
+  if (count && count > 0) {
+    return { error: `Cannot delete category with ${count} posts. Please reassign posts first.` }
+  }
+
+  // Delete the category
+  const { error } = await supabase.from("blog_categories").delete().eq("id", id)
+
+  if (error) {
+    console.error("Error deleting blog category:", error)
+    return { error: `Failed to delete blog category: ${error.message}` }
+  }
+
+  revalidatePath("/admin/blog/categories")
+  revalidatePath("/blog")
+
+  return { success: true }
 }
 
 // Blog Comment Actions
 export async function getBlogComments(postId?: string, isApproved?: boolean) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   let query = supabase.from("blog_comments").select("*").order("created_at", { ascending: false })
 
@@ -618,7 +527,7 @@ export async function getBlogComments(postId?: string, isApproved?: boolean) {
   }
 
   if (isApproved !== undefined) {
-    query = query.eq("status", isApproved ? "approved" : "pending")
+    query = query.eq("is_approved", isApproved)
   }
 
   const { data, error } = await query
@@ -632,121 +541,88 @@ export async function getBlogComments(postId?: string, isApproved?: boolean) {
 }
 
 export async function createBlogComment(formData: FormData) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
-  try {
-    const postId = formData.get("postId") as string
-    const authorName = formData.get("authorName") as string
-    const authorEmail = formData.get("authorEmail") as string
-    const content = formData.get("content") as string
-    const parentId = formData.get("parentId") as string
+  const rawData = Object.fromEntries(formData.entries())
 
-    if (!postId || !authorName || !authorEmail || !content) {
-      return { success: false, error: "All fields are required" }
-    }
-
-    const { data, error } = await supabase
-      .from("blog_comments")
-      .insert({
-        post_id: postId,
-        author_name: authorName,
-        author_email: authorEmail,
-        content,
-        parent_id: parentId || null,
-        status: "pending",
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error("Error creating blog comment:", error)
-      return { success: false, error: "Failed to submit comment" }
-    }
-
-    return { success: true, data }
-  } catch (error) {
-    console.error("Error in createBlogComment:", error)
-    return { success: false, error: "An unexpected error occurred" }
+  // Validate data
+  const validationResult = BlogCommentSchema.safeParse(rawData)
+  if (!validationResult.success) {
+    console.error("Validation errors:", validationResult.error.flatten().fieldErrors)
+    return { error: `Invalid blog comment data: ${JSON.stringify(validationResult.error.flatten().fieldErrors)}` }
   }
+
+  const commentData = validationResult.data
+
+  // Insert comment
+  const { data, error } = await supabase.from("blog_comments").insert([commentData]).select().single()
+
+  if (error) {
+    console.error("Error creating blog comment:", error)
+    return { error: `Failed to create blog comment: ${error.message}` }
+  }
+
+  revalidatePath(`/blog/${data.post_id}`)
+
+  return { data }
 }
 
-export async function updateCommentStatus(id: string, status: string) {
-  const supabase = createServerComponentClient({ cookies })
-
-  try {
-    const { data, error } = await supabase.from("blog_comments").update({ status }).eq("id", id).select().single()
-
-    if (error) {
-      console.error("Error updating comment status:", error)
-      return { success: false, error: "Failed to update comment status" }
-    }
-
-    revalidatePath("/admin/blog/comments")
-    return { success: true, data }
-  } catch (error) {
-    console.error("Error in updateCommentStatus:", error)
-    return { success: false, error: "An unexpected error occurred" }
-  }
-}
-
-export async function deleteBlogComment(id: string) {
-  const supabase = createServerComponentClient({ cookies })
-
-  try {
-    const { error } = await supabase.from("blog_comments").delete().eq("id", id)
-
-    if (error) {
-      console.error("Error deleting blog comment:", error)
-      return { success: false, error: "Failed to delete comment" }
-    }
-
-    revalidatePath("/admin/blog/comments")
-    return { success: true }
-  } catch (error) {
-    console.error("Error in deleteBlogComment:", error)
-    return { success: false, error: "An unexpected error occurred" }
-  }
-}
-
-// --- Compatibility wrappers -------------------------------------------------
-
-/**
- * Approve a comment (alias for updateCommentStatus with "approved").
- * Exposed to keep backward-compatibility with earlier imports.
- */
 export async function approveComment(id: string) {
-  return updateCommentStatus(id, "approved")
-}
+  const supabase = createClient()
 
-/**
- * Delete a comment (alias for deleteBlogComment).
- * Exposed to keep backward-compatibility with earlier imports.
- */
-export async function deleteComment(id: string) {
-  return deleteBlogComment(id)
-}
+  const { data, error } = await supabase
+    .from("blog_comments")
+    .update({ is_approved: true })
+    .eq("id", id)
+    .select()
+    .single()
 
-// Utility function to increment post views
-export async function incrementPostViews(slug: string) {
-  const supabase = createServerComponentClient({ cookies })
-
-  try {
-    const { error } = await supabase
-      .from("blog_posts")
-      .update({ views_count: supabase.sql`views_count + 1` })
-      .eq("slug", slug)
-
-    if (error) {
-      console.error("Error incrementing post views:", error)
-    }
-  } catch (error) {
-    console.error("Error in incrementPostViews:", error)
+  if (error) {
+    console.error("Error approving comment:", error)
+    return { error: `Failed to approve comment: ${error.message}` }
   }
+
+  revalidatePath("/admin/blog/comments")
+  if (data.post_id) {
+    const { data: post } = await supabase.from("blog_posts").select("slug").eq("id", data.post_id).single()
+
+    if (post?.slug) {
+      revalidatePath(`/blog/${post.slug}`)
+    }
+  }
+
+  return { data }
+}
+
+export async function deleteComment(id: string) {
+  const supabase = createClient()
+
+  // Get post_id before deleting for revalidation
+  const { data: comment } = await supabase.from("blog_comments").select("post_id").eq("id", id).single()
+
+  // Delete the comment
+  const { error } = await supabase.from("blog_comments").delete().eq("id", id)
+
+  if (error) {
+    console.error("Error deleting comment:", error)
+    return { error: `Failed to delete comment: ${error.message}` }
+  }
+
+  revalidatePath("/admin/blog/comments")
+  if (comment?.post_id) {
+    const { data: post } = await supabase.from("blog_posts").select("slug").eq("id", comment.post_id).single()
+
+    if (post?.slug) {
+      revalidatePath(`/blog/${post.slug}`)
+    }
+  }
+
+  return { success: true }
 }
 
 // Tag-related actions
 export async function getAllTags() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -779,7 +655,7 @@ export async function getAllTags() {
 }
 
 export async function getPostsByTag(tag: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -801,7 +677,7 @@ export async function getPostsByTag(tag: string) {
 }
 
 export async function getPostsByCategory(categoryId: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -823,7 +699,7 @@ export async function getPostsByCategory(categoryId: string) {
 }
 
 export async function getPostsByCategorySlug(slug: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   // First get the category
   const { data: category, error: categoryError } = await supabase
@@ -859,7 +735,7 @@ export async function getPostsByCategorySlug(slug: string) {
 
 // Search
 export async function searchBlogPosts(query: string) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -882,7 +758,7 @@ export async function searchBlogPosts(query: string) {
 
 // Blog statistics
 export async function getBlogStats() {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   // Get total posts
   const { count: totalPosts, error: totalError } = await supabase
@@ -930,7 +806,7 @@ export async function getBlogStats() {
 
 // Get related posts
 export async function getRelatedPosts(postId: string, limit = 3) {
-  const supabase = createServerComponentClient({ cookies })
+  const supabase = createClient()
 
   // First get the current post to get its tags and category
   const { data: currentPost, error: postError } = await supabase

@@ -1,151 +1,192 @@
--- Drop existing tables if they exist to start fresh
-DROP TABLE IF EXISTS blog_comments CASCADE;
-DROP TABLE IF EXISTS blog_post_tags CASCADE;
-DROP TABLE IF EXISTS blog_tags CASCADE;
-DROP TABLE IF EXISTS blog_posts CASCADE;
-DROP TABLE IF EXISTS blog_categories CASCADE;
+-- Create ENUM type for blog post status if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'post_status_enum') THEN
+        CREATE TYPE post_status_enum AS ENUM ('draft', 'published', 'archived');
+    END IF;
+END$$;
 
--- Create blog categories table
-CREATE TABLE blog_categories (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    slug VARCHAR(100) NOT NULL UNIQUE,
+-- Create blog_categories table
+CREATE TABLE IF NOT EXISTS blog_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
     description TEXT,
-    color VARCHAR(7) DEFAULT '#10B981',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create blog tags table
-CREATE TABLE blog_tags (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    slug VARCHAR(50) NOT NULL UNIQUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Create blog posts table
-CREATE TABLE blog_posts (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    title VARCHAR(200) NOT NULL,
-    slug VARCHAR(200) NOT NULL UNIQUE,
+-- Create blog_posts table with proper relationships
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    content TEXT,
     excerpt TEXT,
+    author_id UUID REFERENCES auth.users(id),
+    category_id UUID REFERENCES blog_categories(id),
+    tags TEXT[] DEFAULT '{}',
+    status post_status_enum NOT NULL DEFAULT 'draft',
+    featured_image TEXT,
+    seo_title TEXT,
+    seo_description TEXT,
+    seo_keywords TEXT[],
+    publish_date TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    views_count INTEGER DEFAULT 0
+);
+
+-- Create blog_comments table
+CREATE TABLE IF NOT EXISTS blog_comments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
     content TEXT NOT NULL,
-    featured_image_url TEXT,
-    category_id UUID REFERENCES blog_categories(id) ON DELETE SET NULL,
-    author_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
-    published_at TIMESTAMP WITH TIME ZONE,
-    meta_title VARCHAR(60),
-    meta_description VARCHAR(160),
-    reading_time INTEGER DEFAULT 5,
-    views_count INTEGER DEFAULT 0,
-    likes_count INTEGER DEFAULT 0,
-    comments_count INTEGER DEFAULT 0,
-    featured BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    is_approved BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create blog post tags junction table
-CREATE TABLE blog_post_tags (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    post_id UUID REFERENCES blog_posts(id) ON DELETE CASCADE,
-    tag_id UUID REFERENCES blog_tags(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(post_id, tag_id)
+-- Create blog_post_likes table for tracking user likes
+CREATE TABLE IF NOT EXISTS blog_post_likes (
+    post_id UUID NOT NULL REFERENCES blog_posts(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES auth.users(id),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (post_id, user_id)
 );
 
--- Create blog comments table
-CREATE TABLE blog_comments (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    post_id UUID REFERENCES blog_posts(id) ON DELETE CASCADE,
-    author_name VARCHAR(100) NOT NULL,
-    author_email VARCHAR(255) NOT NULL,
-    content TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'spam')),
-    parent_id UUID REFERENCES blog_comments(id) ON DELETE CASCADE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Add indexes for performance
+CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_status ON blog_posts(status);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_author ON blog_posts(author_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_category ON blog_posts(category_id);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_publish_date ON blog_posts(publish_date);
+CREATE INDEX IF NOT EXISTS idx_blog_comments_post_id ON blog_comments(post_id);
 
--- Create indexes for better performance
-CREATE INDEX idx_blog_posts_slug ON blog_posts(slug);
-CREATE INDEX idx_blog_posts_status ON blog_posts(status);
-CREATE INDEX idx_blog_posts_published_at ON blog_posts(published_at DESC);
-CREATE INDEX idx_blog_posts_category ON blog_posts(category_id);
-CREATE INDEX idx_blog_posts_featured ON blog_posts(featured);
-CREATE INDEX idx_blog_categories_slug ON blog_categories(slug);
-CREATE INDEX idx_blog_tags_slug ON blog_tags(slug);
-CREATE INDEX idx_blog_comments_post ON blog_comments(post_id);
-CREATE INDEX idx_blog_comments_status ON blog_comments(status);
-
--- Create updated_at trigger function
+-- Create function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- Create triggers for updated_at
-CREATE TRIGGER update_blog_categories_updated_at BEFORE UPDATE ON blog_categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_blog_posts_updated_at BEFORE UPDATE ON blog_posts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_blog_comments_updated_at BEFORE UPDATE ON blog_comments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_blog_posts_updated_at ON blog_posts;
+CREATE TRIGGER update_blog_posts_updated_at
+BEFORE UPDATE ON blog_posts
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
 
--- Function to generate slug from title
+DROP TRIGGER IF EXISTS update_blog_categories_updated_at ON blog_categories;
+CREATE TRIGGER update_blog_categories_updated_at
+BEFORE UPDATE ON blog_categories
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_blog_comments_updated_at ON blog_comments;
+CREATE TRIGGER update_blog_comments_updated_at
+BEFORE UPDATE ON blog_comments
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+-- Create function to generate slug from title
 CREATE OR REPLACE FUNCTION generate_slug(title TEXT)
 RETURNS TEXT AS $$
+DECLARE
+    slug TEXT;
 BEGIN
-    RETURN lower(regexp_replace(regexp_replace(title, '[^a-zA-Z0-9\s-]', '', 'g'), '\s+', '-', 'g'));
+    -- Convert to lowercase
+    slug := LOWER(title);
+    
+    -- Replace spaces and special characters with hyphens
+    slug := REGEXP_REPLACE(slug, '[^a-z0-9\-_]+', '-', 'g');
+    
+    -- Remove multiple consecutive hyphens
+    slug := REGEXP_REPLACE(slug, '\-+', '-', 'g');
+    
+    -- Remove leading and trailing hyphens
+    slug := TRIM(BOTH '-' FROM slug);
+    
+    RETURN slug;
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to update comments count
-CREATE OR REPLACE FUNCTION update_post_comments_count()
+-- Create function to ensure unique slugs
+CREATE OR REPLACE FUNCTION ensure_unique_blog_slug()
 RETURNS TRIGGER AS $$
+DECLARE
+    base_slug TEXT;
+    new_slug TEXT;
+    counter INTEGER := 1;
 BEGIN
-    IF TG_OP = 'INSERT' THEN
-        UPDATE blog_posts 
-        SET comments_count = comments_count + 1 
-        WHERE id = NEW.post_id;
-        RETURN NEW;
-    ELSIF TG_OP = 'DELETE' THEN
-        UPDATE blog_posts 
-        SET comments_count = comments_count - 1 
-        WHERE id = OLD.post_id;
-        RETURN OLD;
+    -- If slug is provided, use it; otherwise generate from title
+    IF NEW.slug IS NULL OR NEW.slug = '' THEN
+        base_slug := generate_slug(NEW.title);
+    ELSE
+        base_slug := generate_slug(NEW.slug);
     END IF;
-    RETURN NULL;
+    
+    new_slug := base_slug;
+    
+    -- Check if slug exists and append counter if needed
+    WHILE EXISTS (SELECT 1 FROM blog_posts WHERE slug = new_slug AND id != NEW.id) LOOP
+        counter := counter + 1;
+        new_slug := base_slug || '-' || counter;
+    END LOOP;
+    
+    NEW.slug := new_slug;
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for comments count
-CREATE TRIGGER update_comments_count_trigger
-    AFTER INSERT OR DELETE ON blog_comments
-    FOR EACH ROW EXECUTE FUNCTION update_post_comments_count();
+-- Create trigger for unique slug generation
+DROP TRIGGER IF EXISTS ensure_unique_blog_slug_trigger ON blog_posts;
+CREATE TRIGGER ensure_unique_blog_slug_trigger
+BEFORE INSERT OR UPDATE ON blog_posts
+FOR EACH ROW
+EXECUTE FUNCTION ensure_unique_blog_slug();
 
--- Enable RLS
-ALTER TABLE blog_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE blog_tags ENABLE ROW LEVEL SECURITY;
+-- Create RLS policies for blog_posts
 ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE blog_post_tags ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public can view published posts" ON blog_posts
+    FOR SELECT USING (status = 'published');
+
+CREATE POLICY "Authenticated users can create posts" ON blog_posts
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Users can update their own posts" ON blog_posts
+    FOR UPDATE USING (auth.uid() = author_id);
+
+CREATE POLICY "Admin can do everything" ON blog_posts
+    USING (auth.role() = 'service_role');
+
+-- Create RLS policies for blog_comments
 ALTER TABLE blog_comments ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for public read access
-CREATE POLICY "Public can view published blog posts" ON blog_posts FOR SELECT USING (status = 'published');
-CREATE POLICY "Public can view blog categories" ON blog_categories FOR SELECT USING (true);
-CREATE POLICY "Public can view blog tags" ON blog_tags FOR SELECT USING (true);
-CREATE POLICY "Public can view blog post tags" ON blog_post_tags FOR SELECT USING (true);
-CREATE POLICY "Public can view approved comments" ON blog_comments FOR SELECT USING (status = 'approved');
+CREATE POLICY "Public can view approved comments" ON blog_comments
+    FOR SELECT USING (is_approved = true);
 
--- RLS Policies for authenticated users (admin)
-CREATE POLICY "Authenticated users can manage blog posts" ON blog_posts FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can manage categories" ON blog_categories FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can manage tags" ON blog_tags FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can manage post tags" ON blog_post_tags FOR ALL USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can manage comments" ON blog_comments FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Authenticated users can create comments" ON blog_comments
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated' OR auth.role() = 'anon');
 
--- Allow public to insert comments (they'll be pending by default)
-CREATE POLICY "Public can insert comments" ON blog_comments FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can update their own comments" ON blog_comments
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Admin can do everything with comments" ON blog_comments
+    USING (auth.role() = 'service_role');
+
+-- Seed some initial categories
+INSERT INTO blog_categories (name, slug, description)
+VALUES 
+    ('Sustainability', 'sustainability', 'Articles about sustainable practices and environmental impact'),
+    ('Industry News', 'industry-news', 'Latest news and updates from the biodegradable plastics industry'),
+    ('Product Insights', 'product-insights', 'Detailed information about our products and their applications'),
+    ('Research & Innovation', 'research-innovation', 'New developments and research in biodegradable materials'),
+    ('Case Studies', 'case-studies', 'Real-world examples of our products in action')
+ON CONFLICT (slug) DO NOTHING;

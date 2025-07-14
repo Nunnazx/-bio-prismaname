@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FileText, ZoomIn, X, ExternalLink } from "lucide-react"
+import { FileText, Download, ZoomIn, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -17,17 +17,27 @@ const certificates = [
     issueDate: "March 21, 2023",
     validUntil: "March 20, 2025",
     certNumber: "CPCB/PBAT-PLA/2023/01",
-    verificationUrl: "https://plastic.cpcb.gov.in/compostable/viewdashboardlist",
+    downloadUrl: "#",
   },
   {
     id: "cipet",
-    title: "CIPET Certificate",
-    description: "Central Institute of Petrochemicals Engineering & Technology certification",
+    title: "CIPET Test Report",
+    description: "Central Institute of Petrochemicals Engineering & Technology test results",
     image: "/biodegradable-testing.png",
     issueDate: "March 21, 2023",
     validUntil: "March 20, 2025",
     certNumber: "TR.NO.: 002987(S)",
-    verificationUrl: "https://plastic.cpcb.gov.in/compostable/viewdashboardlist",
+    downloadUrl: "#",
+  },
+  {
+    id: "msme",
+    title: "MSME ZED Bronze",
+    description: "Ministry of Micro, Small & Medium Enterprises Zero Defect Zero Effect certification",
+    image: "/green-leaf-certificate.png", // Replace with actual MSME certificate
+    issueDate: "April 15, 2023",
+    validUntil: "April 14, 2025",
+    certNumber: "MSME-ZED/2023/BR/0123",
+    downloadUrl: "#",
   },
 ]
 
@@ -53,7 +63,7 @@ export function CertificateShowcase() {
       </div>
 
       <Tabs defaultValue="cpcb" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           {certificates.map((cert) => (
             <TabsTrigger key={cert.id} value={cert.id}>
               {cert.title}
@@ -128,12 +138,9 @@ export function CertificateShowcase() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button
-                  className="flex gap-2 bg-green-600 hover:bg-green-700"
-                  onClick={() => window.open(cert.verificationUrl, "_blank")}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Verify Certificate
+                <Button className="flex gap-2 bg-green-600 hover:bg-green-700">
+                  <Download className="h-4 w-4" />
+                  Download Certificate
                 </Button>
               </CardFooter>
             </Card>
