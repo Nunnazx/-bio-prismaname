@@ -124,3 +124,5 @@ export const hi = {
     viewAllPosts: "सभी पोस्ट देखें",
   },
 }
+
+export const translations = hi

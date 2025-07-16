@@ -70,3 +70,5 @@ export const mr = {
     saved: "आपली भाषा प्राधान्य जतन केली गेली आहे",
   },
 }
+
+export const translations = mr

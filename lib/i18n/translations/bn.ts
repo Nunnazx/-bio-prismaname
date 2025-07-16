@@ -70,3 +70,5 @@ export const bn = {
     saved: "আপনার ভাষা পছন্দ সংরক্ষণ করা হয়েছে",
   },
 }
+
+export const translations = bn

@@ -70,3 +70,5 @@ export const ur = {
     saved: "آپ کی زبان کی ترجیح محفوظ کر لی گئی ہے",
   },
 }
+
+export const translations = ur

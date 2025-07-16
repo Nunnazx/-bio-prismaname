@@ -73,3 +73,5 @@ export const te = {
     saved: "మీ భాష ప్రాధాన్యత సేవ్ చేయబడింది",
   },
 }
+
+export const translations = te

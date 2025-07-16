@@ -70,3 +70,5 @@ export const ta = {
     saved: "உங்கள் மொழி விருப்பம் சேமிக்கப்பட்டது",
   },
 }
+
+export const translations = ta

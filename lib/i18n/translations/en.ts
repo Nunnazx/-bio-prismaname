@@ -306,3 +306,6 @@ export const en = {
     saved: "Your language preference has been saved",
   },
 }
+
+// Alias required by the i18n loader
+export const translations = en

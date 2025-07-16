@@ -1,30 +1,28 @@
-/**
- * Dynamically imports the JSON/TS dictionary for a locale.
- * If the requested locale is missing, it falls back to English.
- *
- * Translation files live in lib/i18n/translations/{locale}.ts
- * and should `export default` an object that matches the
- * Dictionary type below.
- */
+import type { Locale } from "./languages"
 
-type Dictionary = {
-  metadata: {
-    title: string
-    description: string
-  }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any
+// Import all translation files
+import { translations as en } from "./translations/en"
+import { translations as hi } from "./translations/hi"
+import { translations as bn } from "./translations/bn"
+import { translations as mr } from "./translations/mr"
+import { translations as ta } from "./translations/ta"
+import { translations as te } from "./translations/te"
+import { translations as ur } from "./translations/ur"
+
+// Create a dictionary mapping
+const dictionaries = {
+  en,
+  hi,
+  bn,
+  mr,
+  ta,
+  te,
+  ur,
+} as const
+
+export async function getDictionary(locale: Locale) {
+  // Return the dictionary for the requested locale, fallback to English
+  return dictionaries[locale] || dictionaries.en
 }
 
-export async function getDictionary(locale: string): Promise<Dictionary> {
-  try {
-    // Vite / Next can tree-shake dynamic imports with variables
-    // when the folder structure is known at build time.
-    const mod = await import(`./translations/${locale}`)
-    return mod.default as Dictionary
-  } catch {
-    // Fallback: always ensure EN exists
-    const mod = await import("./translations/en")
-    return mod.default as Dictionary
-  }
-}
+export type Dictionary = typeof en
