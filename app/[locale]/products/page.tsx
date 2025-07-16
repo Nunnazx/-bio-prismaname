@@ -43,7 +43,7 @@ export default async function ProductsPage({ params }: { params: { locale: strin
           <div className="space-y-4">
             <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Our Products</h1>
             <p className="max-w-[700px] text-gray-500 md:text-xl">
-              Explore our range of compostable plastic alternatives that are safe for you and the planet
+              Explore our range of biodegradable & compostable plastic alternatives that are safe for you and the planet
             </p>
           </div>
 
@@ -57,6 +57,28 @@ export default async function ProductsPage({ params }: { params: { locale: strin
               <p className="text-sm text-green-700">
                 All our products are CPCB certified and tested for safety and compostability
               </p>
+            </div>
+          </div>
+
+          {/* Product Categories */}
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-6">
+            <h2 className="text-xl font-bold mb-4">Product Categories</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[
+                "Filler Master Batches",
+                "Carry Bags / Shopping Bags Plain",
+                "Carry Bags / Shopping Bags With Private Labelling",
+                "Grocery Pouches",
+                "Supermarket Pouches with Perforation Rolls",
+                "D-Cut Garment Bags",
+                "Garbage Bags",
+                "Tiffin Sheets",
+                "Packaging Sheets in Rolls Form",
+              ].map((category) => (
+                <div key={category} className="bg-white p-3 rounded border text-sm font-medium">
+                  {category}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -98,7 +120,7 @@ export default async function ProductsPage({ params }: { params: { locale: strin
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <Leaf className="h-8 w-8 text-green-600" />
                   </div>
-                  <h3 className="font-bold mb-2">100% Biodegradable</h3>
+                  <h3 className="font-bold mb-2">Biodegradable & Compostable</h3>
                   <p className="text-sm text-gray-600">
                     Our products completely break down into natural elements within 180 days
                   </p>

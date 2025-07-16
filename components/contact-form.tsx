@@ -35,6 +35,17 @@ export function ContactForm({ createInquiry }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Validate required fields including phone
+    if (!formData.name || !formData.email || !formData.phone || !formData.inquiryType || !formData.message) {
+      toast({
+        title: "Missing Required Fields",
+        description: "Please fill in all required fields including phone number.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -86,96 +97,116 @@ export function ContactForm({ createInquiry }) {
     }
   }
 
-  // Replace any direct date formatting with this approach
-  const formatDate = (date) => {
-    // Use a stable format that will be consistent between server and client
-    return new Date(date).toISOString().split("T")[0]
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name *</Label>
-          <Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Your name" required />
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold mb-2">Inquire About Biodegradable & Compostable Products</h2>
+        <p className="text-gray-600">
+          Get in touch with us for product information, quotes, and partnership opportunities
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name *</Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              placeholder="Your name"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="Your email"
+              required
+            />
+          </div>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="company">Company</Label>
+            <Input
+              id="company"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              placeholder="Your company"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number *</Label>
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="Your phone number"
+              required
+            />
+          </div>
+        </div>
+
         <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
+          <Label htmlFor="inquiryType">Inquiry Type *</Label>
+          <Select value={formData.inquiryType} onValueChange={handleSelectChange} required>
+            <SelectTrigger id="inquiryType">
+              <SelectValue placeholder="Select inquiry type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="product">Product Information</SelectItem>
+              <SelectItem value="quote">Request a Quote</SelectItem>
+              <SelectItem value="sample">Request a Sample</SelectItem>
+              <SelectItem value="partnership">Be our Marketing Partner</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="message">Message *</Label>
+          <Textarea
+            id="message"
+            name="message"
+            value={formData.message}
             onChange={handleChange}
-            placeholder="Your email"
+            placeholder="Your message"
+            className="min-h-[120px]"
             required
           />
         </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="company">Company</Label>
-          <Input
-            id="company"
-            name="company"
-            value={formData.company}
-            onChange={handleChange}
-            placeholder="Your company"
-          />
+
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>For quick responses:</strong> Send us a WhatsApp message at{" "}
+            <a href="https://wa.me/917578007116" className="font-medium underline">
+              +91-7578007116
+            </a>
+          </p>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Your phone number"
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="inquiryType">Inquiry Type *</Label>
-        <Select
-          value={formData.inquiryType}
-          onValueChange={handleSelectChange}
-          required
-          key="inquiry-type-select" // Add this line to force client-side remounting
-        >
-          <SelectTrigger id="inquiryType">
-            <SelectValue placeholder="Select inquiry type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="product">Product Information</SelectItem>
-            <SelectItem value="quote">Request a Quote</SelectItem>
-            <SelectItem value="sample">Request a Sample</SelectItem>
-            <SelectItem value="partnership">Partnership Opportunity</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="message">Message *</Label>
-        <Textarea
-          id="message"
-          name="message"
-          value={formData.message}
-          onChange={handleChange}
-          placeholder="Your message"
-          className="min-h-[120px]"
-          required
-        />
-      </div>
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending...
-          </>
-        ) : (
-          "Send Message"
-        )}
-      </Button>
-    </form>
+
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending...
+            </>
+          ) : (
+            "Send Message"
+          )}
+        </Button>
+      </form>
+    </div>
   )
 }

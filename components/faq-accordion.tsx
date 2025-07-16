@@ -3,20 +3,20 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-// FAQ data
+// FAQ data with updated MOQ information
 const faqData = [
   {
     category: "Product Information",
     questions: [
       {
-        question: "What are compostable plastics?",
+        question: "What are biodegradable & compostable plastics?",
         answer:
-          "Compostable plastics are materials that can break down completely in a composting environment, converting into carbon dioxide, water, and biomass. Unlike conventional plastics, they don't leave behind microplastics or toxic residues. Our products are made from a blend of PBAT (Polybutylene Adipate Terephthalate) and PLA (Polylactic Acid), which are derived from renewable resources.",
+          "Biodegradable & compostable plastics are materials that can break down completely in a composting environment, converting into carbon dioxide, water, and biomass. Unlike conventional plastics, they don't leave behind microplastics or toxic residues. Our products are made from a blend of PBAT (Polybutylene Adipate Terephthalate) and PLA (Polylactic Acid), which are derived from renewable resources.",
       },
       {
         question: "How long do your products take to decompose?",
         answer:
-          "Our compostable plastics typically decompose within 180 days in industrial composting conditions. The exact time can vary based on environmental factors such as temperature, humidity, and microbial activity. In home composting conditions, it may take slightly longer.",
+          "Our biodegradable & compostable plastics typically decompose within 180 days in industrial composting conditions. The exact time can vary based on environmental factors such as temperature, humidity, and microbial activity. In home composting conditions, it may take slightly longer.",
       },
       {
         question: "Are your products food-safe?",
@@ -26,7 +26,7 @@ const faqData = [
       {
         question: "What is the shelf life of your products?",
         answer:
-          "Our compostable plastic products have a shelf life of approximately 12-18 months when stored in proper conditions (cool, dry place away from direct sunlight). After this period, they may start to show signs of degradation, which is a natural characteristic of biodegradable materials.",
+          "Our biodegradable & compostable plastic products have a shelf life of approximately 12-18 months when stored in proper conditions (cool, dry place away from direct sunlight). After this period, they may start to show signs of degradation, which is a natural characteristic of biodegradable materials.",
       },
     ],
   },
@@ -36,7 +36,7 @@ const faqData = [
       {
         question: "What certifications do your products have?",
         answer:
-          "Our products are certified by the Central Pollution Control Board (CPCB) of India and comply with IS 17088:2021 standards for compostable plastics. We also have MSME ZED Bronze certification for our zero efficiency defects production process.",
+          "Our products are certified by the Central Pollution Control Board (CPCB) of India and comply with IS 17088:2021 standards for compostable plastics. We also have CIPET testing certificates and MSME ZED Bronze certification for our zero efficiency defects production process.",
       },
       {
         question: "Do your products meet international standards?",
@@ -56,7 +56,7 @@ const faqData = [
       {
         question: "What are the common applications for your products?",
         answer:
-          "Our compostable plastics are suitable for a wide range of applications including carry bags, shopping bags, garbage bags, food packaging, agricultural films, and more. They can replace conventional plastics in most applications while providing similar functionality with added environmental benefits.",
+          "Our biodegradable & compostable plastics are suitable for a wide range of applications including filler master batches, carry bags, shopping bags, grocery pouches, supermarket pouches with perforation rolls, D-cut garment bags, garbage bags, tiffin sheets, and packaging sheets in rolls form. They can replace conventional plastics in most applications while providing similar functionality with added environmental benefits.",
       },
       {
         question: "Can your products be used for hot food and beverages?",
@@ -76,7 +76,7 @@ const faqData = [
       {
         question: "What is the minimum order quantity?",
         answer:
-          "Our minimum order quantities vary by product type. For standard products, we typically have a minimum order of 25 kg for granules and 1,000 pieces for bags and packaging products. For custom solutions, please contact our sales team for specific requirements.",
+          "Our minimum order quantities are: For Granules - Multiples of 40 Kgs, and for Compostable Bags (each size) - 40 Kgs minimum. For custom solutions, please contact our sales team for specific requirements.",
       },
       {
         question: "Do you offer custom printing on your products?",
@@ -93,6 +93,11 @@ const faqData = [
         answer:
           "Yes, we ship our products internationally. Shipping costs and delivery timeframes vary by destination. Please contact our sales team for specific information about international shipping to your location.",
       },
+      {
+        question: "How can I become a marketing partner?",
+        answer:
+          "We welcome marketing partnerships! Please contact us through our inquiry form and select 'Be our Marketing Partner' as the inquiry type. Our business development team will get in touch with you to discuss partnership opportunities, terms, and requirements.",
+      },
     ],
   },
 ]
@@ -102,7 +107,9 @@ export function FaqAccordion() {
     <div className="w-full max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold">Frequently Asked Questions</h2>
-        <p className="text-gray-500 mt-2">Find answers to common questions about our compostable plastic products</p>
+        <p className="text-gray-500 mt-2">
+          Find answers to common questions about our biodegradable & compostable plastic products
+        </p>
       </div>
 
       <div className="space-y-6">
