@@ -91,3 +91,50 @@ export async function deleteMediaItem(id: string) {
   revalidatePath("/admin/media")
   return { success: true }
 }
+
+export async function getMediaStats() {
+  const supabase = createClient()
+
+  const { data: media, error } = await supabase.from("media").select("file_type, file_size")
+
+  if (error) {
+    console.error("Error fetching media stats:", error)
+    return {
+      totalFiles: 0,
+      images: 0,
+      videos: 0,
+      totalSize: "0 MB",
+      videoSize: "0 MB",
+      storageUsed: 0,
+      storageLimit: "1 GB",
+    }
+  }
+
+  const totalFiles = media?.length || 0
+  const images = media?.filter(m => m.file_type?.startsWith('image/')).length || 0
+  const videos = media?.filter(m => m.file_type?.startsWith('video/')).length || 0
+  
+  const totalBytes = media?.reduce((sum, m) => sum + (m.file_size || 0), 0) || 0
+  const videoBytes = media?.filter(m => m.file_type?.startsWith('video/')).reduce((sum, m) => sum + (m.file_size || 0), 0) || 0
+  
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return '0 MB'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  }
+
+  const storageLimit = 1024 * 1024 * 1024 // 1GB in bytes
+  const storageUsed = Math.round((totalBytes / storageLimit) * 100)
+
+  return {
+    totalFiles,
+    images,
+    videos,
+    totalSize: formatBytes(totalBytes),
+    videoSize: formatBytes(videoBytes),
+    storageUsed,
+    storageLimit: "1 GB",
+  }
+}
