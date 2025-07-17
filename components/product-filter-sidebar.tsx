@@ -1,214 +1,307 @@
 "use client"
 
 import { useState } from "react"
-import { X, ChevronDown, ChevronUp, Filter } from "lucide-react"
-import type { ProductFilter, ProductFilterOption } from "@/types/product"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { X, Filter } from "lucide-react"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 
-interface ProductFilterSidebarProps {
-  filters: ProductFilter
-  updateFilter: (filter: Partial<ProductFilter>) => void
-  resetFilters: () => void
-  categories: ProductFilterOption[]
-  features: ProductFilterOption[]
-  priceRange: { min: number; max: number }
-  className?: string
-  isMobile?: boolean
+interface ProductFilters {
+  category?: string[]
+  priceRange?: [number, number]
+  inStock?: boolean
+  certification?: string[]
+  material?: string[]
 }
 
-export function ProductFilterSidebar({
-  filters,
-  updateFilter,
-  resetFilters,
-  categories,
-  features,
-  priceRange,
-  className,
-  isMobile = false,
-}: ProductFilterSidebarProps) {
-  const [expanded, setExpanded] = useState({
-    categories: true,
-    price: true,
-    features: true,
-  })
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+interface ProductFilterSidebarProps {
+  filters?: ProductFilters
+  onFiltersChange: (filters: ProductFilters) => void
+  className?: string
+}
 
-  const toggleSection = (section: keyof typeof expanded) => {
-    setExpanded((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }))
+// Safe price formatting function
+const formatPrice = (price: number | undefined): string => {
+  if (typeof price !== "number" || isNaN(price)) {
+    return "₹0"
   }
+  return `₹${price.toLocaleString()}`
+}
 
-  const handleCategoryChange = (categoryId: string) => {
-    updateFilter({ category: filters.category === categoryId ? undefined : categoryId })
-  }
+const categories = [
+  "Filler Master Batches",
+  "Carry Bags / Shopping Bags Plain",
+  "Carry Bags / Shopping Bags With Private Labelling",
+  "Grocery Pouches",
+  "Supermarket Pouches with Perforation Rolls",
+  "D-Cut Garment Bags",
+  "Garbage Bags",
+  "Tiffin Sheets",
+  "Packaging Sheets in Rolls Form",
+]
 
-  const handleFeatureChange = (featureId: string) => {
-    const currentFeatures = filters.features || []
-    const newFeatures = currentFeatures.includes(featureId)
-      ? currentFeatures.filter((id) => id !== featureId)
-      : [...currentFeatures, featureId]
+const certifications = ["CPCB Certified", "CIPET Certified", "ISO Certified", "ASTM Certified"]
 
-    updateFilter({ features: newFeatures.length > 0 ? newFeatures : undefined })
-  }
+const materials = ["PBAT", "PLA", "Starch Based", "Cornstarch", "Bagasse"]
 
-  const handlePriceChange = (value: number[]) => {
-    updateFilter({
-      minPrice: value[0],
-      maxPrice: value[1],
+export function ProductFilterSidebar({ filters = {}, onFiltersChange, className }: ProductFilterSidebarProps) {
+  const [priceRange, setPriceRange] = useState<[number, number]>(filters.priceRange || [0, 10000])
+
+  const handleCategoryChange = (category: string, checked: boolean) => {
+    const currentCategories = filters.category || []
+    const newCategories = checked ? [...currentCategories, category] : currentCategories.filter((c) => c !== category)
+
+    onFiltersChange({
+      ...filters,
+      category: newCategories,
     })
   }
 
-  const formatPrice = (price: number) => {
-    return `₹${price.toLocaleString()}`
+  const handleCertificationChange = (certification: string, checked: boolean) => {
+    const currentCertifications = filters.certification || []
+    const newCertifications = checked
+      ? [...currentCertifications, certification]
+      : currentCertifications.filter((c) => c !== certification)
+
+    onFiltersChange({
+      ...filters,
+      certification: newCertifications,
+    })
   }
 
-  const filterContent = (
-    <div className={cn("space-y-6", className)}>
+  const handleMaterialChange = (material: string, checked: boolean) => {
+    const currentMaterials = filters.material || []
+    const newMaterials = checked ? [...currentMaterials, material] : currentMaterials.filter((m) => m !== material)
+
+    onFiltersChange({
+      ...filters,
+      material: newMaterials,
+    })
+  }
+
+  const handlePriceRangeChange = (newRange: number[]) => {
+    const range: [number, number] = [newRange[0], newRange[1]]
+    setPriceRange(range)
+    onFiltersChange({
+      ...filters,
+      priceRange: range,
+    })
+  }
+
+  const handleInStockChange = (checked: boolean) => {
+    onFiltersChange({
+      ...filters,
+      inStock: checked,
+    })
+  }
+
+  const clearFilters = () => {
+    setPriceRange([0, 10000])
+    onFiltersChange({})
+  }
+
+  const FilterContent = () => (
+    <div className="space-y-6">
+      {/* Clear Filters */}
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Filters</h3>
-        <Button variant="ghost" size="sm" onClick={resetFilters}>
-          Reset
+        <Button variant="ghost" size="sm" onClick={clearFilters}>
+          Clear All
         </Button>
       </div>
 
-      {/* Categories */}
-      <div className="border-t pt-4">
-        <button onClick={() => toggleSection("categories")} className="flex w-full items-center justify-between mb-2">
-          <h4 className="text-sm font-medium">Categories</h4>
-          {expanded.categories ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
-
-        {expanded.categories && (
-          <div className="space-y-2 mt-2">
-            {categories.map((category) => (
-              <div key={category.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`category-${category.id}`}
-                  checked={filters.category === category.id}
-                  onCheckedChange={() => handleCategoryChange(category.id)}
-                />
-                <Label htmlFor={`category-${category.id}`} className="text-sm flex-1 cursor-pointer">
-                  {category.label}
-                </Label>
-                <span className="text-xs text-gray-500">({category.count})</span>
-              </div>
+      {/* Active Filters */}
+      {(filters.category?.length || filters.certification?.length || filters.material?.length || filters.inStock) && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Active Filters</h4>
+          <div className="flex flex-wrap gap-2">
+            {filters.category?.map((category) => (
+              <Badge key={category} variant="secondary" className="text-xs">
+                {category}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => handleCategoryChange(category, false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
             ))}
+            {filters.certification?.map((cert) => (
+              <Badge key={cert} variant="secondary" className="text-xs">
+                {cert}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => handleCertificationChange(cert, false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            ))}
+            {filters.material?.map((material) => (
+              <Badge key={material} variant="secondary" className="text-xs">
+                {material}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => handleMaterialChange(material, false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            ))}
+            {filters.inStock && (
+              <Badge variant="secondary" className="text-xs">
+                In Stock
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-auto p-0 ml-1"
+                  onClick={() => handleInStockChange(false)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </Badge>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Price Range */}
-      <div className="border-t pt-4">
-        <button onClick={() => toggleSection("price")} className="flex w-full items-center justify-between mb-2">
-          <h4 className="text-sm font-medium">Price Range</h4>
-          {expanded.price ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Price Range</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Slider
+            value={priceRange}
+            onValueChange={handlePriceRangeChange}
+            max={10000}
+            min={0}
+            step={100}
+            className="w-full"
+          />
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
+            <span>{formatPrice(priceRange[0])}</span>
+            <span>{formatPrice(priceRange[1])}</span>
+          </div>
+        </CardContent>
+      </Card>
 
-        {expanded.price && (
-          <div className="space-y-4 mt-2">
-            <Slider
-              defaultValue={[priceRange.min, priceRange.max]}
-              min={priceRange.min}
-              max={priceRange.max}
-              step={10}
-              value={[filters.minPrice ?? priceRange.min, filters.maxPrice ?? priceRange.max]}
-              onValueChange={handlePriceChange}
-              className="my-6"
-            />
-            <div className="flex items-center justify-between">
-              <div className="border rounded-md px-2 py-1 w-24">
-                <p className="text-xs text-gray-500">Min</p>
-                <p className="font-medium">{formatPrice(filters.minPrice ?? priceRange.min)}</p>
-              </div>
-              <div className="border rounded-md px-2 py-1 w-24">
-                <p className="text-xs text-gray-500">Max</p>
-                <p className="font-medium">{formatPrice(filters.maxPrice ?? priceRange.max)}</p>
-              </div>
+      {/* Categories */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Product Categories</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {categories.map((category) => (
+            <div key={category} className="flex items-center space-x-2">
+              <Checkbox
+                id={`category-${category}`}
+                checked={filters.category?.includes(category) || false}
+                onCheckedChange={(checked) => handleCategoryChange(category, checked as boolean)}
+              />
+              <Label htmlFor={`category-${category}`} className="text-sm font-normal cursor-pointer">
+                {category}
+              </Label>
             </div>
-          </div>
-        )}
-      </div>
+          ))}
+        </CardContent>
+      </Card>
 
-      {/* Features */}
-      <div className="border-t pt-4">
-        <button onClick={() => toggleSection("features")} className="flex w-full items-center justify-between mb-2">
-          <h4 className="text-sm font-medium">Features</h4>
-          {expanded.features ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
+      {/* Certifications */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Certifications</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {certifications.map((certification) => (
+            <div key={certification} className="flex items-center space-x-2">
+              <Checkbox
+                id={`cert-${certification}`}
+                checked={filters.certification?.includes(certification) || false}
+                onCheckedChange={(checked) => handleCertificationChange(certification, checked as boolean)}
+              />
+              <Label htmlFor={`cert-${certification}`} className="text-sm font-normal cursor-pointer">
+                {certification}
+              </Label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
 
-        {expanded.features && (
-          <div className="space-y-2 mt-2">
-            {features.map((feature) => (
-              <div key={feature.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`feature-${feature.id}`}
-                  checked={(filters.features || []).includes(feature.id)}
-                  onCheckedChange={() => handleFeatureChange(feature.id)}
-                />
-                <Label htmlFor={`feature-${feature.id}`} className="text-sm cursor-pointer">
-                  {feature.label}
-                </Label>
-              </div>
-            ))}
+      {/* Materials */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Materials</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {materials.map((material) => (
+            <div key={material} className="flex items-center space-x-2">
+              <Checkbox
+                id={`material-${material}`}
+                checked={filters.material?.includes(material) || false}
+                onCheckedChange={(checked) => handleMaterialChange(material, checked as boolean)}
+              />
+              <Label htmlFor={`material-${material}`} className="text-sm font-normal cursor-pointer">
+                {material}
+              </Label>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Stock Status */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Availability</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-2">
+            <Checkbox id="in-stock" checked={filters.inStock || false} onCheckedChange={handleInStockChange} />
+            <Label htmlFor="in-stock" className="text-sm font-normal cursor-pointer">
+              In Stock Only
+            </Label>
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 
-  // Mobile filter button and drawer
-  if (isMobile) {
-    return (
-      <>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-2"
-          onClick={() => setMobileFiltersOpen(true)}
-        >
-          <Filter className="h-4 w-4" />
-          Filters
-        </Button>
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className={`hidden lg:block ${className}`}>
+        <FilterContent />
+      </div>
 
-        {mobileFiltersOpen && (
-          <div className="fixed inset-0 z-50 bg-black/50">
-            <div className="fixed bottom-0 left-0 right-0 top-auto z-50 h-[80vh] rounded-t-xl bg-white p-6 shadow-lg">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Filters</h3>
-                <Button variant="ghost" size="icon" onClick={() => setMobileFiltersOpen(false)}>
-                  <X className="h-5 w-5" />
-                </Button>
-              </div>
-              <div className="overflow-y-auto h-[calc(80vh-8rem)]">{filterContent}</div>
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => {
-                      resetFilters()
-                      setMobileFiltersOpen(false)
-                    }}
-                  >
-                    Reset
-                  </Button>
-                  <Button className="flex-1" onClick={() => setMobileFiltersOpen(false)}>
-                    Apply Filters
-                  </Button>
-                </div>
-              </div>
+      {/* Mobile Filter Sheet */}
+      <div className="lg:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-80 overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Product Filters</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <FilterContent />
             </div>
-          </div>
-        )}
-      </>
-    )
-  }
-
-  return filterContent
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
+  )
 }

@@ -6,26 +6,22 @@ import { NatureIntroScreen } from "./nature-intro-screen"
 import { Leaf } from "lucide-react"
 
 export function IntroExperienceWrapper({ children }: { children: React.ReactNode }) {
-  const [showIntro, setShowIntro] = useState(false)
-  const [hasSeenIntro, setHasSeenIntro] = useState(false)
+  const [showIntro, setShowIntro] = useState(true) // Always show intro initially
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    const hasVisited = localStorage.getItem("hasSeenIntro")
-    setShowIntro(hasVisited !== "true")
-    setHasSeenIntro(hasVisited === "true")
+    // Always show intro on every visit - no localStorage check
+    setShowIntro(true)
     setIsLoaded(true)
   }, [])
 
   const handleIntroComplete = () => {
     setShowIntro(false)
-    localStorage.setItem("hasSeenIntro", "true")
-    setHasSeenIntro(true)
+    // Don't save to localStorage - we want intro every time
   }
 
   const resetIntroExperience = () => {
-    localStorage.removeItem("hasSeenIntro")
-    window.location.reload()
+    setShowIntro(true)
   }
 
   if (!isLoaded) {
@@ -43,14 +39,14 @@ export function IntroExperienceWrapper({ children }: { children: React.ReactNode
   return (
     <>
       {showIntro && <NatureIntroScreen onComplete={handleIntroComplete} />}
-      <div className={hasSeenIntro ? "animate-fadeIn" : ""}>
+      <div className={!showIntro ? "animate-fadeIn" : ""}>
         {children}
         {process.env.NODE_ENV === "development" && (
           <button
             onClick={resetIntroExperience}
             className="fixed bottom-4 right-4 bg-gray-800 text-white text-xs px-2 py-1 rounded z-50 opacity-50 hover:opacity-100"
           >
-            Reset Intro
+            Show Intro
           </button>
         )}
       </div>

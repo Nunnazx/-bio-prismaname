@@ -14,6 +14,7 @@ import { IntroExperienceWrapper } from "@/components/intro-experience-wrapper"
 import { Toaster } from "@/components/ui/sonner"
 import { Analytics } from "@vercel/analytics/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { PageTransitionWrapper } from "@/components/page-transition-wrapper"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -37,10 +38,10 @@ export default function RootLayout({
             <Suspense fallback={null}>
               <IntroExperienceWrapper>
                 <div className="flex min-h-screen flex-col">
-                  <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                  <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="container flex h-16 items-center">
                       <Link href={`/${params.locale}`} className="flex items-center gap-2">
-                        <Leaf className="h-6 w-6 text-green-600" />
+                        <Leaf className="h-6 w-6 text-primary" />
                         <span className="font-bold">AICMT</span>
                       </Link>
                       <MainNavigation />
@@ -55,7 +56,9 @@ export default function RootLayout({
                       </div>
                     </div>
                   </header>
-                  <main className="flex-1">{children}</main>
+                  <main className="flex-1">
+                    <PageTransitionWrapper>{children}</PageTransitionWrapper>
+                  </main>
                   <Footer locale={params.locale} />
                 </div>
               </IntroExperienceWrapper>

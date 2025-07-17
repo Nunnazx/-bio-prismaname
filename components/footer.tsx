@@ -1,77 +1,88 @@
 import Link from "next/link"
-import { NewsletterForm } from "@/components/newsletter-form" // Assuming NewsletterForm is in this path
+import { Leaf, Twitter, Linkedin, Instagram } from "lucide-react"
 
 export function Footer({ locale }: { locale: string }) {
+  const currentYear = new Date().getFullYear()
+
   return (
-    <footer className="bg-gray-100 dark:bg-gray-800 py-8 mt-auto">
-      {" "}
-      {/* Changed mt-12 to mt-auto */}
-      <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-3 gap-8 items-start">
-          {" "}
-          {/* Added gap and items-start */}
-          <div className="md:col-span-1">
-            {" "}
-            {/* Company Info */}
-            <h3 className="text-lg font-semibold mb-2">AICMT International</h3>
+    <footer className="bg-secondary text-secondary-foreground">
+      <div className="container mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Link href={`/${locale}`} className="flex items-center gap-2 mb-4">
+              <Leaf className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold">AICMT</span>
+            </Link>
             <p className="text-sm text-muted-foreground">
-              Leading CPCB Certified Manufacturer of Compostable Plastics.
+              From Nature, For Nature. CPCB Certified compostable solutions.
             </p>
-            {/* Add more company info or links here if needed */}
           </div>
-          <div className="md:col-span-1">
-            {" "}
-            {/* Quick Links */}
-            <h3 className="text-lg font-semibold mb-2">Quick Links</h3>
-            <ul className="space-y-1">
+
+          <div>
+            <h3 className="font-semibold uppercase tracking-wide">Quick Links</h3>
+            <ul className="mt-4 space-y-2">
               <li>
-                <Link href={`/${locale}/products`} className="text-sm text-muted-foreground hover:underline">
+                <Link
+                  href={`/${locale}/products`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Products
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/about`} className="text-sm text-muted-foreground hover:underline">
+                <Link
+                  href={`/${locale}/about`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/blog`} className="text-sm text-muted-foreground hover:underline">
+                <Link
+                  href={`/${locale}/blog`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Blog
                 </Link>
               </li>
               <li>
-                <Link href={`/${locale}/contact`} className="text-sm text-muted-foreground hover:underline">
+                <Link
+                  href={`/${locale}/contact`}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                >
                   Contact
                 </Link>
               </li>
             </ul>
           </div>
-          <div className="md:col-span-1">
-            {" "}
-            {/* Newsletter */}
-            <h3 className="text-lg font-semibold mb-2">Stay Updated</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Subscribe to our newsletter for the latest updates and offers.
-            </p>
-            <NewsletterForm source="footer" className="max-w-md" />
+
+          <div>
+            <h3 className="font-semibold uppercase tracking-wide">Contact Us</h3>
+            <address className="mt-4 space-y-2 not-italic text-sm text-muted-foreground">
+              <p>info@aicmtinternational.com</p>
+              <p>+91-7075500868</p>
+              <p>Hyderabad, Telangana, India</p>
+            </address>
+          </div>
+
+          <div>
+            <h3 className="font-semibold uppercase tracking-wide">Follow Us</h3>
+            <div className="mt-4 flex space-x-4">
+              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Twitter />
+              </Link>
+              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Linkedin />
+              </Link>
+              <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
+                <Instagram />
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className="border-t mt-8 pt-6 flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
-          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            © {new Date().getFullYear()} AICMT International Pvt. Ltd. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            <Link href={`/${locale}/terms`} className="text-sm text-muted-foreground hover:underline">
-              Terms
-            </Link>
-            <Link href={`/${locale}/privacy`} className="text-sm text-muted-foreground hover:underline">
-              Privacy
-            </Link>
-            <Link href={`/${locale}/language-preferences`} className="text-sm text-muted-foreground hover:underline">
-              Language Preferences
-            </Link>
-          </div>
+        <div className="mt-12 border-t border-border/40 pt-8 text-center text-sm text-muted-foreground">
+          <p>&copy; {currentYear} AICMT International. All Rights Reserved.</p>
         </div>
       </div>
     </footer>
