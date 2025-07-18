@@ -2,8 +2,10 @@ import type React from "react"
 import { Inter } from "next/font/google"
 import { LanguageProvider } from "@/lib/i18n/language-context"
 import { ThemeProvider } from "@/components/theme-provider"
+import { CartProvider } from "@/lib/cart-context"
 import { MainNavigation, MobileNavigation } from "@/components/main-navigation"
 import { LanguageSelector } from "@/components/language-selector"
+import { ShoppingCartDrawer } from "@/components/shopping-cart"
 import { Leaf } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -36,8 +38,9 @@ export default async function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" suppressHydrationWarning>
           <LanguageProvider initialLocale={locale}>
-            <Suspense fallback={null}>
-              <IntroExperienceWrapper>
+            <CartProvider>
+              <Suspense fallback={null}>
+                <IntroExperienceWrapper>
                 <div className="flex min-h-screen flex-col">
                   <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                     <div className="container flex h-16 items-center">
@@ -47,6 +50,7 @@ export default async function RootLayout({
                       </Link>
                       <MainNavigation />
                       <div className="ml-auto flex items-center gap-2">
+                        <ShoppingCartDrawer />
                         <LanguageSelector />
                         <MobileNavigation />
                         <Link href={`/${locale}/contact`}>
@@ -67,6 +71,7 @@ export default async function RootLayout({
             <Toaster />
             <Analytics />
             <SpeedInsights />
+            </CartProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
