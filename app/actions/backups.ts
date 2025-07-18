@@ -1,92 +1,90 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getBackups() {
-  const supabase = createClient()
+  try {
+    const data = await prisma.backup.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
 
-  const { data, error } = await supabase.from("backups").select("*").order("created_at", { ascending: false })
-
-  if (error) {
+    return data
+  } catch (error) {
     console.error("Error fetching backups:", error)
     throw new Error("Failed to fetch backups")
   }
-
-  return data
 }
 
 export async function getBackup(id: string) {
-  const supabase = createClient()
+  try {
+    const data = await prisma.backup.findUnique({
+      where: { id }
+    })
 
-  const { data, error } = await supabase.from("backups").select("*").eq("id", id).single()
-
-  if (error) {
+    return data
+  } catch (error) {
     console.error("Error fetching backup:", error)
     throw new Error("Failed to fetch backup")
   }
-
-  return data
 }
 
 export async function createBackup(backupData: any) {
-  const supabase = createClient()
-
-  // Remove empty ID to let Supabase generate it
-  if (backupData.id === "" || backupData.id === undefined) {
-    delete backupData.id
-  }
-
-  // Set created_by if not provided
-  if (!backupData.created_by) {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (session?.user?.id) {
-      backupData.created_by = session.user.id
+  try {
+    // Remove empty ID
+    if (backupData.id === "" || backupData.id === undefined) {
+      delete backupData.id
     }
-  }
 
-  const { data, error } = await supabase.from("backups").insert([backupData]).select()
+    const data = await prisma.backup.create({
+      data: {
+        ...backupData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
 
-  if (error) {
+    revalidatePath("/admin/backups")
+    return data
+  } catch (error) {
     console.error("Error creating backup:", error)
     throw new Error("Failed to create backup")
   }
-
-  revalidatePath("/admin/backups")
-  return data[0]
 }
 
 export async function updateBackup(id: string, backupData: any) {
-  const supabase = createClient()
+  try {
+    // Don't update the ID
+    if (backupData.id) {
+      delete backupData.id
+    }
 
-  // Don't update the ID
-  if (backupData.id) {
-    delete backupData.id
-  }
+    const data = await prisma.backup.update({
+      where: { id },
+      data: {
+        ...backupData,
+        updatedAt: new Date()
+      }
+    })
 
-  const { data, error } = await supabase.from("backups").update(backupData).eq("id", id).select()
-
-  if (error) {
+    revalidatePath("/admin/backups")
+    return data
+  } catch (error) {
     console.error("Error updating backup:", error)
     throw new Error("Failed to update backup")
   }
-
-  revalidatePath("/admin/backups")
-  return data[0]
 }
 
 export async function deleteBackup(id: string) {
-  const supabase = createClient()
+  try {
+    await prisma.backup.delete({
+      where: { id }
+    })
 
-  const { error } = await supabase.from("backups").delete().eq("id", id)
-
-  if (error) {
+    revalidatePath("/admin/backups")
+    return { success: true }
+  } catch (error) {
     console.error("Error deleting backup:", error)
     throw new Error("Failed to delete backup")
   }
-
-  revalidatePath("/admin/backups")
-  return { success: true }
 }

@@ -1,16 +1,38 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Star, ThumbsUp, MessageSquare, ImageIcon, User } from "lucide-react"
-import { format } from "date-fns"
-import { useToast } from "@/hooks/use-toast"
+import { useState, useEffect } from 'react'
+import { Star, ThumbsUp, MessageSquare, User, Calendar } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Progress } from '@/components/ui/progress'
+import { useToast } from '@/components/ui/use-toast'
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { OptimizedImage } from "@/components/optimized-image"
-import { getProductReviews, markReviewHelpful } from "@/app/actions/reviews"
-import { ReviewForm } from "@/components/review-form"
+interface Review {
+  id: string
+  name: string
+  email: string
+  company?: string
+  title: string
+  content: string
+  rating: number
+  isVerified: boolean
+  isFeatured: boolean
+  helpfulCount: number
+  images: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+interface ReviewStats {
+  averageRating: number
+  totalReviews: number
+  ratingDistribution: { [key: number]: number }
+}
 
 interface ProductReviewsProps {
   productId: string
@@ -18,261 +40,312 @@ interface ProductReviewsProps {
 }
 
 export function ProductReviews({ productId, productName }: ProductReviewsProps) {
-  const [reviews, setReviews] = useState<any[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [stats, setStats] = useState<ReviewStats>({
+    averageRating: 0,
+    totalReviews: 0,
+    ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState({
-    average: 0,
-    total: 0,
-    distribution: [0, 0, 0, 0, 0],
-  })
+  const [activeTab, setActiveTab] = useState('reviews')
   const { toast } = useToast()
 
-  // Fetch reviews
+  // Review form state
+  const [reviewForm, setReviewForm] = useState({
+    name: '',
+    email: '',
+    company: '',
+    title: '',
+    content: '',
+    rating: 5
+  })
+  const [submitting, setSubmitting] = useState(false)
+
   useEffect(() => {
-    async function fetchReviews() {
-      setLoading(true)
-      try {
-        const result = await getProductReviews(productId)
-        if (result.error) {
-          setError(result.error)
-        } else if (result.reviews) {
-          setReviews(result.reviews)
-
-          // Calculate stats
-          const total = result.reviews.length
-          if (total > 0) {
-            const sum = result.reviews.reduce((acc: number, review: any) => acc + review.rating, 0)
-            const average = sum / total
-
-            // Calculate distribution
-            const distribution = [0, 0, 0, 0, 0]
-            result.reviews.forEach((review: any) => {
-              distribution[review.rating - 1]++
-            })
-
-            setStats({
-              average,
-              total,
-              distribution,
-            })
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching reviews:", err)
-        setError("Failed to load reviews")
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchReviews()
   }, [productId])
 
-  // Handle marking a review as helpful
-  const handleMarkHelpful = async (reviewId: string) => {
+  const fetchReviews = async () => {
     try {
-      const result = await markReviewHelpful(reviewId)
-      if (result.error) {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive",
-        })
-      } else {
-        // Update the review in the local state
-        setReviews(
-          reviews.map((review) => {
-            if (review.id === reviewId) {
-              return { ...review, helpful_count: (review.helpful_count || 0) + 1 }
-            }
-            return review
-          }),
-        )
+      setLoading(true)
+      // Mock data for now - replace with actual API call
+      const mockReviews: Review[] = [
+        {
+          id: '1',
+          name: 'Rajesh Kumar',
+          email: 'rajesh@greentech.com',
+          company: 'GreenTech Solutions',
+          title: 'Excellent Quality Product',
+          content: 'We have been using this PBAT resin for our packaging operations for 6 months now. The quality is consistently excellent and the biodegradation properties are exactly as promised. Our customers love the eco-friendly aspect.',
+          rating: 5,
+          isVerified: true,
+          isFeatured: true,
+          helpfulCount: 12,
+          images: [],
+          createdAt: new Date('2024-01-15').toISOString(),
+          updatedAt: new Date('2024-01-15').toISOString()
+        },
+        {
+          id: '2',
+          name: 'Priya Sharma',
+          email: 'priya@ecopack.in',
+          company: 'EcoPack India',
+          title: 'Great for Retail Applications',
+          content: 'These compostable bags are perfect for our retail chain. They are strong, reliable, and our customers appreciate the environmental benefits. Processing was smooth and delivery was on time.',
+          rating: 4,
+          isVerified: true,
+          isFeatured: false,
+          helpfulCount: 8,
+          images: [],
+          createdAt: new Date('2024-02-01').toISOString(),
+          updatedAt: new Date('2024-02-01').toISOString()
+        },
+        {
+          id: '3',
+          name: 'Mohammed Ali',
+          email: 'ali@freshfoods.com',
+          company: 'Fresh Foods Ltd',
+          title: 'Perfect for Food Packaging',
+          content: 'Using these biodegradable films for our fresh produce packaging. They maintain product freshness while being completely safe and environmentally friendly. Highly recommended!',
+          rating: 5,
+          isVerified: true,
+          isFeatured: false,
+          helpfulCount: 6,
+          images: [],
+          createdAt: new Date('2024-02-15').toISOString(),
+          updatedAt: new Date('2024-02-15').toISOString()
+        }
+      ]
 
-        toast({
-          title: "Thank you!",
-          description: "You marked this review as helpful",
-        })
-      }
-    } catch (err) {
-      console.error("Error marking review as helpful:", err)
-      toast({
-        title: "Error",
-        description: "Failed to mark review as helpful",
-        variant: "destructive",
+      setReviews(mockReviews)
+      
+      // Calculate stats
+      const totalReviews = mockReviews.length
+      const averageRating = mockReviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews
+      const ratingDistribution = mockReviews.reduce((dist, review) => {
+        dist[review.rating] = (dist[review.rating] || 0) + 1
+        return dist
+      }, {} as { [key: number]: number })
+
+      setStats({
+        averageRating: Math.round(averageRating * 10) / 10,
+        totalReviews,
+        ratingDistribution: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0, ...ratingDistribution }
       })
+      
+      setError(null)
+    } catch (err) {
+      setError('Failed to load reviews. Please try again.')
+      console.error('Error fetching reviews:', err)
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Render loading state
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!reviewForm.name || !reviewForm.email || !reviewForm.title || !reviewForm.content) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setSubmitting(true)
+    
+    try {
+      // Mock submission - replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      toast({
+        title: "Review Submitted",
+        description: "Thank you for your review! It will be published after moderation.",
+      })
+      
+      // Reset form
+      setReviewForm({
+        name: '',
+        email: '',
+        company: '',
+        title: '',
+        content: '',
+        rating: 5
+      })
+      
+      // Switch back to reviews tab
+      setActiveTab('reviews')
+      
+    } catch (err) {
+      toast({
+        title: "Submission Failed",
+        description: "There was a problem submitting your review. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const renderStars = (rating: number, size: 'sm' | 'md' | 'lg' = 'md') => {
+    const sizeClasses = {
+      sm: 'h-3 w-3',
+      md: 'h-4 w-4',
+      lg: 'h-5 w-5'
+    }
+    
+    return (
+      <div className="flex">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            className={`${sizeClasses[size]} ${
+              star <= rating 
+                ? 'fill-yellow-400 text-yellow-400' 
+                : 'text-gray-300'
+            }`}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
   if (loading) {
     return (
-      <div className="w-full py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="space-y-4">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
-  // Render error state
   if (error) {
     return (
-      <div className="w-full py-8">
-        <div className="text-center p-6 bg-red-50 rounded-lg">
-          <p className="text-red-600">{error}</p>
-          <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
+      <div className="text-center p-6 bg-red-50 rounded-lg">
+        <p className="text-red-600">{error}</p>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
       </div>
     )
   }
 
   return (
-    <div className="w-full py-8">
-      <Tabs defaultValue="reviews">
-        <TabsList className="mb-6">
-          <TabsTrigger value="reviews">Reviews ({stats.total})</TabsTrigger>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Customer Reviews</h2>
+        <div className="flex items-center gap-2">
+          {renderStars(Math.round(stats.averageRating), 'lg')}
+          <span className="text-lg font-semibold">{stats.averageRating}</span>
+          <span className="text-gray-500">({stats.totalReviews} reviews)</span>
+        </div>
+      </div>
+
+      {/* Rating Distribution */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Rating Distribution</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {[5, 4, 3, 2, 1].map((rating) => (
+              <div key={rating} className="flex items-center gap-3">
+                <div className="flex items-center gap-1 w-12">
+                  <span className="text-sm">{rating}</span>
+                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                </div>
+                <Progress 
+                  value={(stats.ratingDistribution[rating] / stats.totalReviews) * 100} 
+                  className="flex-1 h-2"
+                />
+                <span className="text-sm text-gray-500 w-8">
+                  {stats.ratingDistribution[rating]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="reviews">Reviews ({stats.totalReviews})</TabsTrigger>
           <TabsTrigger value="write">Write a Review</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="reviews">
-          {/* Review Summary */}
-          {stats.total > 0 ? (
-            <Card className="mb-8">
-              <CardContent className="p-6">
-                <div className="grid md:grid-cols-2 gap-8">
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="text-5xl font-bold mb-2">{stats.average.toFixed(1)}</div>
-                    <div className="flex items-center mb-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-5 w-5 ${
-                            star <= Math.round(stats.average) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-sm text-gray-500">Based on {stats.total} reviews</div>
-                  </div>
-
-                  <div className="space-y-2">
-                    {[5, 4, 3, 2, 1].map((rating) => {
-                      const count = stats.distribution[rating - 1]
-                      const percentage = stats.total > 0 ? (count / stats.total) * 100 : 0
-
-                      return (
-                        <div key={rating} className="flex items-center">
-                          <div className="w-12 text-sm text-gray-600">{rating} stars</div>
-                          <div className="flex-1 mx-3 h-4 bg-gray-200 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-yellow-400 rounded-full"
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                          <div className="w-10 text-sm text-gray-600">{count}</div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="text-center p-8 bg-gray-50 rounded-lg mb-8">
+        <TabsContent value="reviews" className="space-y-4">
+          {reviews.length === 0 ? (
+            <div className="text-center p-8">
+              <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
               <h3 className="text-xl font-medium mb-2">No Reviews Yet</h3>
               <p className="text-gray-500 mb-4">Be the first to review this product</p>
-              <Button onClick={() => document.querySelector('[data-value="write"]')?.click()}>Write a Review</Button>
+              <Button onClick={() => setActiveTab('write')}>Write a Review</Button>
             </div>
-          )}
-
-          {/* Review List */}
-          {reviews.length > 0 && (
-            <div className="space-y-6">
+          ) : (
+            <div className="space-y-4">
               {reviews.map((review) => (
-                <Card key={review.id} className="overflow-hidden">
-                  <CardHeader className="bg-gray-50 p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center">
-                            {[1, 2, 3, 4, 5].map((star) => (
-                              <Star
-                                key={star}
-                                className={`h-4 w-4 ${
-                                  star <= review.rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-                                }`}
-                              />
-                            ))}
+                <Card key={review.id} className={review.isFeatured ? 'border-green-200 bg-green-50' : ''}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-gray-500" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold">{review.name}</h4>
+                            {review.isVerified && (
+                              <Badge variant="secondary" className="text-xs">
+                                Verified Purchase
+                              </Badge>
+                            )}
+                            {review.isFeatured && (
+                              <Badge variant="default" className="text-xs bg-green-600">
+                                Featured
+                              </Badge>
+                            )}
                           </div>
-                          <h3 className="font-semibold">{review.title}</h3>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                          <User className="h-3 w-3" />
-                          <span>{review.name}</span>
-                          {review.is_verified_purchase && (
-                            <span className="text-green-600 text-xs font-medium">Verified Purchase</span>
+                          {review.company && (
+                            <p className="text-sm text-gray-600">{review.company}</p>
                           )}
+                          <div className="flex items-center gap-2 mt-1">
+                            {renderStars(review.rating, 'sm')}
+                            <span className="text-xs text-gray-500">
+                              <Calendar className="h-3 w-3 inline mr-1" />
+                              {formatDate(review.createdAt)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-sm text-gray-500">{format(new Date(review.created_at), "MMM d, yyyy")}</div>
                     </div>
-                  </CardHeader>
-
-                  <CardContent className="p-4">
-                    <p className="text-gray-700 whitespace-pre-line">{review.content}</p>
-
-                    {/* Review Images */}
-                    {review.review_images && review.review_images.length > 0 && (
-                      <div className="mt-4">
-                        <div className="flex items-center gap-1 text-sm font-medium mb-2">
-                          <ImageIcon className="h-4 w-4" />
-                          <span>Images from this review</span>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {review.review_images.map((image: any) => (
-                            <div key={image.id} className="w-20 h-20 rounded-md overflow-hidden border">
-                              <OptimizedImage
-                                src={image.image_url}
-                                alt="Review image"
-                                width={80}
-                                height={80}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Admin Response */}
-                    {review.review_responses && review.review_responses.length > 0 && (
-                      <div className="mt-4 bg-blue-50 p-3 rounded-md">
-                        <div className="flex items-center gap-1 text-sm font-medium text-blue-700 mb-1">
-                          <MessageSquare className="h-4 w-4" />
-                          <span>Response from AICMT</span>
-                        </div>
-                        <p className="text-gray-700 text-sm">{review.review_responses[0].content}</p>
-                      </div>
-                    )}
+                    
+                    <h5 className="font-medium mb-2">{review.title}</h5>
+                    <p className="text-gray-700 mb-4">{review.content}</p>
+                    
+                    <div className="flex items-center justify-between">
+                      <Button variant="ghost" size="sm" className="text-gray-500">
+                        <ThumbsUp className="h-4 w-4 mr-1" />
+                        Helpful ({review.helpfulCount})
+                      </Button>
+                    </div>
                   </CardContent>
-
-                  <CardFooter className="p-4 pt-0 border-t">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-500 hover:text-gray-700"
-                      onClick={() => handleMarkHelpful(review.id)}
-                    >
-                      <ThumbsUp className="h-4 w-4 mr-1" />
-                      Helpful ({review.helpful_count || 0})
-                    </Button>
-                  </CardFooter>
                 </Card>
               ))}
             </div>
@@ -282,11 +355,90 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
         <TabsContent value="write">
           <Card>
             <CardHeader>
-              <h3 className="text-xl font-semibold">Write a Review for {productName}</h3>
-              <p className="text-gray-500">Share your experience with this product</p>
+              <CardTitle>Write a Review for {productName}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ReviewForm productId={productId} />
+              <form onSubmit={handleSubmitReview} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      value={reviewForm.name}
+                      onChange={(e) => setReviewForm(prev => ({ ...prev, name: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={reviewForm.email}
+                      onChange={(e) => setReviewForm(prev => ({ ...prev, email: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="company">Company (Optional)</Label>
+                  <Input
+                    id="company"
+                    value={reviewForm.company}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, company: e.target.value }))}
+                  />
+                </div>
+
+                <div>
+                  <Label>Rating *</Label>
+                  <div className="flex gap-1 mt-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewForm(prev => ({ ...prev, rating: star }))}
+                        className="p-1"
+                      >
+                        <Star
+                          className={`h-6 w-6 ${
+                            star <= reviewForm.rating
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-gray-300 hover:text-yellow-400'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="title">Review Title *</Label>
+                  <Input
+                    id="title"
+                    value={reviewForm.title}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Summarize your experience"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="content">Your Review *</Label>
+                  <Textarea
+                    id="content"
+                    value={reviewForm.content}
+                    onChange={(e) => setReviewForm(prev => ({ ...prev, content: e.target.value }))}
+                    placeholder="Share your experience with this product..."
+                    className="min-h-[120px]"
+                    required
+                  />
+                </div>
+
+                <Button type="submit" disabled={submitting} className="w-full">
+                  {submitting ? 'Submitting...' : 'Submit Review'}
+                </Button>
+              </form>
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(request: Request) {
   try {
     const data = await request.json()
-    const supabase = createClient()
 
     // Validate required fields
     const requiredFields = ["name", "email", "message", "inquiryType"]
@@ -27,17 +26,14 @@ export async function POST(request: Request) {
     }
 
     // Insert the inquiry into the database
-    const { data: inquiry, error } = await supabase.from("inquiries").insert([inquiryData]).select()
-
-    if (error) {
-      console.error("Error saving inquiry:", error)
-      return NextResponse.json({ error: "Failed to save inquiry" }, { status: 500 })
-    }
+    const inquiry = await prisma.inquiry.create({
+      data: inquiryData
+    })
 
     return NextResponse.json({
       success: true,
       message: "Inquiry submitted successfully",
-      inquiryId: inquiry[0].id,
+      inquiryId: inquiry.id,
     })
   } catch (error) {
     console.error("Error processing inquiry:", error)

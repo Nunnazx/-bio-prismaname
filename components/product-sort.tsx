@@ -1,46 +1,24 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import type { ProductFilter } from "@/types/product"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface ProductSortProps {
-  sortBy?: ProductFilter["sortBy"]
-  sortOrder?: ProductFilter["sortOrder"]
-  onSort: (sortBy: ProductFilter["sortBy"], sortOrder: ProductFilter["sortOrder"]) => void
-  className?: string
+  value: string
+  onChange: (value: string) => void
 }
 
-export function ProductSort({ sortBy, sortOrder = "asc", onSort, className }: ProductSortProps) {
-  const getSortLabel = () => {
-    if (!sortBy) return "Sort by"
-
-    const labels = {
-      name: "Name",
-      price: "Price",
-      newest: "Newest",
-    }
-
-    return `${labels[sortBy]} (${sortOrder === "asc" ? "A-Z" : "Z-A"})`
-  }
-
+export function ProductSort({ value, onChange }: ProductSortProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline" className={className}>
-          {getSortLabel()}
-          <ChevronDown className="ml-2 h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => onSort("name", "asc")}>Name (A-Z)</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("name", "desc")}>Name (Z-A)</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("price", "asc")}>Price (Low to High)</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("price", "desc")}>Price (High to Low)</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("newest", "desc")}>Newest First</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onSort("newest", "asc")}>Oldest First</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-48">
+        <SelectValue placeholder="Sort by" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="name">Name (A-Z)</SelectItem>
+        <SelectItem value="category">Category</SelectItem>
+        <SelectItem value="newest">Newest First</SelectItem>
+        <SelectItem value="featured">Featured First</SelectItem>
+      </SelectContent>
+    </Select>
   )
 }

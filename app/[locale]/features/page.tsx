@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Calculator, BarChart3, Clock, HelpCircle } from "lucide-react"
 import Link from "next/link"
 
-export default function FeaturesPage({ params }: { params: { locale: string } }) {
+export default async function FeaturesPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   return (
     <>
       <LanguageMeta
         title="Interactive Tools & Features | AICMT International"
         description="Explore our interactive tools to learn about biodegradable plastics, calculate environmental impact, and compare products."
-        currentLocale={params.locale}
+        currentLocale={locale}
         currentPath="/features"
       />
 
@@ -79,7 +80,7 @@ export default function FeaturesPage({ params }: { params: { locale: string } })
               </CardHeader>
               <CardContent>
                 <p className="mb-4">Our products come with unique certification codes that can be verified online.</p>
-                <Link href={`/${params.locale}/certification`}>
+                <Link href={`/${locale}/certification`}>
                   <Button variant="outline" className="w-full">
                     Verify Certification
                   </Button>
@@ -107,7 +108,7 @@ export default function FeaturesPage({ params }: { params: { locale: string } })
               </CardHeader>
               <CardContent>
                 <p className="mb-4">Access educational materials about biodegradable plastics and sustainability.</p>
-                <Link href={`/${params.locale}/blog`}>
+                <Link href={`/${locale}/blog`}>
                   <Button variant="outline" className="w-full">
                     Explore Resources
                   </Button>

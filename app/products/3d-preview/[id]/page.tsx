@@ -1,43 +1,20 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Product360Viewer } from "@/components/product-360-viewer"
-
-async function getProduct(id: string) {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data: product, error } = await supabase
-    .from("products")
-    .select(`
-      *,
-      product_models(*)
-    `)
-    .eq("id", id)
-    .single()
-
-  if (error || !product) {
-    console.error("Error fetching product:", error)
-    return null
-  }
-
-  return product
-}
+import { getProductById } from "@/mongodb-prisma/actions/products"
 
 export default async function ProductPreviewPage({ params }: { params: { id: string } }) {
-  const product = await getProduct(params.id)
+  const product = await getProductById(params.id)
 
   if (!product) {
     notFound()
   }
 
-  // Get model URL from product or product_models
-  const modelUrl =
-    product.model_url ||
-    (product.product_models && product.product_models.length > 0 ? product.product_models[0].model_url : null)
+  // Get model URL from product
+  const modelUrl = product.modelUrl
 
   if (!modelUrl) {
     notFound()

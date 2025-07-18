@@ -1,0 +1,81 @@
+{
+  "summary": {
+    "totalTests": 11,
+    "passedTests": 2,
+    "failedTests": 9,
+    "successRate": "18.2%",
+    "timestamp": "2025-07-18T13:13:41.314Z"
+  },
+  "results": [
+    {
+      "test": "Home Page Load",
+      "success": false,
+      "details": "Navigation timeout of 30000 ms exceeded",
+      "timestamp": "2025-07-18T13:09:39.608Z"
+    },
+    {
+      "test": "Products Page Load",
+      "success": true,
+      "details": "",
+      "timestamp": "2025-07-18T13:09:46.333Z"
+    },
+    {
+      "test": "Product Cards Present",
+      "success": false,
+      "details": "Found 0 products",
+      "timestamp": "2025-07-18T13:09:46.780Z"
+    },
+    {
+      "test": "Product Search",
+      "success": false,
+      "details": "Search input not found",
+      "timestamp": "2025-07-18T13:09:46.800Z"
+    },
+    {
+      "test": "Shopping Cart Test",
+      "success": false,
+      "details": "SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:has-text(\"Add to Cart\"), [data-testid=\"add-to-cart\"]' is not a valid selector.",
+      "timestamp": "2025-07-18T13:09:46.810Z"
+    },
+    {
+      "test": "Wishlist Test",
+      "success": false,
+      "details": "SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:has-text(\"Save\"), button:has-text(\"Wishlist\"), [data-testid=\"wishlist-button\"]' is not a valid selector.",
+      "timestamp": "2025-07-18T13:09:46.817Z"
+    },
+    {
+      "test": "Checkout Page Load",
+      "success": true,
+      "details": "",
+      "timestamp": "2025-07-18T13:12:34.059Z"
+    },
+    {
+      "test": "Checkout Form Fields Present",
+      "success": false,
+      "details": "Found 0 fields",
+      "timestamp": "2025-07-18T13:12:34.149Z"
+    },
+    {
+      "test": "Product Search Test",
+      "success": false,
+      "details": "SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:has-text(\"Filter\"), [data-testid=\"filter-button\"]' is not a valid selector.",
+      "timestamp": "2025-07-18T13:12:41.297Z"
+    },
+    {
+      "test": "Responsive Design Test",
+      "success": false,
+      "details": "Navigation timeout of 30000 ms exceeded",
+      "timestamp": "2025-07-18T13:13:11.308Z"
+    },
+    {
+      "test": "Performance Test",
+      "success": false,
+      "details": "Navigation timeout of 30000 ms exceeded",
+      "timestamp": "2025-07-18T13:13:41.313Z"
+    }
+  ],
+  "screenshots": [
+    "C:\\Users\\bilvalabs\\v0-final-biodegradable\\test-screenshots\\screenshot-products-page-2025-07-18T13-09-45-178Z.png",
+    "C:\\Users\\bilvalabs\\v0-final-biodegradable\\test-screenshots\\screenshot-checkout-page-2025-07-18T13-09-58-851Z.png"
+  ]
+}

@@ -1,29 +1,13 @@
 import { ArrowLeft, Download, Leaf, Shield } from "lucide-react"
 import Link from "next/link"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 
 import { Button } from "@/components/ui/button"
 import { LanguageMeta } from "@/components/language-meta"
 import { ProductFilterClientWrapper } from "@/components/product-filter-client-wrapper"
+import { getProducts } from "@/app/actions/products"
 
-async function getProducts() {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data: products, error } = await supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false })
-
-  if (error) {
-    console.error("Error fetching products:", error)
-    return []
-  }
-
-  return products || []
-}
-
-export default async function ProductsPage({ params }: { params: { locale: string } }) {
+export default async function ProductsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
   const products = await getProducts()
 
   return (
@@ -32,7 +16,7 @@ export default async function ProductsPage({ params }: { params: { locale: strin
       <div className="container px-4 py-12 md:px-6 md:py-24">
         <div className="flex flex-col gap-8">
           <div className="flex items-center gap-2">
-            <Link href={`/${params.locale}`}>
+            <Link href={`/${locale}`}>
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Home
@@ -83,7 +67,7 @@ export default async function ProductsPage({ params }: { params: { locale: strin
           </div>
 
           {/* Product Filtering and Display */}
-          <ProductFilterClientWrapper products={products} locale={params.locale} />
+          <ProductFilterClientWrapper products={products} locale={locale} />
 
           <div className="mt-12 p-6 bg-gray-50 rounded-lg">
             <div className="flex flex-col md:flex-row gap-6 items-center">
@@ -148,7 +132,7 @@ export default async function ProductsPage({ params }: { params: { locale: strin
                 </div>
               </div>
               <div className="mt-6 text-center">
-                <Link href={`/${params.locale}/certification`}>
+                <Link href={`/${locale}/certification`}>
                   <Button variant="outline">View All Certifications</Button>
                 </Link>
               </div>

@@ -271,7 +271,7 @@ export default function ArchitectureDiagram() {
                         strokeWidth="1"
                       />
                       <text x="310" y="395" textAnchor="middle" fontSize="14">
-                        Supabase
+                        MongoDB
                       </text>
                       <rect
                         x="400"
@@ -491,13 +491,13 @@ export default function ArchitectureDiagram() {
                         S
                       </div>
                       <div>
-                        <h3 className="font-medium">Supabase</h3>
-                        <p className="text-sm text-gray-500">Open source Firebase alternative</p>
+                        <h3 className="font-medium">MongoDB</h3>
+                        <p className="text-sm text-gray-500">NoSQL document database</p>
                         <ul className="text-sm list-disc pl-5 mt-2 space-y-1">
-                          <li>PostgreSQL database</li>
-                          <li>Authentication services</li>
-                          <li>Storage solutions</li>
-                          <li>Realtime subscriptions</li>
+                          <li>Flexible document storage</li>
+                          <li>Horizontal scaling</li>
+                          <li>Rich query language</li>
+                          <li>Built-in replication</li>
                         </ul>
                       </div>
                     </li>
@@ -573,8 +573,8 @@ export default function ArchitectureDiagram() {
                         <p className="text-gray-500">Platform for frontend deployment with global CDN</p>
                       </li>
                       <li>
-                        <span className="font-medium">Supabase</span>
-                        <p className="text-gray-500">Managed PostgreSQL database with authentication</p>
+                        <span className="font-medium">MongoDB Atlas</span>
+                        <p className="text-gray-500">Managed MongoDB database with Prisma ORM</p>
                       </li>
                       <li>
                         <span className="font-medium">AWS S3</span>
@@ -680,7 +680,7 @@ export default function ArchitectureDiagram() {
                           strokeWidth="2"
                         />
                         <text x="460" y="185" textAnchor="middle" fontSize="14">
-                          Supabase DB
+                          MongoDB
                         </text>
 
                         {/* Storage */}

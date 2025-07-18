@@ -279,22 +279,22 @@ function FloatingElements({ accent }: { accent: string }) {
           key={i}
           className={`absolute w-8 h-8 rounded-full ${accent === "green" ? "bg-green-500/10" : "bg-blue-500/10"}`}
           initial={{
-            x: Math.random() * 100 - 50,
-            y: Math.random() * 100 - 50,
-            scale: Math.random() * 0.5 + 0.5,
+            x: (i * 37) % 100 - 50,
+            y: (i * 23) % 100 - 50,
+            scale: 0.5 + ((i * 13) % 50) / 100,
           }}
           animate={{
-            x: Math.random() * 100 - 50,
-            y: Math.random() * 100 - 50,
+            x: ((i + 1) * 37) % 100 - 50,
+            y: ((i + 1) * 23) % 100 - 50,
             transition: {
-              duration: Math.random() * 10 + 10,
+              duration: 10 + (i % 10),
               repeat: Number.POSITIVE_INFINITY,
               repeatType: "reverse",
             },
           }}
           style={{
-            top: `${Math.random() * 100}%`,
-            left: `${Math.random() * 100}%`,
+            top: `${(i * 17) % 100}%`,
+            left: `${(i * 31) % 100}%`,
           }}
         />
       ))}

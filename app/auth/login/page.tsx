@@ -9,15 +9,16 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createClient } from "@/lib/supabase/client"
 import { Package, AlertCircle, CheckCircle2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useAuth } from "@/lib/auth-context"
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const registered = searchParams.get("registered")
   const redirectedFrom = searchParams.get("redirectedFrom") || "/admin/dashboard"
+  const { login } = useAuth()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -38,24 +39,12 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      const supabase = createClient()
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        setError(error.message)
-        setIsLoading(false)
-        return
-      }
-
+      await login(email, password)
       // Redirect to the admin dashboard or the page they were trying to access
       router.push(redirectedFrom)
     } catch (err) {
       console.error("Login error:", err)
-      setError("An unexpected error occurred")
+      setError("Invalid email or password")
     } finally {
       setIsLoading(false)
     }
@@ -84,7 +73,7 @@ export default function LoginPage() {
             )}
 
             {success && (
-              <Alert variant="success" className="bg-green-50 text-green-800 border-green-200">
+              <Alert variant="default" className="bg-green-50 text-green-800 border-green-200">
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
                 <AlertTitle>Success</AlertTitle>
                 <AlertDescription>{success}</AlertDescription>

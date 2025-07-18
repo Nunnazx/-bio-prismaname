@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BlogCommentsTable } from "@/components/admin/blog-comments-table"
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 
 export const metadata = {
   title: "Blog Comments | Admin Dashboard",
@@ -10,28 +10,32 @@ export const metadata = {
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-export default async function BlogCommentsPage() {
-  // Get comments with post titles
-  const supabase = createClient()
+async function getBlogComments() {
+  try {
+    const comments = await prisma.blogComment.findMany({
+      include: {
+        blogPost: {
+          select: { title: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
 
-  const { data: comments, error } = await supabase
-    .from("blog_comments")
-    .select(`
-      *,
-      blog_posts!inner(title)
-    `)
-    .order("created_at", { ascending: false })
+    // Transform the data to include post titles
+    const commentsWithPostTitles = comments.map((comment) => ({
+      ...comment,
+      post_title: comment.blogPost?.title || "Unknown Post",
+    }))
 
-  if (error) {
+    return commentsWithPostTitles
+  } catch (error) {
     console.error("Error fetching comments:", error)
-    throw new Error("Failed to fetch comments")
+    return []
   }
+}
 
-  // Transform the data to include post titles
-  const commentsWithPostTitles = comments.map((comment) => ({
-    ...comment,
-    post_title: comment.blog_posts?.title || "Unknown Post",
-  }))
+export default async function BlogCommentsPage() {
+  const comments = await getBlogComments()
 
   return (
     <div className="flex flex-col gap-4">
@@ -45,7 +49,7 @@ export default async function BlogCommentsPage() {
           <CardDescription>Manage and moderate user comments on your blog posts</CardDescription>
         </CardHeader>
         <CardContent>
-          <BlogCommentsTable initialComments={commentsWithPostTitles} />
+          <BlogCommentsTable initialComments={comments} />
         </CardContent>
       </Card>
     </div>

@@ -1,0 +1,393 @@
+{
+  "summary": {
+    "totalTests": 31,
+    "passedTests": 29,
+    "failedTests": 2,
+    "successRate": "93.5%",
+    "timestamp": "2025-07-18T13:32:46.818Z"
+  },
+  "results": [
+    {
+      "test": "File: lib/cart-context.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.790Z"
+    },
+    {
+      "test": "File: components/shopping-cart.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.792Z"
+    },
+    {
+      "test": "File: components/product-reviews.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.792Z"
+    },
+    {
+      "test": "File: components/add-to-cart-button.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.793Z"
+    },
+    {
+      "test": "File: app/checkout/page.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.793Z"
+    },
+    {
+      "test": "File: app/wishlist/page.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.794Z"
+    },
+    {
+      "test": "File: app/thank-you/page.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.794Z"
+    },
+    {
+      "test": "File: components/product-search.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.796Z"
+    },
+    {
+      "test": "File: components/product-comparison.tsx",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.798Z"
+    },
+    {
+      "test": "Cart Context Content",
+      "success": true,
+      "details": "All required elements found",
+      "timestamp": "2025-07-18T13:32:46.799Z"
+    },
+    {
+      "test": "Shopping Cart Content",
+      "success": false,
+      "details": "Missing some elements",
+      "timestamp": "2025-07-18T13:32:46.800Z"
+    },
+    {
+      "test": "Product Reviews Content",
+      "success": true,
+      "details": "All required elements found",
+      "timestamp": "2025-07-18T13:32:46.800Z"
+    },
+    {
+      "test": "Add to Cart Button Content",
+      "success": true,
+      "details": "All required elements found",
+      "timestamp": "2025-07-18T13:32:46.801Z"
+    },
+    {
+      "test": "Checkout Page Content",
+      "success": true,
+      "details": "All required elements found",
+      "timestamp": "2025-07-18T13:32:46.802Z"
+    },
+    {
+      "test": "Dependency: react",
+      "success": "^19",
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.804Z"
+    },
+    {
+      "test": "Dependency: next",
+      "success": "15.2.4",
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.804Z"
+    },
+    {
+      "test": "Dependency: lucide-react",
+      "success": "^0.454.0",
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.804Z"
+    },
+    {
+      "test": "Dependency: @radix-ui/react-dialog",
+      "success": "latest",
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.805Z"
+    },
+    {
+      "test": "Dependency: @radix-ui/react-toast",
+      "success": "latest",
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.805Z"
+    },
+    {
+      "test": "TypeScript Config",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.806Z"
+    },
+    {
+      "test": "JSX Support",
+      "success": true,
+      "details": "Configured",
+      "timestamp": "2025-07-18T13:32:46.806Z"
+    },
+    {
+      "test": "Tailwind Config",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.807Z"
+    },
+    {
+      "test": "Tailwind Content Config",
+      "success": true,
+      "details": "Configured",
+      "timestamp": "2025-07-18T13:32:46.807Z"
+    },
+    {
+      "test": "Shopping Cart Context",
+      "success": true,
+      "details": "100% complete (4/4 features)",
+      "timestamp": "2025-07-18T13:32:46.808Z"
+    },
+    {
+      "test": "Product Reviews System",
+      "success": true,
+      "details": "100% complete (4/4 features)",
+      "timestamp": "2025-07-18T13:32:46.808Z"
+    },
+    {
+      "test": "Checkout Process",
+      "success": true,
+      "details": "100% complete (4/4 features)",
+      "timestamp": "2025-07-18T13:32:46.810Z"
+    },
+    {
+      "test": "Wishlist Functionality",
+      "success": true,
+      "details": "100% complete (4/4 features)",
+      "timestamp": "2025-07-18T13:32:46.811Z"
+    },
+    {
+      "test": "Product Search",
+      "success": false,
+      "details": "25% complete (1/4 features)",
+      "timestamp": "2025-07-18T13:32:46.811Z"
+    },
+    {
+      "test": "Next.js Config",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.814Z"
+    },
+    {
+      "test": "PostCSS Config",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.815Z"
+    },
+    {
+      "test": "Components Config",
+      "success": true,
+      "details": "Found",
+      "timestamp": "2025-07-18T13:32:46.816Z"
+    }
+  ],
+  "categories": {
+    "File Structure": [
+      {
+        "test": "File: lib/cart-context.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.790Z"
+      },
+      {
+        "test": "File: components/shopping-cart.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.792Z"
+      },
+      {
+        "test": "File: components/product-reviews.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.792Z"
+      },
+      {
+        "test": "File: components/add-to-cart-button.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.793Z"
+      },
+      {
+        "test": "File: app/checkout/page.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.793Z"
+      },
+      {
+        "test": "File: app/wishlist/page.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.794Z"
+      },
+      {
+        "test": "File: app/thank-you/page.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.794Z"
+      },
+      {
+        "test": "File: components/product-search.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.796Z"
+      },
+      {
+        "test": "File: components/product-comparison.tsx",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.798Z"
+      }
+    ],
+    "Component Content": [
+      {
+        "test": "Cart Context Content",
+        "success": true,
+        "details": "All required elements found",
+        "timestamp": "2025-07-18T13:32:46.799Z"
+      },
+      {
+        "test": "Shopping Cart Content",
+        "success": false,
+        "details": "Missing some elements",
+        "timestamp": "2025-07-18T13:32:46.800Z"
+      },
+      {
+        "test": "Product Reviews Content",
+        "success": true,
+        "details": "All required elements found",
+        "timestamp": "2025-07-18T13:32:46.800Z"
+      },
+      {
+        "test": "Add to Cart Button Content",
+        "success": true,
+        "details": "All required elements found",
+        "timestamp": "2025-07-18T13:32:46.801Z"
+      },
+      {
+        "test": "Checkout Page Content",
+        "success": true,
+        "details": "All required elements found",
+        "timestamp": "2025-07-18T13:32:46.802Z"
+      },
+      {
+        "test": "Tailwind Content Config",
+        "success": true,
+        "details": "Configured",
+        "timestamp": "2025-07-18T13:32:46.807Z"
+      }
+    ],
+    "E-commerce Features": [
+      {
+        "test": "Shopping Cart Context",
+        "success": true,
+        "details": "100% complete (4/4 features)",
+        "timestamp": "2025-07-18T13:32:46.808Z"
+      },
+      {
+        "test": "Product Reviews System",
+        "success": true,
+        "details": "100% complete (4/4 features)",
+        "timestamp": "2025-07-18T13:32:46.808Z"
+      },
+      {
+        "test": "Checkout Process",
+        "success": true,
+        "details": "100% complete (4/4 features)",
+        "timestamp": "2025-07-18T13:32:46.810Z"
+      },
+      {
+        "test": "Wishlist Functionality",
+        "success": true,
+        "details": "100% complete (4/4 features)",
+        "timestamp": "2025-07-18T13:32:46.811Z"
+      },
+      {
+        "test": "Product Search",
+        "success": false,
+        "details": "25% complete (1/4 features)",
+        "timestamp": "2025-07-18T13:32:46.811Z"
+      }
+    ],
+    "Configuration": [
+      {
+        "test": "Dependency: react",
+        "success": "^19",
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.804Z"
+      },
+      {
+        "test": "Dependency: next",
+        "success": "15.2.4",
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.804Z"
+      },
+      {
+        "test": "Dependency: lucide-react",
+        "success": "^0.454.0",
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.804Z"
+      },
+      {
+        "test": "Dependency: @radix-ui/react-dialog",
+        "success": "latest",
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.805Z"
+      },
+      {
+        "test": "Dependency: @radix-ui/react-toast",
+        "success": "latest",
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.805Z"
+      },
+      {
+        "test": "TypeScript Config",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.806Z"
+      },
+      {
+        "test": "Tailwind Config",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.807Z"
+      },
+      {
+        "test": "Tailwind Content Config",
+        "success": true,
+        "details": "Configured",
+        "timestamp": "2025-07-18T13:32:46.807Z"
+      },
+      {
+        "test": "Next.js Config",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.814Z"
+      },
+      {
+        "test": "PostCSS Config",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.815Z"
+      },
+      {
+        "test": "Components Config",
+        "success": true,
+        "details": "Found",
+        "timestamp": "2025-07-18T13:32:46.816Z"
+      }
+    ]
+  }
+}

@@ -12,7 +12,8 @@ export const metadata: Metadata = {
 
 export default async function InquiriesPage() {
   // Fetch inquiries from the database
-  const inquiries = await getInquiries()
+  const inquiriesData = await getInquiries()
+  const inquiries = inquiriesData.inquiries || []
   const stats = await getInquiryStats()
 
   return (
@@ -73,15 +74,15 @@ export default async function InquiriesPage() {
         </TabsContent>
 
         <TabsContent value="new" className="space-y-4">
-          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "new")} />
+          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "NEW")} />
         </TabsContent>
 
         <TabsContent value="in-progress" className="space-y-4">
-          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "in-progress")} />
+          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "IN_PROGRESS")} />
         </TabsContent>
 
         <TabsContent value="completed" className="space-y-4">
-          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "completed")} />
+          <InquiriesTable inquiries={inquiries.filter((inquiry) => inquiry.status === "COMPLETED")} />
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">

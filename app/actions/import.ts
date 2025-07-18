@@ -1,40 +1,54 @@
 "use server"
 
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 import Papa from "papaparse"
-import type { Product } from "@/lib/types"
 
-type ProductInsert = Omit<Product, "id" | "created_at" | "updated_at" | "image_url"> & {
+type ProductInsert = {
+  code: string
+  name: string
+  category: string
+  description?: string
   features?: object
   specifications?: object
+  price?: string
+  imageUrl?: string
+  isActive?: boolean
 }
 
 async function parseAndUpsert(products: ProductInsert[]) {
-  const supabase = await createSupabaseServerClient()
+  try {
+    // Validate data structure (basic check)
+    const validProducts = products.filter((p) => p.code && p.name && p.category)
 
-  // Validate data structure (basic check)
-  const validProducts = products.filter((p) => p.code && p.name && p.category)
-
-  if (validProducts.length === 0) {
-    return {
-      status: "error",
-      message: "No valid product data found in the file. Ensure 'code', 'name', and 'category' are present.",
+    if (validProducts.length === 0) {
+      return {
+        status: "error",
+        message: "No valid product data found in the file. Ensure 'code', 'name', and 'category' are present.",
+      }
     }
+
+    let count = 0
+    for (const product of validProducts) {
+      await prisma.product.upsert({
+        where: { code: product.code },
+        update: {
+          ...product,
+          updatedAt: new Date()
+        },
+        create: {
+          ...product,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }
+      })
+      count++
+    }
+
+    return { status: "success", message: `Successfully imported/updated ${count} products.` }
+  } catch (error) {
+    console.error("Database upsert error:", error)
+    return { status: "error", message: `Database error: ${error}` }
   }
-
-  const { error, count } = await supabase
-    .from("products")
-    .upsert(validProducts, {
-      onConflict: "code", // Use 'code' to find existing products to update
-    })
-    .select()
-
-  if (error) {
-    console.error("Supabase upsert error:", error)
-    return { status: "error", message: `Database error: ${error.message}` }
-  }
-
-  return { status: "success", message: `Successfully imported/updated ${count ?? 0} products.` }
 }
 
 export async function importProductsFromCsv(prevState: any, formData: FormData) {
@@ -58,7 +72,7 @@ export async function importProductsFromCsv(prevState: any, formData: FormData) 
             return {}
           }
         }
-        if (header === "is_active") {
+        if (header === "isActive") {
           return value.toLowerCase() === "true"
         }
         return value

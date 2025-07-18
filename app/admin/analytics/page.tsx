@@ -24,7 +24,7 @@ export default async function AnalyticsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
         <div className="text-sm text-muted-foreground">
-          Last updated: {new Date().toLocaleString()}
+          Analytics Dashboard
         </div>
       </div>
 

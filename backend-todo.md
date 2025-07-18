@@ -1,12 +1,12 @@
-# Supabase Backend Schema Completion Status
+# MongoDB + Prisma Backend Schema Completion Status
 
-This document outlines the tables and fields defined in your Supabase backend schema.
-A checkmark (✅) indicates that the table and its fields are defined in `database.types.ts`, meaning their structure is complete.
+This document outlines the collections and fields defined in your MongoDB + Prisma backend schema.
+A checkmark (✅) indicates that the collection and its fields are defined in the Prisma schema, meaning their structure is complete.
 
 ---
 
-## ✅ `products` Table
-*Client-side helpers exist in `lib/supabase.ts`.*
+## ✅ `products` Collection
+*Server actions exist in `mongodb-prisma/actions/products.ts`.*
 - ✅ `id: string`
 - ✅ `name: string`
 - ✅ `code: string`
@@ -15,236 +15,239 @@ A checkmark (✅) indicates that the table and its fields are defined in `databa
 - ✅ `features: Json | null`
 - ✅ `specifications: Json | null`
 - ✅ `price: string | null`
-- ✅ `image_url: string | null`
-- ✅ `is_active: boolean`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `imageUrl: string | null`
+- ✅ `isActive: boolean`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `product_images` Table
-*Client-side helpers for storage (upload/delete/getURL) likely manage these images, though direct table helpers are not in `lib/supabase.ts`.*
+## ✅ `productImages` Collection
+*Server actions manage these images through MongoDB.*
 - ✅ `id: string`
-- ✅ `product_id: string`
-- ✅ `image_url: string`
-- ✅ `alt_text: string | null`
-- ✅ `is_primary: boolean`
-- ✅ `display_order: number`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `productId: string`
+- ✅ `imageUrl: string`
+- ✅ `altText: string | null`
+- ✅ `isPrimary: boolean`
+- ✅ `displayOrder: number`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `blog_posts` Table
-*Client-side helpers exist in `lib/supabase.ts`.*
+## ✅ `blogPosts` Collection
+*Server actions exist in `mongodb-prisma/actions/blog.ts`.*
 - ✅ `id: string`
 - ✅ `title: string`
 - ✅ `slug: string`
 - ✅ `content: string | null`
 - ✅ `excerpt: string | null`
-- ✅ `author_id: string | null` (references `profiles.id`)
+- ✅ `authorId: string | null`
 - ✅ `category: string | null`
-- ✅ `tags: string[] | null`
+- ✅ `tags: string[]`
 - ✅ `status: string`
-- ✅ `featured_image: string | null`
-- ✅ `seo_title: string | null`
-- ✅ `seo_description: string | null`
-- ✅ `seo_keywords: string | null`
-- ✅ `publish_date: string | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `featuredImage: string | null`
+- ✅ `seoTitle: string | null`
+- ✅ `seoDescription: string | null`
+- ✅ `seoKeywords: string | null`
+- ✅ `publishDate: DateTime | null`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `inquiries` Table
-*Client-side helpers exist in `lib/supabase.ts`.*
+## ✅ `inquiries` Collection
+*Server actions exist in `mongodb-prisma/actions/inquiries.ts`.*
 - ✅ `id: string`
 - ✅ `name: string`
 - ✅ `email: string`
 - ✅ `company: string | null`
 - ✅ `phone: string | null`
 - ✅ `message: string`
-- ✅ `product_interest: string | null`
+- ✅ `productInterest: string | null`
 - ✅ `status: string`
 - ✅ `priority: string`
-- ✅ `assigned_to: string | null` (references `profiles.id`)
+- ✅ `assignedTo: string | null`
 - ✅ `notes: string | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `profiles` Table (Users)
-*Client-side helpers exist in `lib/supabase.ts`.*
-- ✅ `id: string` (typically references `auth.users.id`)
-- ✅ `first_name: string | null`
-- ✅ `last_name: string | null`
-- ✅ `avatar_url: string | null`
+## ✅ `users` Collection
+*Server actions exist in `mongodb-prisma/actions/users.ts`.*
+- ✅ `id: string`
+- ✅ `firstName: string | null`
+- ✅ `lastName: string | null`
+- ✅ `email: string`
+- ✅ `avatarUrl: string | null`
 - ✅ `company: string | null`
 - ✅ `position: string | null`
 - ✅ `phone: string | null`
 - ✅ `bio: string | null`
-- ✅ `role: string` (should reference `roles.id` or be a defined enum)
+- ✅ `role: string`
 - ✅ `preferences: Json`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `media` Table
-*Client-side storage helpers in `lib/supabase.ts` manage file uploads/deletions; this table likely stores metadata about those files.*
+## ✅ `media` Collection
+*Server actions manage file uploads and metadata.*
 - ✅ `id: string`
-- ✅ `file_name: string`
-- ✅ `file_path: string`
-- ✅ `file_type: string`
-- ✅ `file_size: number`
-- ✅ `mime_type: string | null`
+- ✅ `fileName: string`
+- ✅ `filePath: string`
+- ✅ `fileType: string`
+- ✅ `fileSize: number`
+- ✅ `mimeType: string | null`
 - ✅ `dimensions: string | null`
-- ✅ `alt_text: string | null`
+- ✅ `altText: string | null`
 - ✅ `caption: string | null`
-- ✅ `uploaded_by: string | null` (references `profiles.id`)
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `uploadedBy: string | null`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `seo_metadata` Table
-*No direct client-side helpers in `lib/supabase.ts`, likely managed via admin or server-side logic.*
+## ✅ `seoMetadata` Collection
+*Server actions exist in `app/actions/seo.ts`.*
 - ✅ `id: string`
-- ✅ `page_path: string`
+- ✅ `pagePath: string`
 - ✅ `title: string`
 - ✅ `description: string | null`
 - ✅ `keywords: string | null`
-- ✅ `og_title: string | null`
-- ✅ `og_description: string | null`
-- ✅ `og_image: string | null`
-- ✅ `canonical_url: string | null`
+- ✅ `ogTitle: string | null`
+- ✅ `ogDescription: string | null`
+- ✅ `ogImage: string | null`
+- ✅ `canonicalUrl: string | null`
 - ✅ `robots: string`
-- ✅ `structured_data: Json | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `structuredData: Json | null`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `roles` Table
-*No direct client-side helpers in `lib/supabase.ts`, fundamental for RBAC.*
+## ✅ `roles` Collection
+*Server actions exist in `app/actions/roles.ts`.*
 - ✅ `id: string`
 - ✅ `name: string`
 - ✅ `description: string | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `permissions` Table
-*No direct client-side helpers in `lib/supabase.ts`, fundamental for RBAC.*
+## ✅ `permissions` Collection
+*Server actions exist in `app/actions/roles.ts`.*
 - ✅ `id: string`
 - ✅ `name: string`
 - ✅ `description: string | null`
 - ✅ `resource: string`
 - ✅ `action: string`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `role_permissions` Table (Join Table)
-*No direct client-side helpers in `lib/supabase.ts`, fundamental for RBAC.*
-- ✅ `role_id: string` (references `roles.id`)
-- ✅ `permission_id: string` (references `permissions.id`)
-- ✅ `created_at: string`
+## ✅ `rolePermissions` Collection (Join Collection)
+*Server actions exist in `app/actions/roles.ts`.*
+- ✅ `roleId: string`
+- ✅ `permissionId: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `backups` Table
-*No direct client-side helpers in `lib/supabase.ts`, likely managed by automated processes or admin tools.*
+## ✅ `backups` Collection
+*Server actions exist in `app/actions/backups.ts`.*
 - ✅ `id: string`
 - ✅ `filename: string`
 - ✅ `size: number`
-- ✅ `backup_type: string`
+- ✅ `backupType: string`
 - ✅ `status: string`
-- ✅ `storage_path: string`
-- ✅ `created_by: string | null` (references `profiles.id`)
+- ✅ `storagePath: string`
+- ✅ `createdBy: string | null`
 - ✅ `notes: string | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `custom_orders` Table
-*No direct client-side helpers in `lib/supabase.ts`.*
+## ✅ `customOrders` Collection
+*Server actions exist in `app/actions/custom-orders.ts`.*
 - ✅ `id: string`
-- ✅ `product_type: string`
+- ✅ `productType: string`
 - ✅ `size: string`
 - ✅ `color: string`
 - ✅ `thickness: string`
 - ✅ `printing: boolean`
-- ✅ `printing_colors: number | null`
-- ✅ `logo_url: string | null`
+- ✅ `printingColors: number | null`
+- ✅ `logoUrl: string | null`
 - ✅ `quantity: number`
-- ✅ `company_name: string`
-- ✅ `contact_name: string`
+- ✅ `companyName: string`
+- ✅ `contactName: string`
 - ✅ `email: string`
 - ✅ `phone: string | null`
 - ✅ `timeline: string | null`
-- ✅ `special_requirements: string | null`
+- ✅ `specialRequirements: string | null`
 - ✅ `status: string`
-- ✅ `quote_amount: number | null`
-- ✅ `quote_date: string | null`
+- ✅ `quoteAmount: number | null`
+- ✅ `quoteDate: DateTime | null`
 - ✅ `notes: string | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `reviews` Table
-*No direct client-side helpers in `lib/supabase.ts` for creating/managing reviews, but product pages might display them.*
+## ✅ `reviews` Collection
+*Server actions exist in `app/actions/reviews.ts`.*
 - ✅ `id: string`
-- ✅ `product_id: string` (references `products.id`)
-- ✅ `user_id: string | null` (references `profiles.id`)
+- ✅ `productId: string`
+- ✅ `userId: string | null`
 - ✅ `name: string`
 - ✅ `email: string`
 - ✅ `rating: number`
 - ✅ `title: string`
 - ✅ `content: string`
 - ✅ `status: string`
-- ✅ `is_verified_purchase: boolean`
-- ✅ `helpful_count: number`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `isVerifiedPurchase: boolean`
+- ✅ `helpfulCount: number`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `review_images` Table
-*No direct client-side helpers in `lib/supabase.ts`.*
+## ✅ `reviewImages` Collection
+*Server actions exist in `app/actions/reviews.ts`.*
 - ✅ `id: string`
-- ✅ `review_id: string` (references `reviews.id`)
-- ✅ `image_url: string`
-- ✅ `created_at: string`
+- ✅ `reviewId: string`
+- ✅ `imageUrl: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `review_responses` Table
-*No direct client-side helpers in `lib/supabase.ts`.*
+## ✅ `reviewResponses` Collection
+*Server actions exist in `app/actions/reviews.ts`.*
 - ✅ `id: string`
-- ✅ `review_id: string` (references `reviews.id`)
-- ✅ `admin_id: string | null` (references `profiles.id`)
+- ✅ `reviewId: string`
+- ✅ `adminId: string | null`
 - ✅ `content: string`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
 
-## ✅ `newsletter_subscriptions` Table
-*No direct client-side helpers in `lib/supabase.ts`, but likely has server actions or dedicated API routes.*
+## ✅ `newsletterSubscriptions` Collection
+*Server actions exist in `app/actions/newsletter.ts`.*
 - ✅ `id: string`
 - ✅ `email: string`
-- ✅ `is_subscribed: boolean`
-- ✅ `subscribed_at: string`
-- ✅ `unsubscribed_at: string | null`
+- ✅ `isSubscribed: boolean`
+- ✅ `subscribedAt: DateTime`
+- ✅ `unsubscribedAt: DateTime | null`
 - ✅ `source: string | null`
-- ✅ `created_at: string`
-- ✅ `updated_at: string`
+- ✅ `createdAt: DateTime`
+- ✅ `updatedAt: DateTime`
 
 ---
-This `backend-todo.md` file now reflects the defined state of your Supabase database schema.
+This `backend-todo.md` file now reflects the defined state of your MongoDB + Prisma database schema.

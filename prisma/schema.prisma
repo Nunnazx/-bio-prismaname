@@ -1,0 +1,520 @@
+// MongoDB + Prisma Schema for AICMT International
+// This schema defines the database structure for the biodegradable plastics website
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  phone     String?
+  company   String?
+  position  String?
+  bio       String?
+  avatarUrl String?
+  role      UserRole @default(USER)
+  status    UserStatus @default(ACTIVE)
+  
+  // Preferences
+  language    String @default("en")
+  timezone    String @default("UTC")
+  preferences Json?
+  
+  // Relationships
+  blogPosts BlogPost[]
+  inquiries Inquiry[]
+  media     Media[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lastLogin DateTime?
+  
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  AUTHOR
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+  SUSPENDED
+}
+
+// Product Catalog
+model Product {
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String        @unique
+  code        String        @unique
+  description String?
+  category    ProductCategory
+  
+  // Product Details
+  features      String[]
+  specifications Json?
+  price         Float?
+  currency      String @default("INR")
+  
+  // Media
+  images        ProductImage[]
+  primaryImage  String?
+  gallery       String[]
+  
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+  
+  // Status
+  status      ProductStatus @default(DRAFT)
+  isActive    Boolean       @default(true)
+  isFeatured  Boolean       @default(false)
+  
+  // Inventory
+  stockStatus StockStatus @default(IN_STOCK)
+  stockCount  Int?
+  
+  // Relationships
+  inquiries   Inquiry[]
+  reviews     Review[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("products")
+}
+
+model ProductImage {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  productId String  @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  url         String
+  altText     String?
+  caption     String?
+  isPrimary   Boolean @default(false)
+  displayOrder Int    @default(0)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("product_images")
+}
+
+enum ProductCategory {
+  GRANULES
+  BAGS
+  PACKAGING
+  FILMS
+  CUSTOM
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum StockStatus {
+  IN_STOCK
+  LOW_STOCK
+  OUT_OF_STOCK
+  DISCONTINUED
+}
+
+// Blog System
+model BlogPost {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  title    String
+  slug     String @unique
+  content  String
+  excerpt  String?
+  
+  // Author
+  authorId String @db.ObjectId
+  author   User   @relation(fields: [authorId], references: [id])
+  
+  // Categorization
+  category String?
+  tags     String[]
+  
+  // Media
+  featuredImage String?
+  gallery       String[]
+  
+  // SEO
+  seoTitle       String?
+  seoDescription String?
+  seoKeywords    String[]
+  
+  // Status
+  status      BlogStatus @default(DRAFT)
+  isPublished Boolean    @default(false)
+  isFeatured  Boolean    @default(false)
+  
+  // Publishing
+  publishedAt DateTime?
+  scheduledAt DateTime?
+  
+  // Engagement
+  views     Int @default(0)
+  likes     Int @default(0)
+  shares    Int @default(0)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("blog_posts")
+}
+
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+// Customer Inquiries
+model Inquiry {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  name    String
+  email   String
+  phone   String?
+  company String?
+  message String
+  
+  // Inquiry Details
+  inquiryType    InquiryType
+  productId      String?     @db.ObjectId
+  product        Product?    @relation(fields: [productId], references: [id])
+  productInterest String?
+  
+  // Status & Priority
+  status   InquiryStatus   @default(NEW)
+  priority InquiryPriority @default(MEDIUM)
+  
+  // Assignment
+  assignedToId String? @db.ObjectId
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id])
+  
+  // Follow-up
+  notes        String?
+  followUpDate DateTime?
+  responseDate DateTime?
+  
+  // Source tracking
+  source   String? // website, phone, email, etc.
+  referrer String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("inquiries")
+}
+
+enum InquiryType {
+  PRODUCT_INFO
+  QUOTE_REQUEST
+  SAMPLE_REQUEST
+  PARTNERSHIP
+  SUPPORT
+  OTHER
+}
+
+enum InquiryStatus {
+  NEW
+  IN_PROGRESS
+  RESPONDED
+  COMPLETED
+  CLOSED
+}
+
+enum InquiryPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// Media Management
+model Media {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  fileName String
+  filePath String
+  fileType String
+  fileSize Int
+  mimeType String?
+  
+  // Image specific
+  dimensions String?
+  width      Int?
+  height     Int?
+  
+  // Metadata
+  altText     String?
+  caption     String?
+  description String?
+  
+  // Organization
+  folder   String?
+  tags     String[]
+  category MediaCategory @default(OTHER)
+  
+  // Upload info
+  uploadedById String @db.ObjectId
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+  
+  // Usage tracking
+  usageCount Int @default(0)
+  lastUsed   DateTime?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("media")
+}
+
+enum MediaCategory {
+  PRODUCT_IMAGE
+  BLOG_IMAGE
+  AVATAR
+  DOCUMENT
+  VIDEO
+  OTHER
+}
+
+// Reviews & Testimonials
+model Review {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  productId String @db.ObjectId
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  // Reviewer info
+  name    String
+  email   String
+  company String?
+  
+  // Review content
+  title   String
+  content String
+  rating  Int // 1-5 stars
+  
+  // Status
+  status      ReviewStatus @default(PENDING)
+  isVerified  Boolean      @default(false)
+  isFeatured  Boolean      @default(false)
+  
+  // Engagement
+  helpfulCount Int @default(0)
+  
+  // Media
+  images String[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  SPAM
+}
+
+// Analytics
+model Analytics {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  date     DateTime @default(now())
+  
+  // Page info
+  pagePath  String
+  pageTitle String?
+  
+  // Visitor info
+  visitorId String
+  sessionId String
+  
+  // Technical info
+  userAgent String?
+  ipAddress String?
+  country   String?
+  city      String?
+  device    String?
+  browser   String?
+  os        String?
+  
+  // Referrer info
+  referrer       String?
+  referrerDomain String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  
+  // Engagement
+  timeOnPage    Int? // seconds
+  bounceRate    Float?
+  exitPage      Boolean @default(false)
+  
+  // Events
+  events Json[]
+  
+  @@map("analytics")
+}
+
+// Newsletter Subscriptions
+model Newsletter {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  email String @unique
+  
+  // Status
+  isSubscribed Boolean @default(true)
+  isActive     Boolean @default(true)
+  
+  // Preferences
+  frequency   NewsletterFrequency @default(WEEKLY)
+  categories  String[]
+  language    String @default("en")
+  
+  // Tracking
+  source          String? // footer, popup, etc.
+  subscribedAt    DateTime @default(now())
+  unsubscribedAt  DateTime?
+  lastEmailSent   DateTime?
+  emailsSent      Int @default(0)
+  emailsOpened    Int @default(0)
+  emailsClicked   Int @default(0)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("newsletter_subscriptions")
+}
+
+enum NewsletterFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
+// System Settings
+model Setting {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  key         String @unique
+  value       Json
+  description String?
+  category    String @default("general")
+  
+  // Metadata
+  isPublic    Boolean @default(false)
+  isEditable  Boolean @default(true)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("settings")
+}
+
+// Custom Orders
+model CustomOrder {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Customer info
+  companyName String
+  contactName String
+  email       String
+  phone       String?
+  
+  // Product specifications
+  productType     String
+  size            String
+  color           String
+  thickness       String
+  quantity        Int
+  
+  // Printing requirements
+  printing        Boolean @default(false)
+  printingColors  Int?
+  logoUrl         String?
+  
+  // Requirements
+  timeline             String?
+  specialRequirements  String?
+  
+  // Business
+  status       CustomOrderStatus @default(PENDING)
+  quoteAmount  Float?
+  quoteCurrency String @default("INR")
+  quoteDate    DateTime?
+  
+  // Internal
+  notes String?
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("custom_orders")
+}
+
+enum CustomOrderStatus {
+  PENDING
+  QUOTED
+  APPROVED
+  IN_PRODUCTION
+  COMPLETED
+  CANCELLED
+}
+
+// Certifications
+model Certification {
+  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  issuingBody String
+  description String?
+  
+  // Certificate details
+  certificateNumber String?
+  imageUrl          String?
+  documentUrl       String?
+  
+  // Validity
+  validFrom  DateTime?
+  validUntil DateTime?
+  isActive   Boolean @default(true)
+  
+  // Display
+  displayOrder Int @default(0)
+  isFeatured   Boolean @default(false)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("certifications")
+}

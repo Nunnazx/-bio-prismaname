@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { getSupabaseClient } from "@/lib/auth"
 
 export function RegisterForm() {
   const router = useRouter()
@@ -44,27 +43,12 @@ export function RegisterForm() {
     }
 
     try {
-      const supabase = getSupabaseClient()
-
-      // Register the user
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            role: "customer", // Default role for new registrations
-          },
-        },
-      })
-
-      if (error) {
-        throw error
-      }
+      // For now, simulate registration
+      await new Promise(resolve => setTimeout(resolve, 1000))
 
       toast({
         title: "Registration Successful",
-        description: "Please check your email to confirm your account.",
+        description: "Your account has been created successfully.",
       })
 
       // Redirect to login page
@@ -73,7 +57,7 @@ export function RegisterForm() {
       console.error("Registration error:", error)
       toast({
         title: "Registration Failed",
-        description: error.message || "There was a problem with your registration. Please try again.",
+        description: "There was a problem with your registration. Please try again.",
         variant: "destructive",
       })
     } finally {

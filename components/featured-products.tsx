@@ -7,33 +7,24 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, Star, Info, ShoppingCart } from "lucide-react"
 import Link from "next/link"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useRouter } from "next/navigation"
+import { getProducts } from "@/mongodb-prisma/actions/products"
 
 export function FeaturedProducts() {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true)
-      const supabase = createClientComponentClient()
-
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .eq("is_active", true)
-        .order("created_at", { ascending: false })
-        .limit(4)
-
-      if (error) {
+      try {
+        const data = await getProducts()
+        // Get first 4 active products
+        const featuredProducts = data.filter((product: any) => product.isActive).slice(0, 4)
+        setProducts(featuredProducts)
+      } catch (error) {
         console.error("Error fetching featured products:", error)
-      } else {
-        setProducts(data || [])
       }
-
       setLoading(false)
     }
 

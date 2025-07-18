@@ -2,13 +2,13 @@ import { redirect } from "next/navigation"
 import { cookies, headers } from "next/headers"
 import { Leaf } from "lucide-react"
 
-export default function RootPage() {
+export default async function RootPage() {
   // Get the Accept-Language header
-  const headersList = headers()
+  const headersList = await headers()
   const acceptLanguage = headersList.get("accept-language") || ""
 
   // Get the language from cookies if available
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const savedLanguage = cookieStore.get("language")?.value
 
   // Supported languages

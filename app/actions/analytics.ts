@@ -1,10 +1,8 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 
 export async function getAnalyticsSummary() {
-  const supabase = createClient()
-
   // Get current month data
   const currentDate = new Date()
   const currentMonth = currentDate.getMonth()
@@ -15,27 +13,37 @@ export async function getAnalyticsSummary() {
   const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear
 
   // Format dates for queries
-  const currentMonthStart = new Date(currentYear, currentMonth, 1).toISOString()
-  const previousMonthStart = new Date(previousYear, previousMonth, 1).toISOString()
-  const previousMonthEnd = new Date(currentYear, currentMonth, 0).toISOString()
+  const currentMonthStart = new Date(currentYear, currentMonth, 1)
+  const previousMonthStart = new Date(previousYear, previousMonth, 1)
+  const previousMonthEnd = new Date(currentYear, currentMonth, 0)
 
   try {
     // Get total pageviews and visitors for current month
-    const { data: currentMonthData, error: currentError } = await supabase
-      .from("analytics")
-      .select("pageviews, visitors")
-      .gte("date", currentMonthStart)
-
-    if (currentError) throw currentError
+    const currentMonthData = await prisma.analytics.findMany({
+      where: {
+        date: {
+          gte: currentMonthStart
+        }
+      },
+      select: {
+        pageviews: true,
+        visitors: true
+      }
+    })
 
     // Get total pageviews and visitors for previous month
-    const { data: previousMonthData, error: previousError } = await supabase
-      .from("analytics")
-      .select("pageviews, visitors")
-      .gte("date", previousMonthStart)
-      .lte("date", previousMonthEnd)
-
-    if (previousError) throw previousError
+    const previousMonthData = await prisma.analytics.findMany({
+      where: {
+        date: {
+          gte: previousMonthStart,
+          lte: previousMonthEnd
+        }
+      },
+      select: {
+        pageviews: true,
+        visitors: true
+      }
+    })
 
     // Calculate totals
     const currentPageviews = currentMonthData.reduce((sum, day) => sum + day.pageviews, 0)
@@ -52,9 +60,12 @@ export async function getAnalyticsSummary() {
       previousVisitors === 0 ? 100 : Math.round(((currentVisitors - previousVisitors) / previousVisitors) * 100)
 
     // Get all-time totals
-    const { data: allTimeData, error: allTimeError } = await supabase.from("analytics").select("pageviews, visitors")
-
-    if (allTimeError) throw allTimeError
+    const allTimeData = await prisma.analytics.findMany({
+      select: {
+        pageviews: true,
+        visitors: true
+      }
+    })
 
     const totalPageviews = allTimeData.reduce((sum, day) => sum + day.pageviews, 0)
     const totalVisitors = allTimeData.reduce((sum, day) => sum + day.visitors, 0)
@@ -112,8 +123,6 @@ export async function getAnalyticsSummary() {
 }
 
 export async function getAnalyticsData(period = "30days") {
-  const supabase = createClient()
-
   // Calculate date range based on period
   const endDate = new Date()
   const startDate = new Date()
@@ -136,14 +145,17 @@ export async function getAnalyticsData(period = "30days") {
   }
 
   try {
-    const { data, error } = await supabase
-      .from("analytics")
-      .select("*")
-      .gte("date", startDate.toISOString())
-      .lte("date", endDate.toISOString())
-      .order("date", { ascending: true })
-
-    if (error) throw error
+    const data = await prisma.analytics.findMany({
+      where: {
+        date: {
+          gte: startDate,
+          lte: endDate
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      }
+    })
 
     return data || []
   } catch (error) {

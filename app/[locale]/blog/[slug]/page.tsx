@@ -1,7 +1,5 @@
 import { ArrowLeft, Calendar, Clock, User } from "lucide-react"
 import Link from "next/link"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 import { notFound } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -10,69 +8,49 @@ import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { OptimizedImage } from "@/components/optimized-image"
 import { TranslatedText } from "@/components/translated-text"
-
-async function getBlogPost(slug: string) {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data: post, error } = await supabase
-    .from("blog_posts")
-    .select("*, profiles(first_name, last_name)")
-    .eq("slug", slug)
-    .single()
-
-  if (error || !post) {
-    console.error("Error fetching blog post:", error)
-    return null
-  }
-
-  return post
-}
+import { getBlogPostBySlug, getBlogPosts } from "@/mongodb-prisma/actions/blog"
 
 async function getRelatedPosts(currentPostId: string, tags: string[], limit = 3) {
-  const supabase = createServerComponentClient({ cookies })
+  try {
+    const allPosts = await getBlogPosts()
+    const publishedPosts = allPosts.filter(post => 
+      post.status === "published" && 
+      post.id !== currentPostId
+    )
 
-  // Get posts that share tags with the current post
-  const { data: posts, error } = await supabase
-    .from("blog_posts")
-    .select("id, title, slug, featured_image")
-    .neq("id", currentPostId)
-    .eq("status", "published")
-    .overlaps("tags", tags) // fetch posts that share at least one tag
-    .limit(limit)
+    // Get posts that share tags with the current post
+    const relatedPosts = publishedPosts.filter(post => 
+      post.tags && post.tags.some(tag => tags.includes(tag))
+    ).slice(0, limit)
 
-  if (error) {
+    // If we don't have enough related posts, get recent posts
+    if (relatedPosts.length < limit) {
+      const neededPosts = limit - relatedPosts.length
+      const existingIds = [currentPostId, ...relatedPosts.map(p => p.id)]
+      
+      const recentPosts = publishedPosts
+        .filter(post => !existingIds.includes(post.id))
+        .sort((a, b) => new Date(b.publishDate || b.createdAt).getTime() - new Date(a.publishDate || a.createdAt).getTime())
+        .slice(0, neededPosts)
+
+      relatedPosts.push(...recentPosts)
+    }
+
+    return relatedPosts.map(post => ({
+      id: post.id,
+      title: post.title,
+      slug: post.slug,
+      featuredImage: post.featuredImage
+    }))
+  } catch (error) {
     console.error("Error fetching related posts:", error)
     return []
   }
-
-  // If we don't have enough related posts, get recent posts
-  if (posts.length < limit) {
-    const neededPosts = limit - posts.length
-    const existingIds = [currentPostId, ...posts.map((p) => p.id)]
-    // PostgREST needs the list formatted like '(id1,id2,...)'
-    const idsFilter = `(${existingIds.map((id) => `"${id}"`).join(",")})`
-
-    const { data: recentPosts, error: recentError } = await supabase
-      .from("blog_posts")
-      .select("id, title, slug, featured_image")
-      .not("id", "in", idsFilter)
-      .eq("status", "published")
-      .order("publish_date", { ascending: false })
-      .limit(neededPosts)
-
-    if (recentError) {
-      console.error("Error fetching recent posts:", recentError)
-    } else if (recentPosts) {
-      posts.push(...recentPosts)
-    }
-  }
-
-  return posts
 }
 
 export default async function BlogPostPage({ params }: { params: { locale: string; slug: string } }) {
   const { locale, slug } = params
-  const post = await getBlogPost(slug)
+  const post = await getBlogPostBySlug(slug)
 
   if (!post) {
     notFound()
@@ -119,12 +97,12 @@ export default async function BlogPostPage({ params }: { params: { locale: strin
             <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>{formatDate(post.publish_date || post.created_at)}</span>
+                <span>{formatDate((post.publishDate || post.createdAt).toISOString())}</span>
               </div>
               <Separator orientation="vertical" className="h-4" />
               <div className="flex items-center gap-1">
                 <User className="h-4 w-4" />
-                <span>{post.profiles ? `${post.profiles.first_name} ${post.profiles.last_name}` : "Admin"}</span>
+                <span>Admin</span>
               </div>
               <Separator orientation="vertical" className="h-4" />
               <div className="flex items-center gap-1">
@@ -138,7 +116,7 @@ export default async function BlogPostPage({ params }: { params: { locale: strin
 
           <div className="relative aspect-[21/9] w-full overflow-hidden rounded-lg">
             <OptimizedImage
-              src={post.featured_image || "/placeholder.svg?height=500&width=1000&query=blog post"}
+              src={post.featuredImage || "/placeholder.svg?height=500&width=1000&query=blog post"}
               alt={post.title}
               fill
               priority
@@ -181,7 +159,7 @@ export default async function BlogPostPage({ params }: { params: { locale: strin
                 <Card key={relatedPost.id} className="overflow-hidden">
                   <div className="relative aspect-video w-full">
                     <OptimizedImage
-                      src={relatedPost.featured_image || "/placeholder.svg?height=200&width=350&query=blog post"}
+                      src={relatedPost.featuredImage || "/placeholder.svg?height=200&width=350&query=blog post"}
                       alt={relatedPost.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 350px"

@@ -1,84 +1,57 @@
-"use client"
+'use client'
 
-import type React from "react"
+import React, { createContext, useContext, useState, useEffect } from 'react'
 
-import { createContext, useContext, useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import type { Session, User } from "@supabase/supabase-js"
+interface User {
+  id: string
+  email: string
+  role: 'admin' | 'editor' | 'user'
+}
 
-type AuthContextType = {
+interface AuthContextType {
   user: User | null
-  session: Session | null
-  isLoading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string) => Promise<{ error: any }>
-  signOut: () => Promise<{ error: any }>
+  login: (email: string, password: string) => Promise<void>
+  logout: () => void
+  loading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get session from Supabase
-    const getSession = async () => {
-      const { data, error } = await supabase.auth.getSession()
-      if (error) {
-        console.error("Error getting session:", error)
-      }
-      setSession(data.session)
-      setUser(data.session?.user ?? null)
-      setIsLoading(false)
-    }
-
-    getSession()
-
-    // Listen for auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-    })
-
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
+    // For now, just set loading to false
+    // In a real implementation, you'd check for existing sessions
+    setLoading(false)
   }, [])
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error }
+  const login = async (email: string, password: string) => {
+    // Placeholder login logic
+    // In a real implementation, you'd authenticate with your backend
+    setUser({
+      id: '1',
+      email,
+      role: 'admin'
+    })
   }
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password })
-    return { error }
+  const logout = () => {
+    setUser(null)
   }
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
-  }
-
-  const value = {
-    user,
-    session,
-    isLoading,
-    signIn,
-    signUp,
-    signOut,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
 }

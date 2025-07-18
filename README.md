@@ -8,7 +8,7 @@ A comprehensive web platform for AICMT International, showcasing biodegradable p
 
 AICMT International is a leading manufacturer of biodegradable and compostable plastic alternatives. This web platform serves as the company's digital presence, providing information about products, sustainability initiatives, certifications, and corporate values.
 
-The platform is built with Next.js, uses Supabase for the backend, and features a multilingual interface to serve a global audience.
+The platform is built with Next.js, uses MongoDB with Prisma for the backend, and features a multilingual interface to serve a global audience.
 
 ## ✨ Features
 
@@ -59,7 +59,7 @@ The project is being developed in phases:
 ## 🛠️ Technology Stack
 
 - **Frontend**: Next.js 14 (App Router), React, TypeScript, Tailwind CSS, shadcn/ui components
-- **Backend**: Supabase (PostgreSQL, Authentication, Storage)
+- **Backend**: MongoDB with Prisma ORM
 - **State Management**: React Context API
 - **Styling**: Tailwind CSS, shadcn/ui components
 - **Internationalization**: Custom i18n implementation
@@ -69,7 +69,7 @@ The project is being developed in phases:
 
 - Node.js 18.x or higher
 - npm or yarn
-- Supabase account
+- MongoDB database (local or cloud)
 - Vercel account (optional, for deployment)
 
 ## 🚀 Getting Started
@@ -92,15 +92,16 @@ The project is being developed in phases:
 3. Set up environment variables:
    Create a `.env.local` file in the root directory with the following variables:
    \`\`\`
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   DATABASE_URL="mongodb://localhost:27017/aicmt"
+   # Or for MongoDB Atlas:
+   # DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/aicmt"
    \`\`\`
 
 4. Set up the database:
-   Run the migration script in your Supabase SQL editor:
-   \`\`\`sql
-   -- Copy the contents of supabase/migrations/20240516_initial_schema.sql
+   Generate Prisma client and push the schema:
+   \`\`\`bash
+   npx prisma generate
+   npx prisma db push
    \`\`\`
 
 5. Start the development server:
@@ -114,10 +115,17 @@ The project is being developed in phases:
 
 ### Database Setup
 
-1. Create a new Supabase project
-2. Go to the SQL Editor in your Supabase dashboard
-3. Copy and paste the contents of `supabase/migrations/20240516_initial_schema.sql`
-4. Run the SQL script to create all necessary tables and initial data
+1. Set up MongoDB (local or cloud)
+2. Update your `.env.local` file with the correct DATABASE_URL
+3. Generate Prisma client and push the schema:
+   ```bash
+   npx prisma generate
+   npx prisma db push
+   ```
+4. Seed the database with initial data:
+   ```bash
+   npx prisma db seed
+   ```
 
 ## 📁 Project Structure
 
@@ -135,14 +143,14 @@ aicmt-international/
 │   └── ...                 # Feature-specific components
 ├── lib/                    # Utility functions and libraries
 │   ├── i18n/               # Internationalization
-│   ├── supabase/           # Supabase client and types
+│   ├── prisma.ts           # Prisma client configuration
 │   └── ...                 # Other utilities
 ├── public/                 # Static assets
 │   ├── images/             # Images
 │   ├── models/             # 3D models
 │   └── ...                 # Other static files
-├── supabase/               # Supabase configuration
-│   └── migrations/         # Database migrations
+├── prisma/                 # Prisma configuration
+│   └── schema.prisma       # Database schema
 ├── .env.local              # Environment variables (not in repo)
 ├── next.config.js          # Next.js configuration
 ├── tailwind.config.js      # Tailwind CSS configuration
@@ -172,7 +180,7 @@ The system supports the following roles:
 
 ## 🔒 Authentication
 
-Authentication is handled through Supabase Auth. The system supports:
+Authentication is handled through a custom auth system with MongoDB. The system supports:
 - Email/password authentication
 - Role-based access control
 - Protected routes
@@ -225,8 +233,8 @@ A comprehensive admin dashboard for managing your biodegradable products busines
 ## Tech Stack
 
 - **Frontend**: Next.js, React, Tailwind CSS, shadcn/ui
-- **Backend**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
+- **Backend**: MongoDB with Prisma ORM
+- **Authentication**: Custom Auth with MongoDB
 - **Deployment**: Vercel
 
 ## Database Schema
@@ -258,9 +266,9 @@ The dashboard uses the following database tables:
 Create a `.env.local` file with the following variables:
 
 \`\`\`
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
+DATABASE_URL="mongodb://localhost:27017/aicmt"
+# Or for MongoDB Atlas:
+# DATABASE_URL="mongodb+srv://username:password@cluster.mongodb.net/aicmt"
 \`\`\`
 
 ## License

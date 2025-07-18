@@ -1,47 +1,26 @@
 import { ArrowLeft, Leaf, Shield, Recycle, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProductMediaGallery } from "@/components/product-media-gallery"
 import { ProductReviews } from "@/components/product-reviews"
-
-async function getProduct(id: string) {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data: product, error } = await supabase
-    .from("products")
-    .select(`
-      *,
-      product_images(*)
-    `)
-    .eq("id", id)
-    .single()
-
-  if (error || !product) {
-    console.error("Error fetching product:", error)
-    return null
-  }
-
-  return product
-}
+import { getProductById } from "@/mongodb-prisma/actions/products"
 
 export default async function ProductDetailPage({ params }: { params: { id: string } }) {
-  const product = await getProduct(params.id)
+  const product = await getProductById(params.id)
 
   if (!product) {
     notFound()
   }
 
-  // Parse features and specifications from JSONB
+  // Parse features and specifications
   const features = product.features?.features || []
   const specifications = product.specifications || {}
 
   // Get 3D model URL if available
-  const modelUrl = product.model_url || null
+  const modelUrl = product.modelUrl || null
 
   return (
     <div className="container px-4 py-12 md:px-6 md:py-24">
@@ -57,7 +36,7 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
 
         <div className="grid md:grid-cols-2 gap-12">
           {/* Product Media Gallery */}
-          <ProductMediaGallery images={product.product_images || []} productName={product.name} modelUrl={modelUrl} />
+          <ProductMediaGallery images={[]} productName={product.name} modelUrl={modelUrl} />
 
           {/* Product Details */}
           <div className="flex flex-col gap-6">
@@ -92,12 +71,20 @@ export default async function ProductDetailPage({ params }: { params: { id: stri
 
               <TabsContent value="specifications" className="pt-4">
                 <div className="space-y-4">
-                  {Object.entries(specifications).map(([key, value]) => (
-                    <div key={key} className="grid grid-cols-2 border-b pb-2">
-                      <div className="font-medium capitalize">{key.replace(/_/g, " ")}</div>
-                      <div>{String(value)}</div>
-                    </div>
-                  ))}
+                  {Array.isArray(specifications) ? 
+                    specifications.map((spec: any, index: number) => (
+                      <div key={index} className="grid grid-cols-2 border-b pb-2">
+                        <div className="font-medium">{spec.name}</div>
+                        <div>{spec.value}</div>
+                      </div>
+                    )) :
+                    Object.entries(specifications).map(([key, value]) => (
+                      <div key={key} className="grid grid-cols-2 border-b pb-2">
+                        <div className="font-medium capitalize">{key.replace(/_/g, " ")}</div>
+                        <div>{String(value)}</div>
+                      </div>
+                    ))
+                  }
                 </div>
               </TabsContent>
 

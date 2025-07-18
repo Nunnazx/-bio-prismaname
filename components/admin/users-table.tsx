@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog"
 import { Edit, MoreHorizontal, Search, Trash } from "lucide-react"
 
-// Mock data - this would come from Supabase in the real implementation
+// Mock data - this would come from MongoDB in the real implementation
 const initialUsers = [
   {
     id: "1",

@@ -6,13 +6,16 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "seed": "tsx prisma/comprehensive-seed.ts",
+    "seed:full": "tsx prisma/comprehensive-seed.ts"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
     "@google/model-viewer": "latest",
     "@hello-pangea/dnd": "latest",
     "@hookform/resolvers": "latest",
+    "@prisma/client": "latest",
     "@radix-ui/react-accordion": "latest",
     "@radix-ui/react-alert-dialog": "latest",
     "@radix-ui/react-aspect-ratio": "latest",
@@ -43,8 +46,6 @@
     "@react-three/drei": "latest",
     "@react-three/fiber": "latest",
     "@remix-run/react": "latest",
-    "@supabase/auth-helpers-nextjs": "latest",
-    "@supabase/supabase-js": "latest",
     "@sveltejs/kit": "latest",
     "@tanstack/react-table": "latest",
     "@vercel/analytics": "latest",
@@ -63,6 +64,7 @@
     "framer-motion": "latest",
     "input-otp": "latest",
     "lucide-react": "^0.454.0",
+    "mongodb": "latest",
     "next": "15.2.4",
     "next-themes": "latest",
     "papaparse": "latest",
@@ -89,7 +91,10 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "prisma": "^6.12.0",
+    "puppeteer": "^24.14.0",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }

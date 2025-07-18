@@ -2,7 +2,7 @@ import Link from "next/link"
 import { Leaf, Twitter, Linkedin, Instagram } from "lucide-react"
 
 export function Footer({ locale }: { locale: string }) {
-  const currentYear = new Date().getFullYear()
+  const currentYear = 2025 // Fixed year to prevent hydration mismatch
 
   return (
     <footer className="bg-secondary text-secondary-foreground">

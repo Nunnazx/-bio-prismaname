@@ -10,11 +10,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
-import { getSupabaseClient } from "@/lib/auth"
+import { useAuth } from "@/lib/auth-context"
 
 export function LoginForm() {
   const router = useRouter()
   const { toast } = useToast()
+  const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     email: "",
@@ -31,15 +32,7 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      const supabase = getSupabaseClient()
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      })
-
-      if (error) {
-        throw error
-      }
+      await login(formData.email, formData.password)
 
       toast({
         title: "Login Successful",
@@ -53,7 +46,7 @@ export function LoginForm() {
       console.error("Login error:", error)
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid email or password. Please try again.",
+        description: "Invalid email or password. Please try again.",
         variant: "destructive",
       })
     } finally {

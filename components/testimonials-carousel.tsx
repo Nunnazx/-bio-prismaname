@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { OptimizedImage } from "@/components/optimized-image"
 
-// Fallback testimonial data (will only be used if database fetch fails)
+// Fallback testimonial data
 const fallbackTestimonials = [
   {
     id: 1,
@@ -19,6 +18,24 @@ const fallbackTestimonials = [
     quote:
       "Switching to AICMT's compostable bags has been a game-changer for our retail chain. Our customers appreciate our commitment to sustainability, and the quality of the bags is exceptional.",
   },
+  {
+    id: 2,
+    name: "Priya Sharma",
+    position: "Operations Director",
+    company: "EcoMart India",
+    image: "/confident-professional.png",
+    quote:
+      "The biodegradable packaging from AICMT has helped us reduce our environmental footprint significantly. The products are reliable and cost-effective.",
+  },
+  {
+    id: 3,
+    name: "Amit Patel",
+    position: "Sustainability Manager",
+    company: "Green Foods Ltd",
+    image: "/confident-professional.png",
+    quote:
+      "AICMT's compostable food containers have been perfect for our takeaway business. They maintain food quality while being environmentally responsible.",
+  },
 ]
 
 export function TestimonialsCarousel() {
@@ -27,40 +44,11 @@ export function TestimonialsCarousel() {
   const [testimonials, setTestimonials] = useState(fallbackTestimonials)
   const [loading, setLoading] = useState(true)
 
-  // Fetch testimonials from database
+  // Simulate loading
   useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        const supabase = createClientComponentClient()
-
-        // Here you would normally query a testimonials table
-        // For now, we'll leave this commented out since we haven't created that table yet
-
-        /*
-        const { data, error } = await supabase
-          .from('testimonials')
-          .select('*')
-          .order('created_at', { ascending: false })
-        
-        if (error) {
-          console.error('Error fetching testimonials:', error)
-        } else if (data && data.length > 0) {
-          setTestimonials(data)
-        }
-        */
-
-        // For now, we'll keep using the fallback data
-        // Remove this timeout in production
-        setTimeout(() => {
-          setLoading(false)
-        }, 500)
-      } catch (error) {
-        console.error("Error in testimonials fetch:", error)
-        setLoading(false)
-      }
-    }
-
-    fetchTestimonials()
+    setTimeout(() => {
+      setLoading(false)
+    }, 500)
   }, [])
 
   // Handle next/previous navigation

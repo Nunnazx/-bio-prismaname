@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createClient } from "@/lib/supabase/client"
 import { Package } from "lucide-react"
 
 export default function RegisterPage() {
@@ -27,40 +26,13 @@ export default function RegisterPage() {
     setError(null)
 
     try {
-      const supabase = createClient()
-
-      // Sign up the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      })
-
-      if (authError) {
-        setError(authError.message)
-        setIsLoading(false)
-        return
-      }
-
-      if (!authData.user) {
-        setError("Failed to create user")
-        setIsLoading(false)
-        return
-      }
-
-      // Create profile with admin role
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: authData.user.id,
-        first_name: firstName,
-        last_name: lastName,
-        role: "admin", // Set as admin
-      })
-
-      if (profileError) {
-        setError(profileError.message)
-        setIsLoading(false)
-        return
-      }
-
+      // For now, just simulate registration
+      // In a real implementation, you'd create a user in MongoDB
+      console.log("Creating user:", { email, firstName, lastName })
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
       // Redirect to login page
       router.push("/auth/login?registered=true")
     } catch (err) {

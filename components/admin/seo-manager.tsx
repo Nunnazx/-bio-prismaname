@@ -25,7 +25,7 @@ import {
 import { Edit, MoreHorizontal, Search } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 
-// Mock data - this would come from Supabase in the real implementation
+// Mock data - this would come from MongoDB in the real implementation
 const initialPages = [
   {
     id: "1",

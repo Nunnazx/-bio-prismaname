@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-// Mock data - this would come from Supabase in the real implementation
+// Mock data - this would come from MongoDB in the real implementation
 const initialRoles = [
   {
     id: "1",

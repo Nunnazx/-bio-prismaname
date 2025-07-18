@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/dialog"
 import { Copy, Download, FileText, Filter, ImagePlus, MoreHorizontal, Search, Trash, Upload } from "lucide-react"
 
-// Mock data - this would come from Supabase in the real implementation
+// Mock data - this would come from MongoDB in the real implementation
 const initialMediaFiles = [
   {
     id: "1",
@@ -140,7 +140,7 @@ export function MediaLibrary() {
   }
 
   const handleUpload = () => {
-    // In a real implementation, this would handle file uploads to Supabase Storage
+    // In a real implementation, this would handle file uploads to MongoDB GridFS
     setUploadDialogOpen(false)
   }
 

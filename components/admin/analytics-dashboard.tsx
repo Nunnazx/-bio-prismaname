@@ -67,8 +67,8 @@ const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"]
 
 export function AnalyticsDashboard() {
   const [dateRange, setDateRange] = useState<"7d" | "30d" | "90d" | "12m" | "custom">("30d")
-  const [startDate, setStartDate] = useState<Date | undefined>(new Date())
-  const [endDate, setEndDate] = useState<Date | undefined>(new Date())
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined)
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined)
 
   return (
     <div className="space-y-4">

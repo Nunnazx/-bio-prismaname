@@ -1,83 +1,90 @@
 "use server"
 
-import { createClient } from "@/lib/supabase/server"
+import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getSeoMetadata() {
-  const supabase = createClient()
+  try {
+    const data = await prisma.seoMetadata.findMany({
+      orderBy: { pagePath: 'asc' }
+    })
 
-  const { data, error } = await supabase.from("seo_metadata").select("*").order("page_path", { ascending: true })
-
-  if (error) {
+    return data
+  } catch (error) {
     console.error("Error fetching SEO metadata:", error)
     throw new Error("Failed to fetch SEO metadata")
   }
-
-  return data
 }
 
 export async function getSeoMetadataForPage(pagePath: string) {
-  const supabase = createClient()
+  try {
+    const data = await prisma.seoMetadata.findUnique({
+      where: { pagePath }
+    })
 
-  const { data, error } = await supabase.from("seo_metadata").select("*").eq("page_path", pagePath).single()
-
-  if (error && error.code !== "PGRST116") {
-    // PGRST116 is "no rows returned" which is fine
+    return data
+  } catch (error) {
     console.error("Error fetching SEO metadata:", error)
     throw new Error("Failed to fetch SEO metadata")
   }
-
-  return data
 }
 
 export async function createSeoMetadata(seoData: any) {
-  const supabase = createClient()
+  try {
+    // Remove empty ID
+    if (seoData.id === "" || seoData.id === undefined) {
+      delete seoData.id
+    }
 
-  // Remove empty ID to let Supabase generate it
-  if (seoData.id === "" || seoData.id === undefined) {
-    delete seoData.id
-  }
+    const data = await prisma.seoMetadata.create({
+      data: {
+        ...seoData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
 
-  const { data, error } = await supabase.from("seo_metadata").insert([seoData]).select()
-
-  if (error) {
+    revalidatePath("/admin/seo")
+    return data
+  } catch (error) {
     console.error("Error creating SEO metadata:", error)
     throw new Error("Failed to create SEO metadata")
   }
-
-  revalidatePath("/admin/seo")
-  return data[0]
 }
 
 export async function updateSeoMetadata(id: string, seoData: any) {
-  const supabase = createClient()
+  try {
+    // Don't update the ID
+    if (seoData.id) {
+      delete seoData.id
+    }
 
-  // Don't update the ID
-  if (seoData.id) {
-    delete seoData.id
-  }
+    const data = await prisma.seoMetadata.update({
+      where: { id },
+      data: {
+        ...seoData,
+        updatedAt: new Date()
+      }
+    })
 
-  const { data, error } = await supabase.from("seo_metadata").update(seoData).eq("id", id).select()
-
-  if (error) {
+    revalidatePath("/admin/seo")
+    return data
+  } catch (error) {
     console.error("Error updating SEO metadata:", error)
     throw new Error("Failed to update SEO metadata")
   }
-
-  revalidatePath("/admin/seo")
-  return data[0]
 }
 
 export async function deleteSeoMetadata(id: string) {
-  const supabase = createClient()
+  try {
+    await prisma.seoMetadata.delete({
+      where: { id }
+    })
 
-  const { error } = await supabase.from("seo_metadata").delete().eq("id", id)
-
-  if (error) {
+    revalidatePath("/admin/seo")
+    return { success: true }
+  } catch (error) {
     console.error("Error deleting SEO metadata:", error)
     throw new Error("Failed to delete SEO metadata")
   }
-
-  revalidatePath("/admin/seo")
-  return { success: true }
 }

@@ -1,7 +1,5 @@
 import { ArrowLeft, Calendar, Clock, User, ChevronLeft, ChevronRight, Search } from "lucide-react"
 import Link from "next/link"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,41 +8,11 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { OptimizedImage } from "@/components/optimized-image"
 import { TranslatedText } from "@/components/translated-text"
+import { getBlogPosts } from "../../actions/blog"
 
-async function getBlogPosts() {
-  const supabase = createServerComponentClient({ cookies })
-
-  // Remove the join with profiles since the relationship doesn't exist
-  const { data: posts, error } = await supabase
-    .from("blog_posts")
-    .select("*")
-    .eq("status", "published")
-    .order("publish_date", { ascending: false })
-
-  if (error) {
-    console.error("Error fetching blog posts:", error)
-    return []
-  }
-
-  return posts || []
-}
-
-async function getCategories() {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("category")
-    .eq("status", "published")
-    .not("category", "is", null)
-
-  if (error) {
-    console.error("Error fetching categories:", error)
-    return []
-  }
-
+async function getCategories(posts: any[]) {
   // Count occurrences of each category
-  const categoryCounts = data.reduce(
+  const categoryCounts = posts.reduce(
     (acc, post) => {
       if (post.category) {
         acc[post.category] = (acc[post.category] || 0) + 1
@@ -57,32 +25,20 @@ async function getCategories() {
   return Object.entries(categoryCounts).map(([name, count]) => ({ name, count }))
 }
 
-async function getAllTags() {
-  const supabase = createServerComponentClient({ cookies })
-
-  const { data, error } = await supabase
-    .from("blog_posts")
-    .select("tags")
-    .eq("status", "published")
-    .not("tags", "is", null)
-
-  if (error) {
-    console.error("Error fetching tags:", error)
-    return []
-  }
-
+async function getAllTags(posts: any[]) {
   // Flatten and count tags
-  const allTags = data.flatMap((post) => post.tags || [])
+  const allTags = posts.flatMap((post) => post.tags || [])
   const uniqueTags = [...new Set(allTags)]
 
   return uniqueTags
 }
 
-export default async function BlogPage({ params }: { params: { locale: string } }) {
-  const { locale } = params
-  const posts = await getBlogPosts()
-  const categories = await getCategories()
-  const popularTags = await getAllTags()
+export default async function BlogPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params
+  const allPosts = await getBlogPosts()
+  const posts = Array.isArray(allPosts) ? allPosts.filter(post => post.status === "published") : []
+  const categories = await getCategories(posts)
+  const popularTags = await getAllTags(posts)
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -124,7 +80,7 @@ export default async function BlogPage({ params }: { params: { locale: string } 
                   <Card className="overflow-hidden">
                     <div className="relative aspect-video w-full">
                       <OptimizedImage
-                        src={posts[0].featured_image || "/placeholder.svg?height=500&width=900&query=blog post"}
+                        src={posts[0].featuredImage || "/placeholder.svg?height=500&width=900&query=blog post"}
                         alt={posts[0].title}
                         fill
                         priority
@@ -135,7 +91,7 @@ export default async function BlogPage({ params }: { params: { locale: string } 
                     <CardHeader>
                       <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
                         <Calendar className="h-4 w-4" />
-                        <span>{posts[0].publish_date ? formatDate(posts[0].publish_date) : "No date"}</span>
+                        <span>{posts[0].publishedAt ? formatDate(posts[0].publishedAt) : "No date"}</span>
                         <Separator orientation="vertical" className="h-4" />
                         <User className="h-4 w-4" />
                         <span>Admin</span>
@@ -174,7 +130,7 @@ export default async function BlogPage({ params }: { params: { locale: string } 
                     <Card key={post.id} className="overflow-hidden">
                       <div className="relative aspect-video w-full">
                         <OptimizedImage
-                          src={post.featured_image || "/placeholder.svg?height=300&width=500&query=blog post"}
+                          src={post.featuredImage || "/placeholder.svg?height=300&width=500&query=blog post"}
                           alt={post.title}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -183,7 +139,7 @@ export default async function BlogPage({ params }: { params: { locale: string } 
                       </div>
                       <CardHeader>
                         <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                          <span>{post.publish_date ? formatDate(post.publish_date) : "No date"}</span>
+                          <span>{post.publishedAt ? formatDate(post.publishedAt) : "No date"}</span>
                           <Separator orientation="vertical" className="h-3" />
                           <span>{Math.ceil((post.content?.length || 0) / 1500)} min read</span>
                         </div>

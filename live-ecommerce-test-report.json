@@ -1,0 +1,60 @@
+{
+  "summary": {
+    "totalTests": 8,
+    "passedTests": 0,
+    "failedTests": 8,
+    "successRate": "0.0%",
+    "timestamp": "2025-07-18T15:41:40.679Z",
+    "serverUrl": "http://localhost:3001"
+  },
+  "results": [
+    {
+      "test": "Home Page Test",
+      "success": false,
+      "details": "net::ERR_CONNECTION_REFUSED at http://localhost:3001",
+      "timestamp": "2025-07-18T15:41:31.427Z"
+    },
+    {
+      "test": "Products Page Test",
+      "success": false,
+      "details": "net::ERR_CONNECTION_REFUSED at http://localhost:3001/en/products",
+      "timestamp": "2025-07-18T15:41:33.733Z"
+    },
+    {
+      "test": "Add to Cart Test",
+      "success": false,
+      "details": "Execution context was destroyed, most likely because of a navigation.",
+      "timestamp": "2025-07-18T15:41:33.750Z"
+    },
+    {
+      "test": "Shopping Cart Test",
+      "success": false,
+      "details": "SyntaxError: Failed to execute 'querySelector' on 'Document': 'button:has-text(\"cart\"), [data-testid=\"cart\"], .cart-icon, button[class*=\"cart\"]' is not a valid selector.",
+      "timestamp": "2025-07-18T15:41:33.788Z"
+    },
+    {
+      "test": "Wishlist Test",
+      "success": false,
+      "details": "SyntaxError: Failed to execute 'querySelectorAll' on 'Document': 'button:has-text(\"Save\"), button:has-text(\"Wishlist\"), [data-testid=\"wishlist\"], .heart-icon' is not a valid selector.",
+      "timestamp": "2025-07-18T15:41:33.792Z"
+    },
+    {
+      "test": "Checkout Test",
+      "success": false,
+      "details": "net::ERR_CONNECTION_REFUSED at http://localhost:3001/checkout",
+      "timestamp": "2025-07-18T15:41:36.074Z"
+    },
+    {
+      "test": "Thank You Page Test",
+      "success": false,
+      "details": "net::ERR_CONNECTION_REFUSED at http://localhost:3001/thank-you?order=TEST123",
+      "timestamp": "2025-07-18T15:41:38.378Z"
+    },
+    {
+      "test": "Responsive Test",
+      "success": false,
+      "details": "net::ERR_CONNECTION_REFUSED at http://localhost:3001",
+      "timestamp": "2025-07-18T15:41:40.678Z"
+    }
+  ]
+}
