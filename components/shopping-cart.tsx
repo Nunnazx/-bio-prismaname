@@ -144,7 +144,7 @@ export function ShoppingCartDrawer() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Link href="/en/checkout" onClick={() => setIsOpen(false)}>
+                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
                     <Button className="w-full bg-green-600 hover:bg-green-700">
                       Proceed to Checkout
                     </Button>
