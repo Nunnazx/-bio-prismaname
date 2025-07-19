@@ -98,7 +98,8 @@ export function ShoppingCartDrawer() {
                               variant="outline"
                               size="icon"
                               className="h-6 w-6"
-                              onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                              onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                              disabled={state.loading}
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -110,6 +111,7 @@ export function ShoppingCartDrawer() {
                               size="icon"
                               className="h-6 w-6"
                               onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              disabled={state.loading}
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -119,6 +121,7 @@ export function ShoppingCartDrawer() {
                             size="icon"
                             className="h-6 w-6 text-red-500 hover:text-red-700"
                             onClick={() => removeFromCart(item.id)}
+                            disabled={state.loading}
                           >
                             <X className="h-3 w-3" />
                           </Button>
@@ -141,7 +144,7 @@ export function ShoppingCartDrawer() {
                 </div>
                 
                 <div className="space-y-2">
-                  <Link href="/checkout" onClick={() => setIsOpen(false)}>
+                  <Link href="/en/checkout" onClick={() => setIsOpen(false)}>
                     <Button className="w-full bg-green-600 hover:bg-green-700">
                       Proceed to Checkout
                     </Button>

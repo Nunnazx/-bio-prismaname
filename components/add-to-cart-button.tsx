@@ -42,7 +42,7 @@ export function AddToCartButton({
     setIsAdding(true)
     
     try {
-      addToCart(product, quantity)
+      await addToCart(product, quantity)
       
       setJustAdded(true)
       toast({
