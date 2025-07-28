@@ -112,7 +112,7 @@ export function HomeContent() {
           </div>
 
           <VideoPlayer
-            src="/video_A.mp4"
+            src="/video_A(1)(1).mp4"
             title="AICMT International Factory Tour"
             poster="/sustainable-factory-exterior.png"
             className="max-w-4xl mx-auto rounded-xl overflow-hidden shadow-2xl"
