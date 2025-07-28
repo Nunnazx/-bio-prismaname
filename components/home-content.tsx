@@ -35,14 +35,10 @@ export function HomeContent() {
       {/* Hero Section with Nature Background */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <OptimizedImage
-            src="/lush-tropical-foliage.png"
-            alt="Green Nature Background"
-            fill
-            className="object-cover"
-            priority
-          />
+        <div
+          className="absolute inset-0 z-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/lush-tropical-foliage.png')" }}
+        >
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-r from-green-900/60 to-transparent" />
         </div>
@@ -116,7 +112,7 @@ export function HomeContent() {
           </div>
 
           <VideoPlayer
-            src="/videos/factory-tour.mp4"
+            src="/video_A.mp4"
             title="AICMT International Factory Tour"
             poster="/sustainable-factory-exterior.png"
             className="max-w-4xl mx-auto rounded-xl overflow-hidden shadow-2xl"
@@ -124,7 +120,7 @@ export function HomeContent() {
         </div>
       </section>
 
-      {/* Company Introduction */}
+      {/* Company Introduction */}c:\Users\harshavardhan\Downloads\video_A.mp4
       <section className="py-20 bg-white">
         <div className="container px-4">
           <div className="grid lg:grid-cols-2 gap-12 items-center">

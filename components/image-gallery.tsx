@@ -13,32 +13,32 @@ const galleryCategories = [
     name: "Our Facility",
     images: [
       {
-        src: "/gallery/facility-1.jpg",
+        src: "/line.jpg",
         alt: "Modern production facility",
         caption: "State-of-the-art production line",
       },
       {
-        src: "/gallery/facility-2.jpg",
+        src: "/quality.jpg",
         alt: "Quality control lab",
         caption: "Quality testing laboratory",
       },
       {
-        src: "/gallery/facility-3.jpg",
+        src: "/ware.JPG",
         alt: "Warehouse storage",
         caption: "Organized warehouse facility",
       },
       {
-        src: "/gallery/facility-4.jpg",
+        src: "/facility-1.png",
         alt: "Office space",
         caption: "Modern office environment",
       },
       {
-        src: "/sustainable-factory-exterior.png",
+        src: "/exter.jpg",
         alt: "Factory exterior",
         caption: "Sustainable factory exterior",
       },
       {
-        src: "/gallery/facility-6.jpg",
+        src: "/modern.jpg",
         alt: "Research lab",
         caption: "Research and development laboratory",
       },
@@ -49,17 +49,17 @@ const galleryCategories = [
     name: "Products",
     images: [
       {
-        src: "/gallery/product-1.jpg",
+        src: "/product-1.jpg",
         alt: "Biodegradable bags",
         caption: "Eco-friendly shopping bags",
       },
       {
-        src: "/gallery/product-2.jpg",
+        src: "/product-2.jpg",
         alt: "Food packaging",
         caption: "Compostable food containers",
       },
       {
-        src: "/gallery/product-3.jpg",
+        src: "/product-3.jpg",
         alt: "Biodegradable films",
         caption: "Transparent biodegradable films",
       },
@@ -69,12 +69,12 @@ const galleryCategories = [
         caption: "Biodegradable plastic granules",
       },
       {
-        src: "/gallery/product-5.jpg",
+        src: "/product-4.jpg",
         alt: "Custom packaging",
         caption: "Custom printed packaging solutions",
       },
       {
-        src: "/gallery/product-6.jpg",
+        src: "/product-5.jpg",
         alt: "Eco-friendly cutlery",
         caption: "Biodegradable cutlery set",
       },
@@ -85,22 +85,22 @@ const galleryCategories = [
     name: "Events & Exhibitions",
     images: [
       {
-        src: "/gallery/event-1.jpg",
+        src: "/facility-1.png",
         alt: "Trade show booth",
         caption: "Our booth at EcoPlastics Expo 2023",
       },
       {
-        src: "/gallery/event-2.jpg",
+        src: "/facility-1.png",
         alt: "Product demonstration",
         caption: "Live product demonstration",
       },
       {
-        src: "/gallery/event-3.jpg",
+        src: "/facility-1.png",
         alt: "Award ceremony",
         caption: "Receiving sustainability award",
       },
       {
-        src: "/gallery/event-4.jpg",
+        src: "/facility-1.png",
         alt: "Team photo",
         caption: "Our team at industry conference",
       },
@@ -110,7 +110,7 @@ const galleryCategories = [
         caption: "Celebrating company milestones",
       },
       {
-        src: "/gallery/event-6.jpg",
+        src: "/facility-1.png",
         alt: "Customer workshop",
         caption: "Educational workshop for clients",
       },
@@ -152,7 +152,7 @@ export function ImageGallery() {
       const previouslyFocused = document.activeElement
 
       // Handle escape key
-      const handleEscape = (e) => {
+      const handleEscape = (e: KeyboardEvent) => {
         if (e.key === "Escape") closeModal()
       }
 
@@ -194,7 +194,7 @@ export function ImageGallery() {
                   key={index}
                   className="aspect-square relative rounded-md overflow-hidden group cursor-pointer"
                   onClick={() => openModal(index)}
-                  onKeyDown={(e) => e.key === "Enter" && openModal(index)}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => e.key === "Enter" && openModal(index)}
                   tabIndex={0}
                   role="button"
                   aria-label={`View larger image: ${image.caption}`}
@@ -205,12 +205,9 @@ export function ImageGallery() {
                     width={400}
                     height={400}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    fallback={
-                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span className="text-gray-400">{image.alt}</span>
-                      </div>
-                    }
                   />
+                  {/* Fallback for image loading error */}
+                  {/* If you want a fallback, you should handle it inside OptimizedImage or with onError */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                     <div className="bg-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <ZoomIn className="h-5 w-5 text-gray-700" />
@@ -244,14 +241,15 @@ export function ImageGallery() {
             </Button>
 
             <div className="max-h-[80vh] flex items-center justify-center">
-              <OptimizedImage
-                src={currentCategory.images[activeImageIndex].src}
-                alt={currentCategory.images[activeImageIndex].alt}
-                width={1200}
-                height={800}
-                className="max-h-[80vh] w-auto object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
+              <div onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
+                <OptimizedImage
+                  src={currentCategory.images[activeImageIndex].src}
+                  alt={currentCategory.images[activeImageIndex].alt}
+                  width={1200}
+                  height={800}
+                  className="max-h-[80vh] w-auto object-contain"
+                />
+              </div>
             </div>
 
             <div className="absolute left-4 top-1/2 transform -translate-y-1/2">

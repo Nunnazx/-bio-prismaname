@@ -17,7 +17,7 @@ const companyStories = [
         year: "2018",
         title: "The Beginning",
         description: "AICMT was founded with a vision to create sustainable alternatives to conventional plastics.",
-        image: "/stories/founding.jpg",
+        image: "/exter.jpg",
       },
       {
         year: "2019",
@@ -29,13 +29,13 @@ const companyStories = [
         year: "2020",
         title: "Expansion & Growth",
         description: "Expanded our production capacity and introduced new product categories.",
-        image: "/sustainable-factory-exterior.png",
+        image: "/ware.jpg",
       },
       {
         year: "2021",
         title: "Certifications & Recognition",
         description: "Received CPCB certification and other industry recognitions for our products.",
-        image: "/green-leaf-certificate.png",
+        image: "/cpcb.jpg",
       },
       {
         year: "2022",
@@ -182,10 +182,12 @@ export function OurStories() {
                   {story.content.map((item, index) => (
                     <div key={index} className="flex flex-col md:flex-row gap-6">
                       <div className="md:w-1/4 flex flex-row md:flex-col items-center md:items-start gap-4 mb-4 md:mb-0">
-                        <div className="w-12 h-12 rounded-full bg-green-100 text-green-800 flex items-center justify-center font-bold z-10">
-                          {item.year}
-                        </div>
-                        <h3 className="font-bold text-lg">{item.title}</h3>
+                        {"year" in item && (
+                          <div className="w-12 h-12 rounded-full bg-green-100 text-green-800 flex items-center justify-center font-bold z-10">
+                            {item.year}
+                          </div>
+                        )}
+                        <h3 className="font-bold text-lg">{"title" in item ? item.title : ("name" in item ? item.name : "")}</h3>
                       </div>
                       <div className="md:w-3/4">
                         <Card>
@@ -194,7 +196,7 @@ export function OurStories() {
                               <div className="aspect-video md:aspect-square overflow-hidden">
                                 <OptimizedImage
                                   src={item.image}
-                                  alt={`${item.year}: ${item.title} - ${item.description}`}
+                                  alt={"year" in item && "title" in item ? `${item.year}: ${item.title} - ${item.description}` : ("name" in item ? item.name : "Story image")}
                                   width={400}
                                   height={400}
                                   className="w-full h-full object-cover"
@@ -221,14 +223,14 @@ export function OurStories() {
                       <div className="aspect-video overflow-hidden">
                         <OptimizedImage
                           src={item.image}
-                          alt={item.name}
+                          alt={"name" in item ? item.name : ("title" in item ? item.title : "Team image")}
                           width={600}
                           height={400}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="p-6">
-                        <h3 className="font-bold text-xl mb-2">{item.name}</h3>
+                        <h3 className="font-bold text-xl mb-2">{"name" in item ? item.name : ("title" in item ? item.title : "")}</h3>
                         <p className="text-gray-600">{item.description}</p>
                       </div>
                     </CardContent>
@@ -246,7 +248,7 @@ export function OurStories() {
                         <div className="col-span-1 aspect-square overflow-hidden">
                           <OptimizedImage
                             src={item.image}
-                            alt={item.title}
+                            alt={"title" in item ? item.title : ("name" in item ? item.name : "Achievement image")}
                             width={200}
                             height={200}
                             className="w-full h-full object-cover"
@@ -254,8 +256,10 @@ export function OurStories() {
                         </div>
                         <div className="col-span-2 p-4">
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-bold text-lg">{item.title}</h3>
-                            <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">{item.year}</span>
+                            <h3 className="font-bold text-lg">{"title" in item ? item.title : ("name" in item ? item.name : "")}</h3>
+                            {"year" in item && (
+                              <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">{item.year}</span>
+                            )}
                           </div>
                           <p className="text-sm text-gray-600">{item.description}</p>
                         </div>
@@ -274,17 +278,19 @@ export function OurStories() {
                       <div className="aspect-video overflow-hidden relative">
                         <OptimizedImage
                           src={item.image}
-                          alt={item.title}
+                          alt={"title" in item ? item.title : ("name" in item ? item.name : "Impact image")}
                           width={600}
                           height={400}
                           className="w-full h-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end">
                           <div className="p-4 text-white">
-                            <h3 className="font-bold text-xl">{item.title}</h3>
-                            <div className="mt-2 inline-block bg-green-600 px-3 py-1 rounded text-sm font-medium">
-                              {item.stats}
-                            </div>
+                            <h3 className="font-bold text-xl">{"title" in item ? item.title : ("name" in item ? item.name : "")}</h3>
+                            {"stats" in item && (
+                              <div className="mt-2 inline-block bg-green-600 px-3 py-1 rounded text-sm font-medium">
+                                {item.stats}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -13,11 +13,11 @@ const certificates = [
     id: "cpcb",
     title: "CPCB Certificate",
     description: "Central Pollution Control Board certification for compostable plastics",
-    image: "/green-leaf-certificate.png",
+    image: "/cpcb.jpg",
     issueDate: "March 21, 2023",
     validUntil: "March 20, 2025",
     certNumber: "CPCB/PBAT-PLA/2023/01",
-    downloadUrl: "#",
+    downloadUrl: "/CPCB.pdf",
   },
   {
     id: "cipet",
@@ -27,7 +27,7 @@ const certificates = [
     issueDate: "March 21, 2023",
     validUntil: "March 20, 2025",
     certNumber: "TR.NO.: 002987(S)",
-    downloadUrl: "#",
+    downloadUrl: "/aicmt.pdf",
   },
   {
     id: "msme",
@@ -138,10 +138,21 @@ export function CertificateShowcase() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="flex gap-2 bg-green-600 hover:bg-green-700">
-                  <Download className="h-4 w-4" />
-                  Download Certificate
-                </Button>
+                {(cert.id === "cpcb" || cert.id === "cipet") ? (
+                  <a
+                    href={cert.downloadUrl}
+                    download
+                    className="flex gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md items-center"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Certificate
+                  </a>
+                ) : (
+                  <Button className="flex gap-2 bg-green-600 hover:bg-green-700" disabled>
+                    <Download className="h-4 w-4" />
+                    Download Certificate
+                  </Button>
+                )}
               </CardFooter>
             </Card>
           </TabsContent>
@@ -163,14 +174,13 @@ export function CertificateShowcase() {
             >
               <X className="h-5 w-5" />
             </Button>
-            <div className="max-h-[90vh] overflow-auto">
+            <div className="max-h-[90vh] overflow-auto" onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}>
               <OptimizedImage
                 src={modalImage}
                 alt="Certificate full view"
                 width={800}
                 height={1120}
                 className="w-full object-contain"
-                onClick={(e) => e.stopPropagation()}
               />
             </div>
           </div>
